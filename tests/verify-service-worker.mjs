@@ -31,7 +31,9 @@ async function listen(server) {
 async function stop(server) {
     await new Promise(resolve => server.close(resolve));
 }
+let productionNetworkDown = false;
 const distServer = createServer(async (req, res) => {
+    if (productionNetworkDown) return req.socket.destroy();
     const pathname = new URL(req.url, 'http://localhost').pathname;
     const path = pathname === '/' ? 'index.html' : pathname.slice(1);
     if (path.includes('..')) return send(res, 404, 'text/plain', 'missing');
@@ -47,6 +49,7 @@ const distServer = createServer(async (req, res) => {
     } catch { send(res, 404, 'text/plain', 'missing'); }
 });
 let release = 'v1';
+let fixtureNetworkDown = false;
 let brokenInstall = false;
 let failedInstallRequests = 0;
 const cacheName = version => 'games-cache-v3-test-' + version;
@@ -64,6 +67,9 @@ const shell = game => '<!doctype html><html><head><meta charset="utf-8">'
     + '<script src="/assets/js/' + (game ? 'game-' : 'home-') + release + '.js"></script>'
     + '</body></html>';
 const fixtureServer = createServer((req, res) => {
+    // CDP's page.setOfflineMode does not necessarily block fetches performed
+    // by the separate Service Worker target. Fail at the actual HTTP server.
+    if (fixtureNetworkDown) return req.socket.destroy();
     const path = new URL(req.url, 'http://localhost').pathname;
     if (path === '/sw.js') return send(res, 200, 'text/javascript', swFor(release));
     if (path === '/' || path === '/index.html') return send(res, 200, 'text/html', shell(false));
@@ -113,6 +119,10 @@ async function open(path) {
 async function update(p) {
     await p.evaluate(async () => (await navigator.serviceWorker.getRegistration()).update());
 }
+async function offline(p, enabled) {
+    fixtureNetworkDown = enabled;
+    await p.setOfflineMode(enabled);
+}
 async function waitForWaiting(p) {
     await p.waitForFunction(async () => {
         const reg = await navigator.serviceWorker.getRegistration();
@@ -136,6 +146,7 @@ try {
         await productionPage.goto(prodBase + '/', { waitUntil: 'load', timeout: 30000 });
         await productionPage.waitForFunction(() => Boolean(navigator.serviceWorker.controller),
             { timeout: 25000 });
+        productionNetworkDown = true;
         await productionPage.setOfflineMode(true);
         await productionPage.reload({ waitUntil: 'domcontentloaded' });
         await productionPage.waitForFunction(() => {
@@ -143,6 +154,7 @@ try {
             return filter && !filter.hidden && document.querySelectorAll('.game-card').length >= 10;
         }, { timeout: 10000 });
     } finally {
+        productionNetworkDown = false;
         await productionPage.close();
     }
 
@@ -172,25 +184,25 @@ try {
     await waitForOwned(page, [cacheName('v1')]);
     assert(!('games-cache-v2' in await counts(page)),
         'first activation immediately deletes all legacy v2 resources');
-    await page.setOfflineMode(true);
+    await offline(page, true);
     await page.reload({ waitUntil: 'load' });
     assert.equal(await page.$eval('body', el => el.dataset.home), 'v1', 'first-install offline homepage');
     // Legacy cache content must never be served after the new SW activates.
     await page.goto(base + '/old-game.html', { waitUntil: 'load' });
     assert.equal(await page.$eval('h1', el => el.textContent), 'Home v1',
         'offline unknown route falls back to current homepage, not legacy HTML');
-    await page.setOfflineMode(false);
+    await offline(page, false);
     await page.goto(base + '/game.html?daily=1', { waitUntil: 'load' });
     assert.equal(new URL(page.url()).pathname, '/game', 'Cloudflare-style redirect to extensionless URL');
     assert.equal(await page.$eval('body', el => el.dataset.game), 'v1');
     await page.waitForFunction(async () => Boolean(await (await globalThis.caches.open('games-cache-v3-test-v1')).match('/game.html')));
     const urls = await page.evaluate(async () => (await (await globalThis.caches.open('games-cache-v3-test-v1')).keys()).map(r => r.url));
     assert(!urls.some(url => url.includes('?daily=')), 'navigation queries do not add cache keys');
-    await page.setOfflineMode(true);
+    await offline(page, true);
     await page.goto(base + '/game', { waitUntil: 'load' });
     assert.equal(await page.$eval('body', el => el.dataset.game), 'v1',
         'extensionless game URL reloads from same cached document offline');
-    await page.setOfflineMode(false);
+    await offline(page, false);
 
     release = 'v2';
     await update(page);
@@ -205,11 +217,11 @@ try {
         (await (await globalThis.caches.open('games-cache-v3-test-v1')).match('/game.html')).text());
     assert(oldHtml.includes('game-v1.js') && oldHtml.includes('content="test-v1"'),
         'old SW must reject mismatched v2 HTML when caching');
-    await page.setOfflineMode(true);
+    await offline(page, true);
     await page.reload({ waitUntil: 'load' });
     assert.equal(await page.$eval('body', el => el.dataset.game), 'v1',
         'offline game remains complete while newer release waits');
-    await page.setOfflineMode(false);
+    await offline(page, false);
     await page.close();
     page = await open('/');
     await waitForOwned(page, [cacheName('v2')]);
@@ -220,11 +232,11 @@ try {
         'previous generation fully deleted on activation');
     console.log('SW growth: legacy ' + legacyCount + ' entries; after v2 ' + JSON.stringify(await counts(page)));
 
-    await page.setOfflineMode(true);
+    await offline(page, true);
     await page.goto(base + '/game.html', { waitUntil: 'load' });
     assert.equal(await page.$eval('h1', el => el.textContent), 'Home v2',
         'previously visited old game is not served offline after update');
-    await page.setOfflineMode(false);
+    await offline(page, false);
     await page.goto(base + '/game.html', { waitUntil: 'load' });
     assert.equal(await page.$eval('body', el => el.dataset.game), 'v2');
     await page.waitForFunction(async () => Boolean(await (await globalThis.caches.open('games-cache-v3-test-v2')).match('/game.html')));
@@ -236,20 +248,20 @@ try {
     page = await open('/');
     await waitForOwned(page, [cacheName('v3')]);
     await checkSaved(page);
-    await page.setOfflineMode(true);
+    await offline(page, true);
     await page.goto(base + '/game.html', { waitUntil: 'load' });
     assert.equal(await page.$eval('h1', el => el.textContent), 'Home v3',
         'no old v2 game survives a v3 deployment');
-    await page.setOfflineMode(false);
+    await offline(page, false);
     await page.goto(base + '/game.html', { waitUntil: 'load' });
     assert.equal(await page.$eval('body', el => el.dataset.game), 'v3');
     await page.waitForFunction(async () =>
         Boolean(await (await globalThis.caches.open('games-cache-v3-test-v3')).match('/game.html')));
-    await page.setOfflineMode(true);
+    await offline(page, true);
     await page.reload({ waitUntil: 'load' });
     assert.equal(await page.$eval('body', el => el.dataset.game), 'v3',
         'current version of game works offline after visiting it');
-    await page.setOfflineMode(false);
+    await offline(page, false);
     console.log('SW bounded after three releases: ' + JSON.stringify(await counts(page)));
 
     release = 'v4';
