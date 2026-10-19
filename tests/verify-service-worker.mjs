@@ -150,6 +150,31 @@ const waitForOwned = async (p, names) => {
         return JSON.stringify(have) === JSON.stringify(expected);
     }, { timeout: 10000 }, want);
 };
+
+// A waiting worker may activate only after the last old-client tab closes.
+ // Poll Cache Storage through DevTools from an about:blank probe so the probe
+ // does not become another controlled client or race its first navigation.
+async function waitForReleasedGeneration(names) {
+    const expected = [...names].sort();
+    const probe = await browser.newPage();
+    const session = await probe.createCDPSession();
+    let current = [];
+    try {
+        for (let attempt = 0; attempt < 120; attempt++) {
+            const result = await session.send('CacheStorage.requestCacheNames', {
+                securityOrigin: base,
+            });
+            current = result.caches.map(entry => entry.cacheName)
+                .filter(name => name.startsWith('games-cache-')).sort();
+            if (JSON.stringify(current) === JSON.stringify(expected)) return;
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        throw new Error(`Waiting for SW cache activation: expected ${JSON.stringify(expected)}, got ${JSON.stringify(current)}`);
+    } finally {
+        await session.detach();
+        await probe.close();
+    }
+}
 async function open(path) {
     const next = await browser.newPage();
     await next.goto(base + path, { waitUntil: 'load' });
@@ -286,6 +311,7 @@ try {
         'offline game remains complete while newer release waits');
     await offline(page, false);
     await page.close();
+    await waitForReleasedGeneration([cacheName('v2')]);
     page = await open('/');
     await waitForOwned(page, [cacheName('v2')]);
     assert.equal(await page.$eval('body', el => el.dataset.home), 'v2');
@@ -308,6 +334,7 @@ try {
     await update(page);
     await waitForWaiting(page);
     await page.close();
+    await waitForReleasedGeneration([cacheName('v3')]);
     page = await open('/');
     await waitForOwned(page, [cacheName('v3')]);
     await checkSaved(page);
@@ -387,6 +414,7 @@ try {
     assert(htmlBuildMatches, 'recovered HTML uses exactly the expected build marker');
     assert(repaired.script?.includes('dataset.home'), 'existing valid script survived recovery');
     await page.close();
+    await waitForReleasedGeneration([cacheName('v4')]);
     page = await open('/');
     await waitForOwned(page, [cacheName('v4')]);
     await checkSaved(page);
@@ -418,6 +446,7 @@ try {
     await update(page);
     await waitForWaiting(page);
     await page.close();
+    await waitForReleasedGeneration([cacheName('v2')]);
     page = await open('/');
     await waitForOwned(page, [cacheName('v2')]);
     await page.reload({ waitUntil: 'load' });
