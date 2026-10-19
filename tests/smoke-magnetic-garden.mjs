@@ -424,6 +424,17 @@ try {
         await start(page, level);
         for (const action of level.solution) await perform(page, action);
         check(await page.evaluate(() => window.mgGame.state === 'over' && window.mgGame.sim.won), `${level.id}: actual controls solve garden`);
+        if (level.id === 'deeproot-6') {
+            // The result card waits for the whole staggered bloom, including the last flower.
+            const bloom = await page.evaluate(() => {
+                const wait = window.mgGame.bloomBoard();
+                const ends = [...document.querySelectorAll('#mg-board .mg-flower')].flatMap(node => node.getAnimations())
+                    .map(animation => animation.effect.getComputedTiming().endTime);
+                return { wait, ends };
+            });
+            check(bloom.ends.length === 3 && bloom.wait >= Math.max(...bloom.ends),
+                `the bloom wait covers every flower's staggered animation: ${JSON.stringify(bloom)}`);
+        }
         const expectedPosts = Math.floor((index + 1) / 6);
         if ((index + 1) % 6 === 0) {
             await page.waitForFunction(count => Object.keys(window.mgGame.best).length >= count, {}, index + 1);

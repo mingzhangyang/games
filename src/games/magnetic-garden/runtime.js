@@ -13,7 +13,7 @@ const chapterIds = CHAPTERS.map(chapter => chapter.id);
 const clone = value => JSON.parse(JSON.stringify(value));
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 // The finished garden blooms on the board before the result card covers it.
-const BLOOM_BEAT_MS = 600;
+const BLOOM_MS = 600, BLOOM_STAGGER_MS = 80;
 const CONFIRM_GUARD_MS = 250;
 const iconLabel = (id, icon, label) => { $(id).innerHTML = `${icon || ''}<span></span>`; $(id).lastElementChild.textContent = label; };
 
@@ -123,7 +123,7 @@ export class MagneticGardenGame {
         if (token !== this.animationToken) return true;
         this.render();
         if (this.sim.won && motion) {
-            this.animating = true; this.bloomBoard(); await wait(BLOOM_BEAT_MS);
+            this.animating = true; await wait(this.bloomBoard());
             if (token !== this.animationToken) return true;
         }
         this.animating = false;
@@ -203,8 +203,11 @@ export class MagneticGardenGame {
         if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         $('mg-result-flower').animate([{ transform:'translateY(16px) scale(.65)', opacity:0 },{ transform:'translateY(-7px) scale(1.07)', opacity:1 },{ transform:'translateY(0) scale(1)', opacity:1 }], { duration:650, easing:'cubic-bezier(.22,.7,.3,1)' });
     }
+    /** Blooms every planted flower in turn; returns when the last one has finished opening. */
     bloomBoard() {
-        $('mg-board').querySelectorAll('.is-grown .mg-flower').forEach((node,i) => node.animate([{transform:'scale(.25)',opacity:0},{transform:'scale(1.1)',opacity:1},{transform:'scale(1)',opacity:1}],{duration:600,delay:i*80,easing:'ease-out'}));
+        const flowers = [...$('mg-board').querySelectorAll('.is-grown .mg-flower')];
+        flowers.forEach((node,i) => node.animate([{transform:'scale(.25)',opacity:0},{transform:'scale(1.1)',opacity:1},{transform:'scale(1)',opacity:1}],{duration:BLOOM_MS,delay:i*BLOOM_STAGGER_MS,easing:'ease-out'}));
+        return BLOOM_MS + Math.max(0, flowers.length - 1) * BLOOM_STAGGER_MS;
     }
     showHintAction(action) {
         const previous = this.selected;
