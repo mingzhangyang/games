@@ -31,13 +31,21 @@ function documentKey(pathname) {
 
 // An old worker can continue controlling a tab while a new release is online.
 // Never replace its offline document with newer HTML pointing at missing chunks.
-async function cacheMatchingDocument(cache, key, response) {
+async function isMatchingBuildDocument(response, key) {
     try {
         if (!response.ok || response.type !== 'basic'
-            || !response.headers.get('content-type')?.toLowerCase().includes('text/html')) return;
-        if (documentKey(new URL(response.url).pathname) !== key) return;
-        const html = await response.clone().text();
-        if (!html.includes(`<meta name="games-build" content="${BUILD}">`)) return;
+            || !response.headers.get('content-type')?.toLowerCase().includes('text/html')) return false;
+        if (documentKey(new URL(response.url).pathname) !== key) return false;
+        return (await response.clone().text())
+            .includes(`<meta name="games-build" content="${BUILD}">`);
+    } catch {
+        return false;
+    }
+}
+
+async function cacheMatchingDocument(cache, key, response) {
+    if (!await isMatchingBuildDocument(response, key)) return;
+    try {
         await cache.put(key, response);
     } catch {
         // Cache writes are best effort and never block the online navigation.
@@ -48,9 +56,41 @@ self.addEventListener('install', event => {
     event.waitUntil((async () => {
         const existed = (await caches.keys()).includes(CACHE);
         try {
+            // Fetch once and validate the exact responses we will cache.
+            // addAll() accepts 200 HTML from a different deploy; a separate
+            // validation fetch followed by addAll() would still race a deploy.
+            const fetched = await Promise.all(PRECACHE.map(async path => {
+                const response = await fetch(new Request(path, { cache: 'no-store' }));
+                if (!response.ok || response.type !== 'basic') {
+                    throw new Error(`Precache request failed: ${path}`);
+                }
+                const key = documentKey(path);
+                if (key) {
+                    if (!await isMatchingBuildDocument(response, key)) {
+                        throw new Error(`Precache HTML build mismatch: ${path}`);
+                    }
+                } else if (response.headers.get('content-type')?.toLowerCase().includes('text/html')) {
+                    throw new Error(`Precache dependency returned HTML: ${path}`);
+                }
+                return { path, response };
+            }));
             const cache = await caches.open(CACHE);
-            // An incomplete precache must NOT replace the active version.
-            await cache.addAll(PRECACHE);
+            if (existed) {
+                // A retry must not overwrite a pre-existing generation. Reuse
+                // it only if the complete, correctly marked shell is present.
+                for (const { path } of fetched) {
+                    const saved = await cache.match(path);
+                    if (!saved || (documentKey(path)
+                        && !await isMatchingBuildDocument(saved, documentKey(path)))) {
+                        throw new Error(`Existing precache entry missing or mismatched: ${path}`);
+                    }
+                }
+                return;
+            }
+            // Never expose a partial new generation after a failed install.
+            for (const { path, response } of fetched) {
+                await cache.put(path, response);
+            }
         } catch (error) {
             if (!existed) await caches.delete(CACHE);
             throw error;

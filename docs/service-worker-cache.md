@@ -18,8 +18,12 @@ superseded Games caches safely.
   the marker is ignored when hashing so re-stamping is deterministic.
   The generated SW also embeds the exact set of emitted HTML routes.
 - Install pre-caches /, /index.html, and the JS/CSS dependencies referenced
-  by the built homepage, plus the homepage SVG sprite. The install fails without
-  replacing the active worker if any critical resource is unavailable.
+  by the built homepage, plus the homepage SVG sprite. It validates every
+  fetched response before writing: both homepage URLs must serve HTML tagged
+  with this worker's `games-build` ID. Assets must not return HTML fallbacks.
+  Responses are fetched only once to avoid a validation/write race. Any failure
+  rejects installation and discards a new partial cache without deleting the
+  active generation; an existing same-ID cache is never overwritten.
 - **No skipWaiting() on updates**: the old worker and its hashed assets remain
   available while any client controlled by it is open. Once these clients close,
   the browser activates the prepared worker.
@@ -75,7 +79,8 @@ pinning mechanism would be a separate feature.
   same origin. It inspects Cache Storage after each update: legacy v2 growth,
   first install, redirected extensionless routes, home and game offline navigation,
   old tab waiting with an online-then-offline reload, immediate deletion of old
-  caches after each release, failed install, rollback and local
+  caches after each release, an all-200 mismatched-build HTML install,
+  an unavailable dependency install, rollback and local
   save/settings/pending-score preservation. CI discovers it in the browser shard.
 - The browser test uses an HTTP fixture generated from the **same SW source and
   stamp renderer** as production; it also loads the built homepage and SW from

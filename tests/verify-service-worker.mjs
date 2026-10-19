@@ -52,6 +52,8 @@ let release = 'v1';
 let fixtureNetworkDown = false;
 let brokenInstall = false;
 let failedInstallRequests = 0;
+let mismatchedInstallPath = null;
+let mismatchedInstallRequests = 0;
 const cacheName = version => 'games-cache-v3-test-' + version;
 const swFor = version => renderServiceWorker(source, {
     buildId: 'test-' + version,
@@ -61,10 +63,10 @@ const swFor = version => renderServiceWorker(source, {
         '/assets/js/extra-' + version + '.js'],
     htmlRoutes: ['/index.html', '/game.html'],
 });
-const shell = game => '<!doctype html><html><head><meta charset="utf-8">'
-    + '<meta name="games-build" content="test-' + release + '"></head><body>'
-    + '<h1>' + (game ? 'Game ' : 'Home ') + release + '</h1>'
-    + '<script src="/assets/js/' + (game ? 'game-' : 'home-') + release + '.js"></script>'
+const shell = (game, version = release) => '<!doctype html><html><head><meta charset="utf-8">'
+    + '<meta name="games-build" content="test-' + version + '"></head><body>'
+    + '<h1>' + (game ? 'Game ' : 'Home ') + version + '</h1>'
+    + '<script src="/assets/js/' + (game ? 'game-' : 'home-') + version + '.js"></script>'
     + '</body></html>';
 const fixtureServer = createServer((req, res) => {
     // CDP's page.setOfflineMode does not necessarily block fetches performed
@@ -72,7 +74,14 @@ const fixtureServer = createServer((req, res) => {
     if (fixtureNetworkDown) return req.socket.destroy();
     const path = new URL(req.url, 'http://localhost').pathname;
     if (path === '/sw.js') return send(res, 200, 'text/javascript', swFor(release));
-    if (path === '/' || path === '/index.html') return send(res, 200, 'text/html', shell(false));
+    if (path === '/' || path === '/index.html') {
+        if (path === mismatchedInstallPath) {
+            mismatchedInstallRequests++;
+            // All HTTP requests still succeed, but this HTML belongs to v5.
+            return send(res, 200, 'text/html', shell(false, 'v5'));
+        }
+        return send(res, 200, 'text/html', shell(false));
+    }
     // Cloudflare's default HTML handling redirects /game.html to /game.
     if (path === '/game.html') {
         res.writeHead(308, { Location: '/game', 'Cache-Control': 'no-store' });
@@ -265,6 +274,29 @@ try {
     console.log('SW bounded after three releases: ' + JSON.stringify(await counts(page)));
 
     release = 'v4';
+    mismatchedInstallPath = '/index.html';
+    await update(page).catch(() => {});
+    // The other homepage URL and all shell assets return 200; only this
+    // response has the wrong build marker. The candidate must NOT activate.
+    for (let attempt = 0; attempt < 100 && mismatchedInstallRequests === 0; attempt++) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    assert(mismatchedInstallRequests > 0, 'mismatched HTTP 200 HTML was fetched during install');
+    await page.waitForFunction(async () => {
+        const r = await navigator.serviceWorker.getRegistration();
+        return !r.installing;
+    }, { timeout: 10000 });
+    assert.deepEqual(await owned(page), [cacheName('v3')],
+        'mismatched-build HTML rejects install without deleting current cache');
+    assert.equal(await page.evaluate(async () => (await navigator.serviceWorker.getRegistration()).waiting), null,
+        'mismatched-build install must not leave a waiting worker');
+    mismatchedInstallPath = null;
+    await offline(page, true);
+    await page.reload({ waitUntil: 'load' });
+    assert.equal(await page.$eval('body', el => el.dataset.game), 'v3',
+        'previous version remains playable offline after mismatched install');
+    await offline(page, false);
+
     brokenInstall = true;
     await update(page).catch(() => {});
     // Observe the actual failed server request: checking !installing alone may
@@ -293,7 +325,7 @@ try {
     assert(!(await keys(page)).includes(cacheName('v3')),
         'rollback also removes superseded version cache');
     await checkSaved(page);
-    console.log('PASS real Chromium SW: current-only cache, legacy removal, 3 deploys, old tabs, failed install, rollback, storage preserved');
+    console.log('PASS real Chromium SW: current-only cache, legacy removal, 3 deploys, old tabs, mismatched HTML, failed install, rollback, storage preserved');
 } finally {
     if (page && !page.isClosed()) await page.close();
     await browser.close();
