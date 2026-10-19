@@ -84,8 +84,9 @@ pinning mechanism would be a separate feature.
   fixture lifecycle tests without requiring `dist/`. When built output exists,
   it additionally validates the generated worker and offline homepage. If only
   one of `dist/sw.js` or `dist/index.html` is present, verification fails
-  rather than silently skipping an incomplete build. CI runs the source-only
-  test **before** build, then runs built-output checks in the browser shards
+  rather than silently skipping an incomplete build. CI runs a standalone
+  real-Chromium source-only install/offline smoke **before** build, then runs
+  the full multi-version fixture and built-output checks in the browser shards
   after `npm run build`. The fixture tests use successive distinct deploys on the
   same origin. It inspects Cache Storage after each update: legacy v2 growth,
   first install, redirected extensionless routes, home and game offline navigation,

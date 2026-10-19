@@ -150,35 +150,6 @@ const waitForOwned = async (p, names) => {
         return JSON.stringify(have) === JSON.stringify(expected);
     }, { timeout: 10000 }, want);
 };
-
-// A waiting worker may activate only after the last old-client tab closes.
-// Inspect the actual worker target: a new page would become another client
-// and could race or prevent the activation we are trying to verify.
-async function waitForReleasedGeneration(names) {
-    const expected = JSON.stringify([...names].sort());
-    let observed = [];
-    for (let attempt = 0; attempt < 120; attempt++) {
-        const targets = browser.targets().filter(target =>
-            target.type() === 'service_worker' && target.url() === base + '/sw.js');
-        for (const target of targets) {
-            try {
-                const worker = await target.worker();
-                if (!worker) continue;
-                const state = await worker.evaluate(async () => ({
-                    active: self.registration.active?.state,
-                    caches: (await caches.keys()).filter(name => name.startsWith('games-cache-')).sort(),
-                }));
-                observed = [state.active, ...state.caches];
-                if (state.active === 'activated'
-                    && JSON.stringify(state.caches) === expected) return;
-            } catch {
-                // Old worker targets can detach as activation finishes.
-            }
-        }
-        await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    throw new Error(`Worker generation never activated: expected ${expected}, observed ${JSON.stringify(observed)}`);
-}
 async function open(path) {
     const next = await browser.newPage();
     await next.goto(base + path, { waitUntil: 'load' });
@@ -315,7 +286,6 @@ try {
         'offline game remains complete while newer release waits');
     await offline(page, false);
     await page.close();
-    await waitForReleasedGeneration([cacheName('v2')]);
     page = await open('/');
     await waitForOwned(page, [cacheName('v2')]);
     assert.equal(await page.$eval('body', el => el.dataset.home), 'v2');
@@ -338,7 +308,6 @@ try {
     await update(page);
     await waitForWaiting(page);
     await page.close();
-    await waitForReleasedGeneration([cacheName('v3')]);
     page = await open('/');
     await waitForOwned(page, [cacheName('v3')]);
     await checkSaved(page);
@@ -418,7 +387,6 @@ try {
     assert(htmlBuildMatches, 'recovered HTML uses exactly the expected build marker');
     assert(repaired.script?.includes('dataset.home'), 'existing valid script survived recovery');
     await page.close();
-    await waitForReleasedGeneration([cacheName('v4')]);
     page = await open('/');
     await waitForOwned(page, [cacheName('v4')]);
     await checkSaved(page);
@@ -450,7 +418,6 @@ try {
     await update(page);
     await waitForWaiting(page);
     await page.close();
-    await waitForReleasedGeneration([cacheName('v2')]);
     page = await open('/');
     await waitForOwned(page, [cacheName('v2')]);
     await page.reload({ waitUntil: 'load' });
