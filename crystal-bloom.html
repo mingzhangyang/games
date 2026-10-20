@@ -68,23 +68,20 @@
             <!-- 提示 -->
             <div class="cb-toast hidden game-toast" id="cb-toast"></div>
 
-            <div class="cb-action-row" id="cb-action-row">
-            <button type="button" class="cb-action-btn cb-stir-btn" id="cb-stir-btn" title="Stir">
-                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <circle cx="12" cy="12" r="7.5"/>
-                    <path d="M12 4.5a7.5 7.5 0 0 1 6.5 3.75"/>
-                    <path d="M8.5 12a3.5 3.5 0 1 0 3.5-3.5"/>
-                </svg>
-                <span class="sci-action-label" data-i18n="stir">Stir</span>
-            </button>
-            <button type="button" class="cb-action-btn cb-run-btn" id="cb-run-btn" title="Grow">
-                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
-                    <path d="M8 5.2v13.6l11-6.8z"/>
-                </svg>
-                <span class="sci-action-label" data-i18n="grow">Grow</span>
-            </button>
-
-            </div>
+            <form class="cb-cooling" id="cb-cooling">
+                <output class="cb-reading" id="cb-reading"></output>
+                <p id="cb-last-anchor"></p>
+                <div class="cb-anchor-fields">
+                    <label><span id="cb-time-label">Simulation time</span><input type="number" id="cb-anchor-time" step="1" required inputmode="numeric"></label>
+                    <label><span id="cb-temp-label">Temperature (°C)</span><input type="number" id="cb-anchor-temp" step="0.5" required inputmode="decimal"></label>
+                    <button type="submit" id="cb-anchor-add"></button>
+                </div>
+                <p id="cb-anchor-feedback" role="status" aria-live="polite"></p>
+                <div class="cb-cooling-actions" id="cb-action-row">
+                    <button type="button" class="cb-cooling-button" id="cb-run-btn"><span class="sci-action-label" data-i18n="grow">Grow</span></button>
+                    <button type="button" class="cb-cooling-button" id="cb-stir-btn"><span class="sci-action-label" data-i18n="stir">Stir</span></button>
+                </div>
+            </form>
 
             <!-- 开始界面 -->
             <div class="cb-overlay game-overlay game-overlay--menu" id="cb-start">

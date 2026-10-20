@@ -25,14 +25,13 @@
 
 import { bindContextualRestart } from '../../platform/contextual-restart.js';
 import { LANGUAGES } from './i18n.js';
+import { createLabConsole } from './ui/lab-console.js';
 
 import {
     STAGE,
     FLAME,
     TARGET,
     MINE,
-    RACK,
-    STATUS,
     WL,
     RULES,
     ELEMENTS,
@@ -63,7 +62,6 @@ import { createSfxEngine } from '../../platform/game-sfx.js';
 export const W = STAGE.w;
 const H = STAGE.h;
 
-const GOLD = '#ffd34d';
 const DIM = 'rgba(200,214,255,0.62)';
 
 // 投盐是「沙」的一声撒进去，倒掉是气流抽走的一记闷响，
@@ -202,6 +200,7 @@ export class FlameVerseGame {
         this.animationId = null;
         this.lastFrame = 0;
 
+        this.labConsole = createLabConsole(this);
         this.initUI();
         this.applyLanguage();
         this.bindInput();
@@ -258,6 +257,7 @@ export class FlameVerseGame {
         const on = this.state === 'playing';
         if (this.el['run-btn']) this.el['run-btn'].classList.toggle('is-dimmed', !on);
         if (this.el['clear-btn']) this.el['clear-btn'].classList.toggle('is-dimmed', !on);
+        this.labConsole?.sync();
     }
 
     /* ---------------------- UI 初始化 ---------------------- */
@@ -626,6 +626,7 @@ export class FlameVerseGame {
             Sfx.fail();
             vibrate([20, 35, 20]);
             this.showToast(`${this.t('failDiff')} · ${this.diffText()}`);
+            this.labConsole.sync();
             track('flame-verse', 'assay_miss', this.diff.length);
             return;
         }
@@ -796,6 +797,7 @@ export class FlameVerseGame {
     /* ---------------------- HUD / Toast ---------------------- */
 
     updateHud() {
+        this.labConsole?.sync();
         const el = this.el;
         if (el['budget']) el['budget'].textContent = String(this.cost());
         if (el['par']) el['par'].textContent = `${this.t('par')} ${this.spec ? this.spec.par : 0}`;
@@ -864,36 +866,6 @@ export class FlameVerseGame {
             }
         });
 
-        // 盐架：pointerdown 直接触发（不等 click，移动端更跟手）
-        c.addEventListener('pointerdown', (e) => {
-            if (this.state !== 'playing' || this.isPaused) return;
-            if (e.cancelable) e.preventDefault();
-            const p = this.stageFromEvent(e);
-            const k = this.jarAt(p.x, p.y);
-            if (k) this.throwSalt(k);
-        });
-        c.addEventListener('contextmenu', (e) => e.preventDefault());
-    }
-
-    /** 画布像素 → 舞台逻辑坐标（后端缓冲区按 renderScale 放大过） */
-    stageFromEvent(e) {
-        const rect = this.canvas.getBoundingClientRect();
-        return {
-            x: (e.clientX - rect.left) / rect.width * W,
-            y: (e.clientY - rect.top) / rect.height * H,
-        };
-    }
-
-    /** 盐罐几何：8 个等宽罐（65 逻辑 px，>44px 触控下限） */
-    jarRect(i) {
-        return { x: RACK.x + i * 65, y: RACK.y, w: 61, h: RACK.h };
-    }
-
-    jarAt(x, y) {
-        if (x < RACK.x || x > RACK.x + RACK.w) return null;
-        if (y < RACK.y - 6 || y > RACK.y + RACK.h + 6) return null;
-        const i = Math.floor((x - RACK.x) / 65);
-        return EL_ORDER[clamp(i, 0, EL_ORDER.length - 1)];
     }
 
     bindUI() {
@@ -907,8 +879,8 @@ export class FlameVerseGame {
 
     /* ---------------------- 暂停适配（抽屉契约） ---------------------- */
 
-    pauseQuiet() { this.isPaused = true; this.contextualRestart?.sync(); }
-    resumeQuiet() { if (this.pauseOwnership?.isHeld()) return; this.lastFrame = 0; this.isPaused = false; this.contextualRestart?.sync(); }
+    pauseQuiet() { this.isPaused = true; this.contextualRestart?.sync(); this.labConsole.sync(); }
+    resumeQuiet() { if (this.pauseOwnership?.isHeld()) return; this.lastFrame = 0; this.isPaused = false; this.contextualRestart?.sync(); this.labConsole.sync(); }
     isRunning() { return this.state === 'playing' && !this.isPaused; }
 
     /* ---------------------- 尺寸 ---------------------- */
@@ -964,14 +936,11 @@ export class FlameVerseGame {
             this.drawFlame(ctx, { [k]: 2 });
             this.drawBarcode(ctx, TARGET, { [k]: 2 }, this.t('targetBar'));
             this.drawBarcode(ctx, MINE, { [k]: 2 }, this.t('mineBar'));
-            this.drawRack(ctx, { [k]: 2 });
             return;
         }
         this.drawFlame(ctx, this.recipe);
         this.drawBarcode(ctx, TARGET, this.spec.recipe, this.t('targetBar'));
         this.drawBarcode(ctx, MINE, this.recipe, this.t('mineBar'));
-        this.drawRack(ctx, this.recipe);
-        this.drawStatus(ctx);
     }
 
     roundRect(ctx, x, y, w, h, r) {
@@ -1099,7 +1068,7 @@ export class FlameVerseGame {
         ctx.restore();
 
         // 标题：这一炉总共投了几把
-        ctx.font = '12px ui-sans-serif, system-ui, sans-serif';
+        ctx.font = `${Math.max(12, 11 * W / (this.canvas.clientWidth || W))}px ui-sans-serif, system-ui, sans-serif`;
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
         ctx.fillStyle = DIM;
@@ -1119,15 +1088,16 @@ export class FlameVerseGame {
         ctx.lineWidth = 1.2;
         ctx.stroke();
 
-        ctx.font = '11px ui-sans-serif, system-ui, sans-serif';
+        const scale = Math.min(1, (this.canvas.clientWidth || W) / W);
+        ctx.font = `${12 / scale}px ui-sans-serif, system-ui, sans-serif`;
         ctx.textBaseline = 'top';
         ctx.textAlign = 'left';
         ctx.fillStyle = DIM;
-        ctx.fillText(title, box.x + 10, box.y + 7);
+        ctx.fillText(title, box.x + 10, box.y + 5 / scale);
 
-        const linesTop = box.y + 22;
-        const linesH = box.h - 22 - 18;
-        const axisY = box.y + box.h - 14;
+        const linesTop = box.y + 23 / scale;
+        const linesH = Math.max(4, box.h - 43 / scale);
+        const axisY = box.y + box.h - 8 / scale;
 
         // 谱线：软边竖带（sigma 故意偏大 —— 邻近线会糊在一起，逼玩家看谱线组）。
         // ⚠️ 这是难度设计，不是画风：细锐线能把 Li 670.8 / Sr 674.0 的主线直接分开，
@@ -1157,110 +1127,29 @@ export class FlameVerseGame {
         ctx.restore();
 
         // 波长轴：真实可见光谱的彩虹条（400nm 左 → 700nm 右）
-        const ag = ctx.createLinearGradient(box.x + 8, 0, box.x + box.w - 8, 0);
+        const ag = ctx.createLinearGradient(box.x, 0, box.x + box.w, 0);
         for (let nm = WL[0]; nm <= WL[1]; nm += 15) {
             ag.addColorStop((nm - WL[0]) / (WL[1] - WL[0]), wlColor(nm));
         }
         ctx.fillStyle = ag;
-        ctx.fillRect(box.x + 8, axisY, box.w - 16, 5);
+        ctx.fillRect(box.x, axisY, box.w, 4 / scale);
 
-        ctx.font = '9px ui-monospace, SFMono-Regular, Consolas, monospace';
+        ctx.font = `${11 / scale}px ui-monospace, SFMono-Regular, Consolas, monospace`;
         ctx.textBaseline = 'bottom';
         ctx.fillStyle = 'rgba(214,229,226,0.66)';
         for (const nm of [400, 450, 500, 550, 600, 650, 700]) {
-            const x = box.x + 8 + ((nm - WL[0]) / (WL[1] - WL[0])) * (box.w - 16);
+            const x = wlX(nm, box);
             ctx.strokeStyle = 'rgba(214,229,226,0.38)';
             ctx.lineWidth = 1;
             ctx.beginPath(); ctx.moveTo(x, axisY + 5); ctx.lineTo(x, axisY + 9); ctx.stroke();
         }
         ctx.textAlign = 'left';
-        ctx.fillText('400', box.x + 8, axisY - 1);
+        ctx.fillText('400', box.x, axisY - 2 / scale);
         ctx.textAlign = 'center';
-        ctx.fillText('550', box.x + box.w / 2, axisY - 1);
+        ctx.fillText('550', box.x + box.w / 2, axisY - 2 / scale);
         ctx.textAlign = 'right';
-        ctx.fillText('700nm', box.x + box.w - 8, axisY - 1);
+        ctx.fillText('700nm', box.x + box.w, axisY - 2 / scale);
         ctx.textAlign = 'left';
     }
 
-    /* ---------------------- 盐架 ---------------------- */
-
-    drawRack(ctx, recipe) {
-        ctx.font = '11px ui-sans-serif, system-ui, sans-serif';
-        for (let i = 0; i < EL_ORDER.length; i++) {
-            const k = EL_ORDER[i];
-            const e = ELEMENTS[k];
-            const r = this.jarRect(i);
-            const d = recipe[k] | 0;
-            const full = d >= RULES.maxDose;
-
-            this.roundRect(ctx, r.x, r.y, r.w, r.h, 9);
-            ctx.fillStyle = d ? 'rgba(255,255,255,0.09)' : 'rgba(255,255,255,0.035)';
-            ctx.fill();
-            ctx.strokeStyle = d ? e.color : 'rgba(200,190,255,0.18)';
-            ctx.lineWidth = d ? 1.8 : 1.1;
-            ctx.stroke();
-
-            // 元素符号
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'top';
-            ctx.font = 'bold 17px ui-sans-serif, system-ui, sans-serif';
-            ctx.fillStyle = e.color;
-            ctx.fillText(e.sym, r.x + r.w / 2, r.y + 6);
-
-            // 盐名（中文 3 字在 61px 里放得下）
-            ctx.font = '10px ui-sans-serif, system-ui, sans-serif';
-            ctx.fillStyle = d ? 'rgba(235,240,255,0.9)' : 'rgba(200,214,255,0.55)';
-            ctx.fillText(this.saltName(k), r.x + r.w / 2, r.y + 29);
-
-            // 档位点：投了几把就亮几个
-            const py = r.y + 50;
-            for (let p = 0; p < RULES.maxDose; p++) {
-                const px = r.x + r.w / 2 + (p - 1) * 15;
-                ctx.beginPath();
-                ctx.arc(px, py, 4.6, 0, Math.PI * 2);
-                ctx.fillStyle = p < d ? e.color : 'rgba(255,255,255,0.14)';
-                ctx.fill();
-                if (p < d) {
-                    ctx.strokeStyle = 'rgba(255,255,255,0.7)';
-                    ctx.lineWidth = 1;
-                    ctx.stroke();
-                }
-            }
-            // 满档标记
-            ctx.font = '9px ui-sans-serif, system-ui, sans-serif';
-            ctx.fillStyle = full ? GOLD : 'rgba(200,214,255,0.4)';
-            ctx.fillText(full ? this.doseWord(d) : (d ? this.doseWord(d) : '0'),
-                r.x + r.w / 2, r.y + 64);
-        }
-    }
-
-    /* ---------------------- 状态带 ---------------------- */
-
-    /**
-     * 状态带（y 512 以下那条空带）：两个浮动动作钮在窄屏上会盖住左右两端，
-     * 所以文字一律居中写，绝不铺满宽度。
-     */
-    drawStatus(ctx) {
-        const cx = W / 2;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
-        ctx.font = 'bold 14px ui-sans-serif, system-ui, sans-serif';
-        ctx.fillStyle = 'rgba(235,240,255,0.92)';
-        const line1 = `${this.t('cost')} ${this.cost()} · ${this.t('par')} ${this.spec.par} · ${this.t('throws')} ${this.throws} · ${this.t('refills')} ${this.refills}`;
-        ctx.fillText(line1, cx, STATUS.y + 10);
-
-        ctx.font = '12px ui-sans-serif, system-ui, sans-serif';
-        if (this.diff.length) {
-            ctx.fillStyle = '#ff8a5c';
-            ctx.fillText(`${this.t('failDiff')} · ${this.diffText()}`, cx, STATUS.y + 28);
-        } else {
-            // ⚠️ 别画长 hint：两个浮动动作钮在窄屏会盖住左右两端，长文案必然被裁。
-            // 页脚已有完整 hint，这里只放样品名。
-            const nm = this.spec.name ? (this.lang === 'zh' ? this.spec.name.zh : this.spec.name.en) : '';
-            ctx.fillStyle = 'rgba(200,214,255,0.62)';
-            ctx.fillText(nm, cx, STATUS.y + 28);
-        }
-        ctx.textAlign = 'left';
-    }
 }

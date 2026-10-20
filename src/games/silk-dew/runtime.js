@@ -1252,6 +1252,15 @@ export class SilkfallGame {
             ctx.arc(0, 0, t.r * 1.45, 0, Math.PI * 2);
             ctx.fill();
 
+            if (this.isDragging) {
+                ctx.beginPath();
+                ctx.arc(0, 0, t.r / pulse, 0, Math.PI * 2);
+                ctx.strokeStyle = P.thornRing;
+                ctx.lineWidth = 1.3 / pulse;
+                ctx.setLineDash([3, 4]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
             ctx.strokeStyle = P.thorn;
             ctx.lineWidth = 2.1;
             ctx.lineCap = 'round';
@@ -1359,6 +1368,31 @@ export class SilkfallGame {
                 ctx.strokeStyle = 'rgba(255,232,150,0.32)';
                 ctx.lineWidth = 1.5;
                 ctx.stroke();
+                ctx.restore();
+                const scale = W / (this.canvas.clientWidth || W);
+                const lx = clamp(a.x, 34 * scale, W - 34 * scale);
+                const ly = Math.max(24 * scale, a.y - 52 * scale);
+                ctx.save();
+                ctx.strokeStyle = P.rope;
+                ctx.lineWidth = 1.3 * scale;
+                ctx.beginPath();
+                ctx.moveTo(a.x, a.y); ctx.lineTo(lx, ly + 8 * scale);
+                ctx.stroke();
+                ctx.fillStyle = 'rgba(13,30,36,0.94)';
+                ctx.beginPath();
+                ctx.arc(lx, ly, 13 * scale, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = P.rope;
+                ctx.lineWidth = 1.5 * scale;
+                ctx.stroke();
+                ctx.fillStyle = '#ffe89a';
+                ctx.beginPath();
+                ctx.arc(lx, ly, 5 * scale, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = 'rgba(30,40,30,0.85)';
+                ctx.beginPath();
+                ctx.arc(lx, ly, 2 * scale, 0, Math.PI * 2);
+                ctx.fill();
                 ctx.restore();
             }
             const g = ctx.createRadialGradient(a.x, a.y, 1, a.x, a.y, PHYS.anchorR * 2.0 * pulse);

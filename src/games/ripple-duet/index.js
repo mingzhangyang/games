@@ -28,7 +28,7 @@ onReady(() => {
     window.rdRuntime = mountGameRuntime({
         self: 'ripple-duet.html',
         game: window.rdGame,
-        frame: { logicalWidth: W },
+        frame: { logicalWidth: W, extraChrome: () => document.getElementById('rd-console').getBoundingClientRect().height },
         more: '#rdSideMore',
         drawer: {
             idPrefix: 'rd',
@@ -44,5 +44,6 @@ onReady(() => {
         },
     });
 
+    new ResizeObserver(() => window.rdRuntime.frame?.refresh()).observe(document.getElementById('rd-console'));
     window.rdDrawer = window.rdRuntime.drawer;
 });

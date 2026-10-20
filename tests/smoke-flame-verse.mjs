@@ -3,7 +3,7 @@
  * smoke-flame-verse — 焰语页运行时冒烟 + 教学内核真机验证。
  *
  * 几何/元素存在性证明不了「游戏能玩」。本脚本走真实交互链：
- *   menu → startLevel(0) → 真实鼠标点盐架投盐 → 键盘投盐 → 满档禁令
+ *   menu → startLevel(0) → 真实鼠标选盐并确认投盐 → 键盘投盐 → 满档禁令
  *   → 倒掉重撒（罚金 + 空炉不罚）→ 送检吻合通关 → 送检不吻合只给谱差不终局
  *   → 谱差反馈后补投仍能通关（cost = par → 3 星）→ 误投倒掉必罚（1 星路径）
  *   → 每日 5 皿 → 抽屉暂停冻结 → 复位
@@ -18,7 +18,7 @@
  * 关键：
  *   · 通关解直接取内核 R.LEVELS[n].recipe（下界已由 verify-flame-verse-levels
  *     穷举 4^8 证明），绝不手填 —— 手填的解一旦和内核漂移，冒烟就成了假绿。
- *   · 盐架投盐走真实鼠标点击（覆盖 jarAt + pointerdown 两层）。
+ *   · 盐架投盐走真实鼠标点击（覆盖 DOM 选择与确认入口）。
  *   · 语言态显式 setItem('site_lang','zh')（headless 默认 en-US）。
  */
 import puppeteer from 'puppeteer-core';
@@ -30,9 +30,6 @@ const fails = [];
 const fail = m => fails.push(m);
 const pass = m => console.log('  ✓ ' + m);
 const wait = ms => new Promise(r => setTimeout(r, ms));
-
-/** 盐罐中心的舞台坐标（几何与页面 jarRect 同源：RACK.x + i*65, RACK.y, h 88） */
-const jarCenter = (i) => ({ x: R.RACK.x + i * 65 + 30.5, y: R.RACK.y + 44 });
 
 const browser = await puppeteer.launch({
     executablePath: CHROME_PATH,
@@ -53,14 +50,12 @@ await page.evaluateOnNewDocument(() => {
 await page.goto(`${BASE}/flame-verse.html`, { waitUntil: 'domcontentloaded', timeout: 45000 });
 await wait(1200);
 
-/** 舞台逻辑坐标 → 页面像素，真实鼠标点一下 */
-async function clickStage(sx, sy) {
-    const r = await page.evaluate(() => {
-        const b = document.getElementById('fv-canvas').getBoundingClientRect();
-        return { x: b.x, y: b.y, w: b.width, h: b.height };
-    });
-    await page.mouse.click(r.x + (sx / R.STAGE.w) * r.w, r.y + (sy / R.STAGE.h) * r.h);
-    await wait(220);
+/** A physical selection never buys salt; only the Add action does. */
+async function clickJar(i) {
+    await page.click(`[data-salt="${R.EL_ORDER[i]}"]`);
+    await page.click('#fv-add-btn');
+    await page.evaluate(() => document.activeElement?.blur());
+    await wait(80);
 }
 
 /** 按内核配方把盐依次「真实点击」投进火焰（i = EL_ORDER 序） */
@@ -68,8 +63,7 @@ async function throwRecipe(recipe) {
     for (const k of R.EL_ORDER) {
         const d = recipe[k] | 0;
         for (let n = 0; n < d; n++) {
-            const c = jarCenter(R.EL_ORDER.indexOf(k));
-            await clickStage(c.x, c.y);
+            await clickJar(R.EL_ORDER.indexOf(k));
         }
     }
 }
@@ -154,21 +148,23 @@ console.log('\n▶ 3. canvas 位图');
     else pass(`canvas 位图非空（ink=${ink}）`);
 }
 
-/* ── 4. 真实鼠标点盐架投盐 ── */
+/* ── 4. 真实鼠标选盐并确认投盐 ── */
 console.log('\n▶ 4. 盐架投盐（真实点击）');
 {
     // fv1 = {na:1}，na 是 EL_ORDER[3]；先错投一把 Li（index 0）制造谱差
-    await clickStage(jarCenter(0).x, jarCenter(0).y);
+    await page.click('[data-salt="li"]');
+    if (await page.evaluate(() => window.fvGame.throws) !== 0) fail('选择盐不得收费');
+    await clickJar(0);
     const s1 = await page.evaluate(() => {
         const g = window.fvGame;
         return { li: g.recipe.li, throws: g.throws, budget: document.getElementById('fv-budget').textContent.trim() };
     });
-    if (s1.li !== 1) fail(`点盐架第 1 罐应给 Li +1，got ${s1.li}（jarAt/pointerdown 未接通？）`);
+    if (s1.li !== 1) fail(`点盐架第 1 罐应给 Li +1，got ${s1.li}（DOM 选择/加入未接通？）`);
     else if (s1.throws !== 1 || s1.budget !== '1') fail(`投盐后应 throws=1 / 代价 1，got ${s1.throws} / "${s1.budget}"`);
     else pass(`真实点击投盐：Li=1、throws=${s1.throws}、代价 ${s1.budget}`);
 
     // 满档禁令：连点 3 次到满，第 4 次必须被拒
-    for (let n = 0; n < 3; n++) await clickStage(jarCenter(0).x, jarCenter(0).y);
+    for (let n = 0; n < 3; n++) await clickJar(0);
     const s2 = await page.evaluate(() => {
         const g = window.fvGame;
         return { li: g.recipe.li, throws: g.throws, toast: document.getElementById('fv-toast').textContent };
@@ -248,8 +244,8 @@ console.log('\n▶ 7. 谱差反馈');
     await page.evaluate(() => window.fvGame.startLevel(1));
     await wait(250);
     // fv2 = {cu:2}：投 cu1 + na1 → 两条谱差
-    await clickStage(jarCenter(R.EL_ORDER.indexOf('cu')).x, jarCenter(R.EL_ORDER.indexOf('cu')).y);
-    await clickStage(jarCenter(R.EL_ORDER.indexOf('na')).x, jarCenter(R.EL_ORDER.indexOf('na')).y);
+    await clickJar(R.EL_ORDER.indexOf('cu'));
+    await clickJar(R.EL_ORDER.indexOf('na'));
     await page.evaluate(() => window.fvGame.pressAssay());
     await wait(300);
     const m1 = await page.evaluate(() => {
@@ -269,7 +265,7 @@ console.log('\n▶ 7. 谱差反馈');
     // 读少补投不罚：重开 fv2，只投 cu1 → 谱差「少 1」→ 补 1 把 → 吻合（cost = par → 3 星）
     await page.evaluate(() => window.fvGame.startLevel(1));
     await wait(250);
-    await clickStage(jarCenter(R.EL_ORDER.indexOf('cu')).x, jarCenter(R.EL_ORDER.indexOf('cu')).y);
+    await clickJar(R.EL_ORDER.indexOf('cu'));
     await page.evaluate(() => window.fvGame.pressAssay());
     await wait(300);
     const under = await page.evaluate(() => {
@@ -280,7 +276,7 @@ console.log('\n▶ 7. 谱差反馈');
     else if (under.diff !== 1 || under.want !== 2 || under.got !== 1) fail(`应报「cu 少 1」一条谱差，got ${JSON.stringify(under)}`);
     else pass(`读少报「少」：diff 1 条（want 2 / got 1）、不终局`);
 
-    await clickStage(jarCenter(R.EL_ORDER.indexOf('cu')).x, jarCenter(R.EL_ORDER.indexOf('cu')).y);
+    await clickJar(R.EL_ORDER.indexOf('cu'));
     await page.evaluate(() => { window.fvGame.pressAssay(); });
     await wait(350);
     const m2 = await page.evaluate(() => {
@@ -298,9 +294,9 @@ console.log('\n▶ 8. 误投必罚');
     await page.evaluate(() => window.fvGame.startLevel(2));
     await wait(250);
     // fv3 = {li:1,na:2}（par 3）：投 li+na+sr（3 把，sr 是误投）
-    await clickStage(jarCenter(0).x, jarCenter(0).y);
-    await clickStage(jarCenter(3).x, jarCenter(3).y);
-    await clickStage(jarCenter(1).x, jarCenter(1).y);
+    await clickJar(0);
+    await clickJar(3);
+    await clickJar(1);
     await page.evaluate(() => window.fvGame.pressDump());      // 罚金 2
     await throwRecipe(R.LEVELS[2].recipe);                      // 再投 par=3 把
     await page.evaluate(() => window.fvGame.pressAssay());

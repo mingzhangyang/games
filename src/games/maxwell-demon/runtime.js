@@ -304,17 +304,22 @@ export class MaxwellDemonGame {
                 if (el['mute-btn']) el['mute-btn'].innerHTML = next ? ICONS.soundOff : ICONS.soundOn;
             });
         }
-        // 两个动作钮：pointerdown 直接触发（不等 click，移动端更跟手）
-        if (el['gate-btn']) {
-            el['gate-btn'].addEventListener('pointerdown', (e) => {
-                e.preventDefault();
-                if (this.state === 'playing' && !this.isPaused) this.wantGate = true;
+        // Preserve pointerdown timing. Native keyboard clicks are a second
+        // entrance to the same one-shot queue, never a second pointer charge.
+        for (const [key, request] of [['gate-btn', 'wantGate'], ['scan-btn', 'wantScan']]) {
+            const button = el[key];
+            if (!button) continue;
+            const queue = () => {
+                if (this.state === 'playing' && !this.isPaused) this[request] = true;
+            };
+            button.addEventListener('pointerdown', event => {
+                if (event.button !== 0) return;
+                event.preventDefault();
+                queue();
             });
-        }
-        if (el['scan-btn']) {
-            el['scan-btn'].addEventListener('pointerdown', (e) => {
-                e.preventDefault();
-                if (this.state === 'playing' && !this.isPaused) this.wantScan = true;
+            button.addEventListener('click', event => { if (event.detail === 0) queue(); });
+            button.addEventListener('keydown', event => {
+                if (event.repeat && (event.key === 'Enter' || event.key === ' ')) event.preventDefault();
             });
         }
         // 每日榜用户名
@@ -943,7 +948,8 @@ export class MaxwellDemonGame {
     /** 顶部：左右腔温度条 + 中央 ΔT；底部：预算条 */
     drawBars(ctx) {
         const w = this.world;
-        ctx.font = '700 12px "Segoe UI", system-ui, sans-serif';
+        const scale = Math.min(1, (this.canvas.clientWidth || W) / W);
+        ctx.font = `700 ${Math.max(12, 11 / scale)}px system-ui, sans-serif`;
         ctx.textBaseline = 'middle';
 
         const barY = 16;
@@ -973,7 +979,7 @@ export class MaxwellDemonGame {
         const shown = Math.abs(w.gap) < 0.005 ? 0 : w.gap;
         const hit = w.gap >= this.spec.target;
         ctx.fillStyle = hit ? P.gapHit : P.gapText;
-        ctx.font = '800 15px "Segoe UI", system-ui, sans-serif';
+        ctx.font = `800 ${Math.max(15, 11 / scale)}px system-ui, sans-serif`;
         ctx.fillText(`ΔT ${shown >= 0 ? '+' : ''}${shown.toFixed(2)} / ${this.spec.target.toFixed(2)}`, DOOR_X, barY + 5);
 
         // 底部预算条
@@ -989,7 +995,7 @@ export class MaxwellDemonGame {
             this.roundRect(ctx, bx0, by, Math.max(2, (bx1 - bx0) * k), 8, 4);
             ctx.fill();
         }
-        ctx.font = '700 11px "Segoe UI", system-ui, sans-serif';
+        ctx.font = `700 ${11 / scale}px system-ui, sans-serif`;
         ctx.fillStyle = P.budgetText;
         // 标签放条**下方**：by-9 = 605 会压在 vessel 底边（606）上
         ctx.textAlign = 'left';
@@ -1167,14 +1173,14 @@ export class MaxwellDemonGame {
                 color = fast ? HOT : COLD;
                 alpha = 0.55 + 0.45 * fade;
             } else {
-                // 观测余晖：刚显过色的分子残留一点色相，避免闪烁
+                // 未扫描/已过期时，颜色、形状和尾迹长度均不编码速度。
                 alpha = 0.85;
             }
             ctx.save();
             ctx.globalAlpha = alpha;
             // 速度尾迹
             const sp = Math.hypot(m.vx, m.vy) || 1;
-            const tl = 6 + clamp(sp / RULES.v0, 0, 2.4) * 7;
+            const tl = seen ? 6 + clamp(sp / RULES.v0, 0, 2.4) * 7 : 12;
             ctx.strokeStyle = color;
             ctx.globalAlpha = alpha * 0.42;
             ctx.lineWidth = 2;

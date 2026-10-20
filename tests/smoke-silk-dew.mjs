@@ -12,12 +12,14 @@
  *
  * 语言态显式 setItem('site_lang', 'zh')（headless 默认 en-US 教训）。
  */
+import { readFileSync } from 'node:fs';
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 
 const BASE = process.argv.find(a => a.startsWith('http')) || 'http://127.0.0.1:8899';
 const fails = [];
 const fail = m => fails.push(m);
+const gardenMidSvg = readFileSync(new URL('../assets/silk-dew/layers/garden-mid.svg', import.meta.url), 'utf8');
 
 const browser = await puppeteer.launch({
     executablePath: CHROME_PATH,
@@ -584,14 +586,41 @@ await reducedPage.close();
 const fallbackPage = await browser.newPage();
 attachDiagnostics(fallbackPage, 'fallback', { allowRequestFailure: isGardenMidProductionUrl });
 await fallbackPage.setViewport({ width: 390, height: 844 });
-await fallbackPage.evaluateOnNewDocument(() => {
+await fallbackPage.evaluateOnNewDocument(targetSvg => {
     try {
         // Earlier smoke pages share this browser context. Reset explicitly so
         // this test cannot inherit light theme and bypass production art.
         localStorage.clear();
         localStorage.setItem('site_theme', 'dark');
     } catch (e) { /* ignore */ }
-});
+    // Vite can inline this small SVG. Match its complete XML tree, never another
+    // garden layer, then let the browser genuinely fail to decode the image.
+    // Source URLs still use the request interception below.
+    const parser = new window.DOMParser();
+    const target = parser.parseFromString(targetSvg, 'image/svg+xml').documentElement;
+    const descriptor = Object.getOwnPropertyDescriptor(window.HTMLImageElement.prototype, 'src');
+    window.__sdBlockedInlineGardenMid = 0;
+    Object.defineProperty(window.HTMLImageElement.prototype, 'src', {
+        ...descriptor,
+        set(value) {
+            if (typeof value === 'string' && value.startsWith('data:image/svg+xml')) {
+                const comma = value.indexOf(',');
+                const header = value.slice(0, comma);
+                const payload = value.slice(comma + 1);
+                try {
+                    const svg = header.endsWith(';base64') ? window.atob(payload) : decodeURIComponent(payload);
+                    const root = parser.parseFromString(svg, 'image/svg+xml').documentElement;
+                    if (root.isEqualNode(target)) {
+                        window.__sdBlockedInlineGardenMid++;
+                        descriptor.set.call(this, 'data:image/svg+xml,invalid');
+                        return;
+                    }
+                } catch (e) { /* an unrelated malformed data URL is not our injection */ }
+            }
+            descriptor.set.call(this, value);
+        },
+    });
+}, gardenMidSvg);
 let interceptedGardenMid = 0;
 await fallbackPage.setRequestInterception(true);
 fallbackPage.on('request', request => {
@@ -622,13 +651,15 @@ const fallbackState = await fallbackPage.evaluate(() => {
         sceneState: g.scene?.debug?.status,
         fallbackReady: g.scene?.debug?.fallbackReady,
         fallbackDrawCount: g.scene?.debug?.fallbackDrawCount || 0,
+        blockedInlineGardenMid: window.__sdBlockedInlineGardenMid || 0,
         opaque,
     };
 });
 if (!fallbackState.hasGame || fallbackState.error) fail(`美术降级路径无法启动: ${JSON.stringify(fallbackState)}`);
 else {
-    if (interceptedGardenMid !== 1) {
-        fail(`fallback 应只拦截 1 个 garden-mid 生产资源，实际 ${interceptedGardenMid}`);
+    const blockedGardenMid = interceptedGardenMid + fallbackState.blockedInlineGardenMid;
+    if (blockedGardenMid !== 1) {
+        fail(`fallback 应只拦截 1 个 garden-mid 生产资源，实际 ${blockedGardenMid}`);
     }
     if (fallbackState.theme !== 'dark' || !fallbackState.productionArt) {
         fail(`fallback 测试未在生产美术启用状态运行: ${JSON.stringify(fallbackState)}`);

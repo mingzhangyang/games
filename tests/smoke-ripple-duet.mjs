@@ -35,16 +35,6 @@ const fail = m => fails.push(m);
 const pass = m => console.log('  ✓ ' + m);
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
-/* 控制台命中区（与 src/games/ripple-duet/runtime.js 的 BTN/CHIP 常量同源） */
-const BTN = {
-    minus: { x: 330, y: 552, w: 64, h: 64 },
-    plus: { x: 400, y: 552, w: 64, h: 64 },
-    freeze: { x: 470, y: 552, w: 70, h: 64 },
-};
-const CHIP = { x: 20, y: 552, w: 62, h: 64, gap: 6 };
-const center = (b) => ({ x: b.x + b.w / 2, y: b.y + b.h / 2 });
-const chipCenter = (i) => center({ x: CHIP.x + i * (CHIP.w + CHIP.gap), y: CHIP.y, w: CHIP.w, h: CHIP.h });
-
 const browser = await puppeteer.launch({
     executablePath: CHROME_PATH,
     headless: 'new',
@@ -72,11 +62,7 @@ async function toPage(sx, sy) {
     });
     return { x: r.x + (sx / R.STAGE.w) * r.w, y: r.y + (sy / R.STAGE.h) * r.h };
 }
-async function clickStage(sx, sy) {
-    const p = await toPage(sx, sy);
-    await page.mouse.click(p.x, p.y);
-    await wait(140);
-}
+
 /** 真实鼠标拖动：按住源 → 移到目标格 → 松开（记 1 次操作） */
 async function dragSource(idx, i, j) {
     const from = await page.evaluate((n) => {
@@ -101,22 +87,26 @@ async function dragSource(idx, i, j) {
     await wait(140);
 }
 
+async function clickControl(name) {
+    await page.click(`#rd-${name}`);
+    await page.evaluate(() => document.activeElement?.blur());
+    await wait(80);
+}
+
 /** 把求解器给的摆位用**真实操作**摆出来（先拖位，再按最短方向拧相位） */
 async function applySolved(spec) {
     const solved = R.solvePar(spec);
     if (!solved.place) return solved;
     for (let idx = 0; idx < solved.place.length; idx++) {
         const want = solved.place[idx];
-        await clickStage(chipCenter(idx).x, chipCenter(idx).y);   // 选中该源
+        await page.click(`[data-source="${idx}"]`);   // 选中该源
         const cur = await page.evaluate((n) => ({ ...window.rdGame.place[n] }), idx);
         if (cur.i !== want.i || cur.j !== want.j) await dragSource(idx, want.i, want.j);
         const ph0 = await page.evaluate((n) => window.rdGame.place[n].ph, idx);
         const d = (((want.ph - ph0) % R.PHASES) + R.PHASES) % R.PHASES;
         const forward = d <= R.PHASES - d;
         const steps = forward ? d : R.PHASES - d;
-        const btn = forward ? BTN.plus : BTN.minus;
-        const c = center(btn);
-        for (let n = 0; n < steps; n++) await clickStage(c.x, c.y);
+        for (let n = 0; n < steps; n++) await clickControl(forward ? 'plus' : 'minus');
     }
     return solved;
 }
@@ -233,20 +223,20 @@ console.log('\n▶ 4. 拖源（真实鼠标）');
 console.log('\n▶ 5. 拧相位（真实点击）');
 {
     const p0 = await page.evaluate(() => ({ ph: window.rdGame.place[0].ph, cost: window.rdGame.cost }));
-    await clickStage(center(BTN.plus).x, center(BTN.plus).y);
+    await clickControl('plus');
     const p1 = await page.evaluate(() => ({ ph: window.rdGame.place[0].ph, cost: window.rdGame.cost }));
     if (p1.ph !== (p0.ph + 1) % R.PHASES) fail(`点 + 应进一档，got ${p0.ph} → ${p1.ph}`);
     else if (p1.cost !== p0.cost + 1) fail(`拧一档应记 1 次操作，got ${p0.cost} → ${p1.cost}`);
     else pass(`点 + 进一档（${p0.ph}→${p1.ph}）、操作 ${p1.cost}`);
 
     // 再拧 7 档 = 绕满一圈回到原相位，代价 +7（环形语义）
-    for (let n = 0; n < R.PHASES - 1; n++) await clickStage(center(BTN.plus).x, center(BTN.plus).y);
+    for (let n = 0; n < R.PHASES - 1; n++) await clickControl('plus');
     const p2 = await page.evaluate(() => ({ ph: window.rdGame.place[0].ph, cost: window.rdGame.cost }));
     if (p2.ph !== p0.ph) fail(`拧满 ${R.PHASES} 档应回到原相位，got ${p2.ph} ≠ ${p0.ph}`);
     else if (p2.cost !== p1.cost + (R.PHASES - 1)) fail(`绕圈代价照记，got ${p1.cost} → ${p2.cost}`);
     else pass(`相位环形：拧满 ${R.PHASES} 档回到 ${p2.ph}，代价照记 ${p2.cost}`);
 
-    await clickStage(center(BTN.minus).x, center(BTN.minus).y);
+    await clickControl('minus');
     const p3 = await page.evaluate(() => window.rdGame.place[0].ph);
     if (p3 !== (p2.ph - 1 + R.PHASES) % R.PHASES) fail(`点 − 应退一档，got ${p2.ph} → ${p3}`);
     else pass(`点 − 退一档：${p2.ph} → ${p3}`);
@@ -261,7 +251,7 @@ console.log('\n▶ 6. 未达标定格');
         state: window.rdGame.state, satisfied: window.rdGame.allSatisfied(),
     }));
     if (before.satisfied) fail('rd1 初始摆位就达标（不该发生）');
-    await clickStage(center(BTN.freeze).x, center(BTN.freeze).y);
+    await clickControl('freeze');
     await wait(250);
     const after = await page.evaluate(() => ({
         state: window.rdGame.state,
@@ -286,7 +276,7 @@ console.log('\n▶ 7. 达标定格');
     }));
     if (!pre.satisfied) fail(`按求解器摆位后应达标（cost ${pre.cost}），allSatisfied 仍 false`);
     else if (pre.cost !== pre.par) fail(`摆位代价 ${pre.cost} 应等于 par ${pre.par}（求解器给出的是最小代价）`);
-    await clickStage(center(BTN.freeze).x, center(BTN.freeze).y);
+    await clickControl('freeze');
     await wait(400);
     const w = await page.evaluate(() => ({
         state: window.rdGame.state,
@@ -310,11 +300,11 @@ console.log('\n▶ 8. 冤枉路掉星');
     await wait(250);
     await applySolved(LEVELS[0]);
     const c0 = await page.evaluate(() => ({ cost: window.rdGame.cost, par: window.rdGame.spec.par }));
-    for (let n = 0; n < R.PHASES; n++) await clickStage(center(BTN.plus).x, center(BTN.plus).y); // 整圈，相位回到原处
+    for (let n = 0; n < R.PHASES; n++) await clickControl('plus'); // 整圈，相位回到原处
     const c1 = await page.evaluate(() => ({ cost: window.rdGame.cost, satisfied: window.rdGame.allSatisfied() }));
     if (!c1.satisfied) fail('拧满整圈后相位回到原处，应仍达标');
     else if (c1.cost !== c0.cost + R.PHASES) fail(`整圈应记 ${R.PHASES} 次操作，got ${c0.cost} → ${c1.cost}`);
-    await clickStage(center(BTN.freeze).x, center(BTN.freeze).y);
+    await clickControl('freeze');
     await wait(400);
     const s = await page.evaluate(() => ({
         state: window.rdGame.state,
@@ -362,7 +352,7 @@ console.log('\n▶ 9. 每日赛程');
             break;
         }
         total += st.cost;
-        await clickStage(center(BTN.freeze).x, center(BTN.freeze).y);
+        await clickControl('freeze');
         await wait(300);
         await page.click('#rd-btn-next');
         await wait(300);

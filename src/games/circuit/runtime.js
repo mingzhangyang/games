@@ -474,6 +474,7 @@ export class CircuitGame {
     /* ── 核心交互：拨动开关 ── */
 
     flipSwitch(stateIdx) {
+        if (this.state !== 'playing' || this.isPaused || !Number.isInteger(stateIdx) || stateIdx < 0 || stateIdx >= this.states.length) return;
         clearTimeout(this.solveTimer);
         this.states[stateIdx] = this.states[stateIdx] ? 0 : 1;
         this.moves += 1;
@@ -735,7 +736,7 @@ export class CircuitGame {
 
     bindInput() {
         this.canvas.addEventListener('pointerdown', (e) => {
-            if (this.state !== 'playing') return;
+            if (this.state !== 'playing' || this.isPaused || e.button !== 0) return;
             e.preventDefault();
             const p = this.toLogical(e);
             const ops = operableIndexes(this.spec);
@@ -1169,6 +1170,12 @@ export class CircuitGame {
         }
         ctx.fill();
         ctx.stroke();
+
+        ctx.fillStyle = P.amber;
+        ctx.font = '700 10px ui-monospace, monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(el.t === 'sw' ? (closed ? 'I' : 'O') : (closed ? '2' : '1'), x, y - 16);
 
         const pad = (p, d = 4) => {
             const dx = x - p.x, dy = y - p.y;

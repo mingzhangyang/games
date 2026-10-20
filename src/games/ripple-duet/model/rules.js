@@ -19,13 +19,9 @@
 // js/ 下除 daily.js 外不许再出现哈希常数）。
 import { hashStringFNV, mulberry32 } from '../../../platform/daily.js';
 
-export const STAGE = { w: 560, h: 640 };
+export const STAGE = { w: 560, h: 418 };
 
-/* 几何：全部画在 canvas 里（没有浮动 DOM 动作钮 —— 舞台是 flex-row，
-   正常流里塞不进控制台，absolute 又会盖住海面），所以 y 到 630 都能用。 */
 export const SEA = { x: 20, y: 10, w: 520, h: 400 };
-export const READOUT = { x: 20, y: 418, w: 520, h: 112 };
-export const CONSOLE = { x: 20, y: 538, w: 520, h: 92 };
 
 export const GRID = { cols: 9, rows: 7 };
 export const PHASES = 8;

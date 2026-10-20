@@ -70,6 +70,9 @@ export const CANVAS_VARS = {
     tint: '--bf-cv-tint',
     traySlotBorder: '--bf-cv-tray-slot-border',
     snap: '--bf-cv-snap',
+    previewBg: '--bf-cv-preview-bg',
+    previewText: '--bf-cv-preview-text',
+    reject: '--bf-cv-reject',
     topLight: '--bf-cv-top-light',
     topLightOut: '--bf-cv-top-light-out',
 };
@@ -1254,6 +1257,13 @@ class BondForgeGame {
             ctx.setLineDash([3, 4]);
             ctx.stroke();
             ctx.setLineDash([]);
+            for (let i = 0; i < left; i++) {
+                const angle = -Math.PI / 2 + i * Math.PI * 2 / left;
+                ctx.beginPath();
+                ctx.arc(atom.x + Math.cos(angle) * (r + 4), atom.y + Math.sin(angle) * (r + 4), 2.8, 0, Math.PI * 2);
+                ctx.fillStyle = P.selectRing;
+                ctx.fill();
+            }
         }
         ctx.restore();
     }
@@ -1328,31 +1338,6 @@ class BondForgeGame {
             this.drawAtom(ctx, { id: -1, sym: t.sym, x, y }, { showValence: false });
         });
         ctx.restore();
-    }
-
-    /** 拖拽中的预览：原子跟着指针 + 候选目标上的吸附提示环 */
-    drawDragPreview(ctx) {
-        const d = this.dragging;
-        if (!d) return;
-
-        // 候选目标提示环
-        if (d.hoverId != null) {
-            const t = this.atoms.find(a => a.id === d.hoverId);
-            if (t) {
-                ctx.save();
-                ctx.beginPath();
-                ctx.arc(t.x, t.y, BOND.previewR, 0, Math.PI * 2);
-                ctx.strokeStyle = P.snap;
-                ctx.lineWidth = 3;
-                ctx.setLineDash([6, 5]);
-                ctx.stroke();
-                ctx.setLineDash([]);
-                ctx.restore();
-            }
-        }
-
-        this.drawAtom(ctx, { id: -1, sym: d.sym, x: d.x, y: d.y },
-            { scale: 1.06, alpha: 0.94, showValence: false });
     }
 
     /** 非法成键的抖动：3 次 ±4px，纯视觉，不改原子真坐标 */
@@ -1564,47 +1549,32 @@ class BondForgeGame {
      *    每成功一次 order+1，直到价键用尽。这样"双键"是玩家一步步拧出来的，
      *    而不是二选一的下拉框 —— 数学上等价，体感上更像在拧螺丝。
      */
-    tryBond(self, cand) {
+    bondPreview(self, cand) {
         const existing = this.bonds.find(b =>
             (b.a === self.id && b.b === cand.id) || (b.a === cand.id && b.b === self.id));
+        const order = (existing ? (existing.order || 1) : 0) + 1;
+        const ionic = isIonic(self.sym, cand.sym);
+        if (ionic) return { existing, order: 1, ionic, legal: !existing, bad: self, limit: 1 };
+        const selfRoom = maxBondsOf(self.sym), candRoom = maxBondsOf(cand.sym);
+        if (existing) {
+            return {
+                existing, order, ionic, legal: this.canAddOrder(self, order) && this.canAddOrder(cand, order),
+                bad: this.usedOf(self) >= selfRoom ? self : cand, limit: Math.min(selfRoom, candRoom),
+            };
+        }
+        const selfOk = allowsBonds(self.sym, this.usedOf(self) + 1) && this.usedOf(self) + 1 <= selfRoom;
+        const candOk = allowsBonds(cand.sym, this.usedOf(cand) + 1) && this.usedOf(cand) + 1 <= candRoom;
+        const bad = selfOk ? cand : self;
+        return { existing, order, ionic, legal: selfOk && candOk, bad, limit: maxBondsOf(bad.sym) };
+    }
 
-        const curOrder = existing ? (existing.order || 1) : 0;
-        const wantOrder = curOrder + 1;
-
-        // 价键检查：两侧各自"已用 + 本次增量"都不能超
-        const selfUsed = this.usedOf(self);
-        const candUsed = this.usedOf(cand);
-        const selfRoom = maxBondsOf(self.sym);
-        const candRoom = maxBondsOf(cand.sym);
-
-        // 离子对：只允许 1 根，且永不加键级
-        if (isIonic(self.sym, cand.sym)) {
-            if (existing) { this.rejectBond(self, 'toastOverValence', { sym: self.sym, n: 1 }); return; }
-            this.formBond(self, cand, 1, existing, true);
+    tryBond(self, cand) {
+        const preview = this.bondPreview(self, cand);
+        if (!preview.legal) {
+            this.rejectBond(self, 'toastOverValence', { sym: preview.bad.sym, n: preview.limit });
             return;
         }
-
-        // 共价：只看元素允许的**总键级**上限
-        //（P/S 这类多价态元素用 bondOrders 集合判定，见 molecules 模块注释）
-        const selfOk = allowsBonds(self.sym, selfUsed + 1) && (selfUsed + 1) <= selfRoom;
-        const candOk = allowsBonds(cand.sym, candUsed + 1) && (candUsed + 1) <= candRoom;
-
-        // 已经有一根键了，想再加一根 = 升键级，两边都要能吃得下
-        if (existing && (!this.canAddOrder(self, wantOrder) || !this.canAddOrder(cand, wantOrder))) {
-            this.rejectBond(self, 'toastOverValence', {
-                sym: this.usedOf(self) >= maxBondsOf(self.sym) ? self.sym : cand.sym,
-                n: Math.min(selfRoom, candRoom),
-            });
-            return;
-        }
-
-        if (!existing && (!selfOk || !candOk)) {
-            const bad = !selfOk ? self : cand;
-            this.rejectBond(self, 'toastOverValence', { sym: bad.sym, n: maxBondsOf(bad.sym) });
-            return;
-        }
-
-        this.formBond(self, cand, wantOrder, existing, false);
+        this.formBond(self, cand, preview.order, preview.existing, preview.ionic);
     }
 
     /**
