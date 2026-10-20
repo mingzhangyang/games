@@ -6,7 +6,8 @@ import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
 import { bindDrawerPauseOwnership } from '../../platform/runtime/pause-ownership.js';
 import { getLang } from '../../platform/site-settings.js';
 import { LANGUAGES } from './i18n.js';
-import { LumenGame, W } from './runtime.js';
+import { LumenGame } from './runtime.js';
+import { W } from './render/geometry.js';
 
 export { LumenGame } from './runtime.js';
 

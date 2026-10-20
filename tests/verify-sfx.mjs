@@ -81,7 +81,7 @@ const MIGRATED = [
     { rel: 'src/games/ripple-duet/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
     { rel: 'src/games/hoop-shot/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
     { rel: 'src/games/carrot-pull/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
-    { rel: 'src/games/lumen/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
+    { rel: 'src/games/lumen/audio.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
     { rel: 'src/games/circuit/runtime.js', root: GAMES_DIR, importPath: '../../platform/game-sfx.js' },
 ];
 for (const item of MIGRATED) {

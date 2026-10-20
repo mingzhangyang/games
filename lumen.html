@@ -10,12 +10,12 @@
     <meta name="theme-support" content="dark">
     <meta name="theme-color" content="#070b22">
     <script src="/theme-boot.js"></script>
-    <meta name="description" content="折光 Lumen — an original beam refraction puzzle. Flip mirrors, bend the beam, light up every crystal. 20 handcrafted levels plus a daily puzzle for the whole world.">
+    <meta name="description" content="折光 Lumen — an original beam refraction puzzle. Flip mirrors, bend the beam, light every crystal and keep shadow crystals dark. 25 levels in 5 chapters with decoy mirrors, linked mirrors and beam splitters, plus a daily puzzle for the whole world.">
     <meta name="robots" content="index, follow">
     <meta name="author" content="Orangely">
     <link rel="canonical" id="canonical-link" href="https://games.orangely.xyz/lumen.html">
     <meta property="og:title" content="折光 Lumen — Beam Refraction Puzzle">
-    <meta property="og:description" content="Flip mirrors, bend the beam, light every crystal. 20 handcrafted levels and a daily puzzle — light every gem with the fewest flips.">
+    <meta property="og:description" content="Flip mirrors, bend the beam, light every crystal — and keep the shadows dark. 25 levels in 5 chapters and a daily two-beam puzzle: plan the route, then flip.">
     <meta property="og:site_name" content="Mini Games Collection">
     <meta property="og:type" content="website">
     <meta property="og:image" content="assets/seo/og-lumen.svg">
@@ -45,7 +45,7 @@
             </div>
             <!-- 中槽：关卡 / 翻转数 HUD，各页自由 -->
             <div class="lm-topbar-center game-topbar-center">
-                <div class="lm-hud-level" id="lm-hud-level">Level 1/20</div>
+                <div class="lm-hud-level" id="lm-hud-level">Level 1-1</div>
                 <div class="lm-flip-box">
                     <span class="lm-flip-value" id="lm-flips">0</span>
                     <span class="lm-par game-start-par" id="lm-par">· Par 2</span>
@@ -127,6 +127,12 @@
                 <div class="lm-side-card game-side-card">
                     <div class="lm-side-title game-side-title" id="lm-side-howto-title"></div>
                     <p class="lm-side-text game-side-text" id="lm-side-howto" data-i18n="howto"></p>
+                    <div class="lm-gloss game-side-legend" id="lm-gloss">
+                        <div class="game-legend-row"><span class="game-legend-dot lm-gloss-icon lm-gloss-crystal"></span><span class="game-legend-text" data-i18n="glossCrystal"></span></div>
+                        <div class="game-legend-row"><span class="game-legend-dot lm-gloss-icon lm-gloss-shadow"></span><span class="game-legend-text" data-i18n="glossShadow"></span></div>
+                        <div class="game-legend-row"><span class="game-legend-dot lm-gloss-icon lm-gloss-link"></span><span class="game-legend-text" data-i18n="glossLink"></span></div>
+                        <div class="game-legend-row"><span class="game-legend-dot lm-gloss-icon lm-gloss-split"></span><span class="game-legend-text" data-i18n="glossSplit"></span></div>
+                    </div>
                 </div>
                 <div class="lm-side-card game-side-card">
                     <div class="lm-side-title game-side-title" id="lm-side-records-title"></div>
@@ -181,7 +187,7 @@
             if (ogImage) ogImage.setAttribute('content', socialImage);
             const twitterImage = document.querySelector('meta[name="twitter:image"]');
             if (twitterImage) twitterImage.setAttribute('content', socialImage);
-            const gameData = {"@context":"https://schema.org","@type":"VideoGame","name":"折光 Lumen — Beam Refraction Puzzle","url":currentUrl,"description":"折光 Lumen — an original beam refraction puzzle. Flip mirrors, bend the beam, light up every crystal. 20 handcrafted levels plus a daily puzzle for the whole world.","applicationCategory":"GameApplication","operatingSystem":"Web","genre":["PuzzleGame","CasualGame"],"playMode":"SinglePlayer","image":socialImage,"inLanguage":document.documentElement.lang||"en","publisher":{"@type":"Organization","name":"Orangely"}};
+            const gameData = {"@context":"https://schema.org","@type":"VideoGame","name":"折光 Lumen — Beam Refraction Puzzle","url":currentUrl,"description":"折光 Lumen — an original beam refraction puzzle. Flip mirrors, bend the beam, light every crystal and keep shadow crystals dark. 25 levels in 5 chapters with decoy mirrors, linked mirrors and beam splitters, plus a daily puzzle for the whole world.","applicationCategory":"GameApplication","operatingSystem":"Web","genre":["PuzzleGame","CasualGame"],"playMode":"SinglePlayer","image":socialImage,"inLanguage":document.documentElement.lang||"en","publisher":{"@type":"Organization","name":"Orangely"}};
             const breadcrumb = {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Mini Games Collection","item":baseUrl},{"@type":"ListItem","position":2,"name":"折光 Lumen — Beam Refraction Puzzle","item":currentUrl}]};
             [gameData, breadcrumb].forEach(data => {
                 const script = document.createElement('script');

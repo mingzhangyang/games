@@ -1,47 +1,41 @@
 /**
- * Lumen 折光 — 光束折射解谜
+ * Lumen 折光 — 状态机与编排
  * =========================
  * 玩法：点击镜面在 '/' 与 '\' 两态间翻转，折转发射器的光束，
- * 点亮全部水晶。翻转次数 ≤ Par 拿满三星。
+ * 点亮全部水晶、不碰暗晶。点击次数 ≤ Par 拿满三星，≤ Par + 2 两星。
  *
- * 关卡数据 / 光束追踪在 model/levels.js（纯模块，校验器共用）：
- *   - 20 手工关卡（解态可解、初盘不可解由 verify-lumen-levels.mjs 锁定）
- *   - 每日谜题：16 布局池 × FNV-1a('lumen-'+UTC+8 日期) 选关 × mulberry32 打乱
+ * 分层（低层不得 import 高层，由 tests/verify-lumen-modules.mjs 锁定）：
+ *   i18n / storage / audio    文案、GameStorage 适配、音效
+ *   model/                    纯模块：beam 光束 / solver 解空间 / levels 关卡与每日 / session 一局状态
+ *   systems/records           星级与每日协议键的持久化（本页唯一碰存储处）
+ *   render/                   geometry 坐标 / pieces 元件画法 / effects 瞬态特效 / board 每帧合成
+ *   input/pointer             画布点击 → 格
+ *   ui/                       view（DOM 文案、HUD、面板）/ daily-board（每日榜单）
+ *   runtime（本文件）          状态机 menu | playing | won-level | won-daily + isPaused，把上面各层接起来
+ *   index                     组合根：共享运行时（frame / drawer / chrome / 暂停归属）
  *
- * 共享层（2026-09 契约）：game-frame（桌面纵向预算）/ game-drawer（移动端统计
- * 抽屉）/ game-chrome（Home·Sound·Lang·More）/ leaderboard / daily / i18n /
- * safe-storage / analytics / game-sfx / boot。
+ * 对外字段（抽屉 / 校验器 / 冒烟读取）：state、isPaused、mode、levelIdx、stars，
+ * 以及只读的 level / grid / trace / flips / par（委托给当前 PlaySession）。
  */
 
 import { bindContextualRestart } from '../../platform/contextual-restart.js';
-import {
-    GRID_N,
-    LUMEN_LEVELS,
-    dailyLevel,
-    traceGrid,
-} from './model/levels.js';
-import { ensurePlayerName, setPlayerName } from '../../platform/player.js';
-import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
-import { ICONS } from '../../platform/icons.js';
-import { updateMoreGames } from '../../platform/more-games.js';
-import { storageGet, storageSet } from '../../platform/safe-storage.js';
-import { LUMEN_STORAGE, LUMEN_STORAGE_SLOTS } from './storage.js';
 import { track } from '../../platform/analytics.js';
 import { todayKey, todayKeyDisplay } from '../../platform/daily.js';
-import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
+import { updateMoreGames } from '../../platform/more-games.js';
+import { ensurePlayerName, setPlayerName } from '../../platform/player.js';
+import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
 import { LANGUAGES } from './i18n.js';
-import { createSfxEngine } from '../../platform/game-sfx.js';
+import { Sfx } from './audio.js';
+import { LUMEN_LEVELS, dailyLevel } from './model/levels.js';
+import { PlaySession, starsFor } from './model/session.js';
+import { loadStars, recordDailyScore, saveStars, todayBest } from './systems/records.js';
+import { BoardRenderer } from './render/board.js';
+import { bindBoardPointer } from './input/pointer.js';
+import { LumenView, copyToClipboard } from './ui/view.js';
+import { createDailyBoard } from './ui/daily-board.js';
 
-/* ────────────────────────── 常量 ────────────────────────── */
-
-export const W = 560, H = 560;
-const CELL = W / GRID_N;
-const STEP = { '>': [0, 1], 'v': [1, 0], '<': [0, -1], '^': [-1, 0] };
-const MIRROR_SWAP = { '/': '\\', '\\': '/' };
-
-function clamp(v, min, max) {
-    return v < min ? min : v > max ? max : v;
-}
+/** 通关后让光束动画走一小段再弹结算，点亮感更完整 */
+const SOLVE_DELAY_MS = 650;
 
 function vibrate(pattern) {
     try {
@@ -49,113 +43,19 @@ function vibrate(pattern) {
     } catch (e) { /* 不支持则忽略 */ }
 }
 
-/* ────────────────────────── i18n ────────────────────────── */
-
-/* ────────────────────────── audio ────────────────────────── */
-
-const sfxEngine = createSfxEngine();
-
-const Sfx = {
-    click() { sfxEngine.tone({ freq: 640, type: 'square', dur: 0.05, vol: 0.06 }); },
-    /** 镜面翻转：干净的机械「嗒」 */
-    flip() {
-        sfxEngine.tone({ freq: 520, slideTo: 760, type: 'triangle', dur: 0.07, vol: 0.12 });
-    },
-    /** 新水晶点亮：上扬双音 */
-    crystal() {
-        sfxEngine.tone({ freq: 880, type: 'sine', dur: 0.12, vol: 0.12 });
-        sfxEngine.tone({ freq: 1320, type: 'sine', dur: 0.16, vol: 0.1, delay: 0.07 });
-    },
-    win() {
-        [523, 659, 784, 1046].forEach((f, i) => {
-            sfxEngine.tone({ freq: f, type: 'triangle', dur: 0.15, vol: 0.13, delay: i * 0.08 });
-        });
-    },
-    star3() {
-        [784, 988, 1175].forEach((f, i) => {
-            sfxEngine.tone({ freq: f, type: 'sine', dur: 0.2, vol: 0.12, delay: 0.3 + i * 0.1 });
-        });
-    },
-};
-
-/* ────────────────────────── 渲染辅助 ────────────────────────── */
-
-function roundRectPath(ctx, x, y, w, h, r) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + w, y, x + w, y + h, r);
-    ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r);
-    ctx.arcTo(x, y, x + w, y, r);
-    ctx.closePath();
-}
-
-function cellCenter(r, c) {
-    return { x: (c + 0.5) * CELL, y: (r + 0.5) * CELL };
-}
-
-/** 折线总长与按弧长取点（光束流动动画用） */
-function polylineGeom(pts) {
-    const px = pts.map(([r, c]) => cellCenter(r, c));
-    const segs = [];
-    let total = 0;
-    for (let i = 1; i < px.length; i++) {
-        const dx = px[i].x - px[i - 1].x;
-        const dy = px[i].y - px[i - 1].y;
-        const len = Math.hypot(dx, dy);
-        segs.push({ a: px[i - 1], b: px[i], len, acc: total });
-        total += len;
-    }
-    return { px, segs, total };
-}
-
-function pointAtDist(geom, dist) {
-    const d = ((dist % geom.total) + geom.total) % geom.total;
-    for (const s of geom.segs) {
-        if (d <= s.acc + s.len) {
-            const k = (d - s.acc) / s.len;
-            return { x: s.a.x + (s.b.x - s.a.x) * k, y: s.a.y + (s.b.y - s.a.y) * k };
-        }
-    }
-    return geom.px[geom.px.length - 1];
-}
-
-/* ────────────────────────── 存储 ────────────────────────── */
-
-function storageParseStars() {
-    try {
-        const arr = LUMEN_STORAGE.get(LUMEN_STORAGE_SLOTS.STARS, []);
-        const out = Array.isArray(arr) ? arr.slice() : [];
-        while (out.length < LUMEN_LEVELS.length) out.push(0);
-        return out;
-    } catch (e) {
-        return new Array(LUMEN_LEVELS.length).fill(0);
-    }
-}
-
-/* ────────────────────────── 游戏主体 ────────────────────────── */
-
 export class LumenGame {
     constructor() {
-        this.canvas = document.getElementById('lm-canvas');
-        this.ctx = this.canvas.getContext('2d');
-        this.el = {};
-        ['lm-btn-home', 'lm-hud-level', 'lm-flips', 'lm-par', 'lm-reset-btn', 'lm-mute-btn', 'lm-toast',
-            'lm-start', 'lm-title', 'lm-subtitle', 'lm-howto', 'lm-btn-levels', 'lm-btn-daily',
-            'lm-level-label', 'lm-level-grid', 'lm-daily-best', 'lm-start-mute',
-            'lm-side-howto-title', 'lm-side-howto', 'lm-side-records-title', 'lm-side-records',
-            'lm-clear', 'lm-clear-stars', 'lm-clear-line', 'lm-btn-next', 'lm-btn-replay', 'lm-btn-menu1',
-            'lm-over', 'lm-over-title', 'lm-over-score', 'lm-over-sub',
-            'lm-btn-again', 'lm-btn-copy', 'lm-btn-menu2',
-            'lm-lb-title', 'lm-lb-list', 'lm-lb-status', 'lm-username', 'lm-username-label',
-            'lm-hint'
-        ].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) this.el[id.replace(/^lm-/, '')] = el;
+        this.view = new LumenView(document);
+        this.board = new BoardRenderer(this.view.canvas);
+        this.dailyBoard = createDailyBoard({
+            list: this.view.el['lb-list'],
+            status: this.view.el['lb-status'],
+            getText: () => this.TEXT,
+            isOpen: () => this.state === 'won-daily' && this.view.isDailyResultOpen(),
         });
 
         this.lang = getLang();
-        this.stars = storageParseStars();
+        this.stars = loadStars();
 
         // 对局状态：menu | playing | won-level | won-daily
         // ⚠️ 字段名与 verify-stats-drawer.mjs 的 AUGMENT runningExpr 严格对应
@@ -163,135 +63,72 @@ export class LumenGame {
         this.isPaused = false; this.contextualRestart?.sync();
         this.mode = 'levels';
         this.levelIdx = 0;
-        this.par = 1;
-        this.flips = 0;
-        this.baseGrid = null;   // 本关初盘（Reset 用）
-        this.grid = null;       // 当前盘面（9 个字符串）
-        this.trace = null;      // traceGrid(grid) 结果
-        this.daily = null;      // 每日谜题 { grid, sol, par, dateKey }
-
-        // 视觉
-        this.time = 0;
-        this.frameDt = 0;
-        this.particles = [];
-        this.starsBg = this.buildStarfield();
-
+        this.session = null;    // 当前对局（PlaySession），盘面 / 光迹 / 点击数的唯一写入方
+        this.daily = null;      // 每日谜题 { grid, sol, par, split, links, dateKey }
+        this.solveTimer = 0;
         this.animationId = null;
         this.lastFrame = 0;
-
-        this.applyLanguage();
-        this.renderLevelGrid();
-        this.bindInput();
-        this.bindUI();
-        this.updateMuteButtons();
-        this.resize();
-        window.addEventListener('resize', () => this.resize());
-        // 桌面舞台尺寸随 --frame-chrome 实测值变化（src/platform/game-frame.js）
-        window.addEventListener('game-frame:changed', () => this.resize());
+        this.frameDt = 0;
 
         this.loadLevel(0);   // 菜单背景展示第 1 关的光路
+        this.bindControls();
+        this.applyLanguage();
+        this.view.renderMute(getMuted());
+        this.board.resize();
+        window.addEventListener('resize', () => this.board.resize());
+        // 桌面舞台尺寸随 --frame-chrome 实测值变化（src/platform/game-frame.js）
+        window.addEventListener('game-frame:changed', () => this.board.resize());
+        // 全站语言/静音设置变化（site-settings.js 派发）→ 本页重刷
+        window.addEventListener('site-settings:changed', () => this.applyLanguage());
         this.startLoop();
     }
 
     get TEXT() { return LANGUAGES[this.lang]; }
 
-    /* ── 语言 ── */
+    get level() { return this.session?.level ?? null; }
+    get grid() { return this.session?.grid ?? null; }
+    get trace() { return this.session?.trace ?? null; }
+    get flips() { return this.session?.flips ?? 0; }
+    get par() { return this.session?.par ?? 0; }
+
+    /* ── 语言与侧栏 ── */
 
     applyLanguage() {
         this.lang = getLang();
-        const t = this.TEXT;
-        document.documentElement.lang = this.lang;
-        document.title = this.lang === 'zh'
-            ? '折光 Lumen — 光束折射解谜'
-            : 'Lumen — Beam Refraction Puzzle';
-        if (this.el['btn-next']) this.el['btn-next'].innerHTML = `${ICONS.arrowRight}<span>${t.next}</span>`;
-        if (this.el['btn-replay']) this.el['btn-replay'].innerHTML = `${ICONS.retry}<span>${t.retry}</span>`;
-        if (this.el['btn-menu1']) this.el['btn-menu1'].innerHTML = `${ICONS.home}<span>${t.menu}</span>`;
-        if (this.el['btn-menu2']) this.el['btn-menu2'].innerHTML = `${ICONS.home}<span>${t.menu}</span>`;
-        if (this.el['btn-again']) this.el['btn-again'].innerHTML = `${ICONS.retry}<span>${t.again}</span>`;
-        if (this.el['btn-copy']) this.el['btn-copy'].innerHTML = `${ICONS.copy}<span>${t.copyResult}</span>`;
-        if (this.el['lb-title']) this.el['lb-title'].textContent = `🏆 ${t.leaderboard}`;
-        if (this.el['btn-home']) {
-        }
-        // 桌面侧栏
-        if (this.el['side-howto-title']) this.el['side-howto-title'].textContent = `📖 ${t.sideHowTo}`;
-        if (this.el['side-records-title']) this.el['side-records-title'].textContent = `🏅 ${t.sideRecords}`;
-        this.renderLevelGrid();
-        this.updateDailyBest();
-        this.updateSideRecords();
+        this.view.setLanguage(this.lang, this.TEXT);
+        this.view.renderLevelGrid(this.stars);
+        this.refreshRecords();
         this.updateHud();
         updateMoreGames(this.lang);
     }
 
-    /* ── 菜单部件 ── */
-
-    renderLevelGrid() {
-        const grid = this.el['level-grid'];
-        if (!grid) return;
-        grid.textContent = '';
-        for (let i = 0; i < LUMEN_LEVELS.length; i++) {
-            const chip = document.createElement('button');
-            chip.type = 'button';
-            chip.className = 'lm-level-chip game-start-level-chip';
-            const num = document.createElement('span');
-            num.className = 'lm-chip-num game-start-chip-num';
-            num.textContent = String(i + 1);
-            const starLine = document.createElement('span');
-            starLine.className = 'lm-chip-stars game-start-chip-stars';
-            const n = this.stars[i] || 0;
-            starLine.textContent = n > 0 ? '⭐'.repeat(n) : '☆☆☆';
-            chip.append(num, starLine);
-            chip.addEventListener('click', () => {
-                Sfx.click();
-                this.startLevel(i);
-            });
-            grid.appendChild(chip);
-        }
+    refreshRecords() {
+        const best = todayBest();
+        this.view.renderDailyBest(best);
+        this.view.renderRecords(this.stars, best);
     }
 
-    updateDailyBest() {
-        if (!this.el['daily-best']) return;
-        const best = Number(storageGet('lm_daily_' + todayKey())) || 0;
-        this.el['daily-best'].textContent = best
-            ? `📅 ${this.TEXT.bestToday}: ${best} ${this.TEXT.flipsWord}`
-            : '';
+    updateHud() {
+        this.view.renderHud({ daily: this.mode === 'daily', levelIdx: this.levelIdx, flips: this.flips, par: this.par });
     }
 
-    updateSideRecords() {
-        const box = this.el['side-records'];
-        if (!box) return;
-        const t = this.TEXT;
-        const best = Number(storageGet('lm_daily_' + todayKey())) || 0;
-        const totalStars = this.stars.reduce((a, b) => a + (b || 0), 0);
-        const rows = [
-            [`📅 ${t.bestToday}`, best ? `${best} ${t.flipsWord}` : '—'],
-            [`⭐ ${t.stars}`, `${totalStars}/${LUMEN_LEVELS.length * 3}`],
-        ];
-        box.textContent = '';
-        rows.forEach(([label, value]) => {
-            const row = document.createElement('div');
-            row.className = 'lm-side-row game-side-row';
-            const labelEl = document.createElement('span');
-            labelEl.textContent = label;
-            const valueEl = document.createElement('b');
-            valueEl.textContent = value;
-            row.append(labelEl, valueEl);
-            box.appendChild(row);
-        });
+    showToast(text, duration, warn) {
+        this.view.toast(text, duration, warn);
     }
 
     /* ── 关卡装载与模式 ── */
 
+    /** 装入一个关卡对象（章节关或每日共用） */
+    useLevel(level) {
+        this.session = new PlaySession(level);
+        this.board.setLevel(level);
+    }
+
     loadLevel(idx) {
-        const lv = LUMEN_LEVELS[clamp(idx, 0, LUMEN_LEVELS.length - 1)];
+        const lv = LUMEN_LEVELS[Math.max(0, Math.min(LUMEN_LEVELS.length - 1, idx))];
         this.levelIdx = lv.index;
         this.mode = 'levels';
-        this.baseGrid = lv.grid;
-        this.grid = lv.grid.slice();
-        this.par = lv.par;
-        this.flips = 0;
-        this.trace = traceGrid(this.grid);
-        this.particles.length = 0;
+        this.useLevel(lv);
     }
 
     /** 关卡模式启动点（AUGMENT 启动参数 [0]） */
@@ -301,27 +138,22 @@ export class LumenGame {
         this.state = 'playing'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
         this.pauseOwnership?.invalidate();
-        this.hideOverlays();
+        this.view.hideOverlays();
         this.updateHud();
+        const intro = LUMEN_LEVELS[this.levelIdx].intro;
+        if (intro) this.showToast(this.TEXT[`intro_${intro}`], 3600);
         track('lumen', 'play');
     }
 
     startDaily() {
         clearTimeout(this.solveTimer);
-        const d = dailyLevel(todayKey());
+        this.daily = dailyLevel(todayKey());
         this.mode = 'daily';
-        this.daily = d;
-        this.levelIdx = 0;
-        this.baseGrid = d.grid;
-        this.grid = d.grid.slice();
-        this.par = d.par;
-        this.flips = 0;
-        this.trace = traceGrid(this.grid);
-        this.particles.length = 0;
+        this.useLevel(this.daily);
         this.state = 'playing'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
         this.pauseOwnership?.invalidate();
-        this.hideOverlays();
+        this.view.hideOverlays();
         this.updateHud();
         this.showToast(this.TEXT.dailyStartToast, 1800);
         track('lumen', 'play');
@@ -330,10 +162,8 @@ export class LumenGame {
     resetLevel() {
         if (this.state !== 'playing') return;
         clearTimeout(this.solveTimer);
-        this.grid = this.baseGrid.slice();
-        this.trace = traceGrid(this.grid);
-        this.flips = 0;
-        this.particles.length = 0;
+        this.session.reset();
+        this.board.clearEffects();
         this.updateHud();
         Sfx.click();
     }
@@ -344,101 +174,10 @@ export class LumenGame {
         this.state = 'menu'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
         this.loadLevel(this.levelIdx);   // 菜单背景继续展示当前关的光路
-        if (this.el.start) this.el.start.classList.remove('hidden');
-        if (this.el.clear) this.el.clear.classList.add('hidden');
-        if (this.el.over) this.el.over.classList.add('hidden');
-        this.updateDailyBest();
-        this.renderLevelGrid();
+        this.view.showStart();
+        this.view.renderLevelGrid(this.stars);
+        this.refreshRecords();
         this.updateHud();
-    }
-
-    hideOverlays() {
-        if (this.el.start) this.el.start.classList.add('hidden');
-        if (this.el.clear) this.el.clear.classList.add('hidden');
-        if (this.el.over) this.el.over.classList.add('hidden');
-    }
-
-    /* ── HUD 与提示 ── */
-
-    updateHud() {
-        const t = this.TEXT;
-        if (this.el['hud-level']) {
-            this.el['hud-level'].textContent = this.mode === 'daily'
-                ? `📅 ${t.daily}`
-                : `${t.level} ${this.levelIdx + 1}/${LUMEN_LEVELS.length}`;
-        }
-        if (this.el.flips) this.el.flips.textContent = String(this.flips);
-        if (this.el.par) this.el.par.textContent = `· ${t.par} ${this.par}`;
-    }
-
-    showToast(text, duration = 1500, warn = false) {
-        const toast = this.el.toast;
-        if (!toast) return;
-        toast.textContent = text;
-        toast.classList.remove('hidden');
-        toast.classList.toggle('warn', warn);
-        clearTimeout(this.toastTimer);
-        this.toastTimer = setTimeout(() => toast.classList.add('hidden'), duration);
-    }
-
-    /* ── 核心交互：翻转镜面 ── */
-
-    flipMirror(r, c) {
-        const ch = this.grid[r][c];
-        const swapped = MIRROR_SWAP[ch];
-        if (!swapped) return;
-        const rows = this.grid.slice();
-        rows[r] = rows[r].slice(0, c) + swapped + rows[r].slice(c + 1);
-        this.grid = rows;
-        this.flips += 1;
-
-        const before = this.trace.crystalLit.length;
-        this.trace = traceGrid(this.grid);
-        const gained = this.trace.crystalLit.length - before;
-        Sfx.flip();
-        if (gained > 0) {
-            Sfx.crystal();
-            for (const idx of this.trace.crystalLit.slice(-gained)) {
-                const r2 = Math.floor(idx / GRID_N), c2 = idx % GRID_N;
-                this.burst(cellCenter(r2, c2).x, cellCenter(r2, c2).y, '#7dfad0', 14);
-            }
-        }
-        this.updateHud();
-
-        if (this.trace.solved) {
-            Sfx.win();
-            vibrate([18, 60, 18]);
-            // 让光束动画走一小段再弹结算，点亮感更完整
-            this.solveTimer = setTimeout(() => this.finishSolved(), 650);
-        }
-    }
-
-    finishSolved() {
-        if (this.state !== 'playing' || !this.trace || !this.trace.solved) return;
-        if (this.mode === 'daily') this.finishDaily();
-        else this.finishLevel();
-    }
-
-    /* ── 结算：关卡 ── */
-
-    finishLevel() {
-        const t = this.TEXT;
-        const stars = this.flips <= this.par ? 3 : this.flips <= this.par + 3 ? 2 : 1;
-        if (stars > (this.stars[this.levelIdx] || 0)) {
-            this.stars[this.levelIdx] = stars;
-            LUMEN_STORAGE.set(LUMEN_STORAGE_SLOTS.STARS, this.stars);
-        }
-        this.state = 'won-level'; this.contextualRestart?.sync();
-        if (stars >= 3) Sfx.star3();
-        if (this.el['clear-stars']) {
-            this.el['clear-stars'].textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
-        }
-        if (this.el['clear-line']) {
-            this.el['clear-line'].textContent = `${t.flips} ${this.flips} · ${t.par} ${this.par}`;
-        }
-        if (this.el.clear) this.el.clear.classList.remove('hidden');
-        this.updateSideRecords();
-        track('lumen', 'finish');
     }
 
     nextLevel() {
@@ -450,151 +189,73 @@ export class LumenGame {
         }
     }
 
-    /* ── 结算：每日 ── */
+    /* ── 核心交互：点击镜面（联动组整组翻转） ── */
+
+    flipMirror(r, c) {
+        const event = this.session.tap(r, c);
+        if (!event) return;
+        this.board.animateTap(event, this.session.grid);
+        Sfx.flip();
+        if (event.gained.length) {
+            Sfx.crystal();
+            this.board.burst(event.gained, 'crystal');
+        }
+        if (event.newShadows.length) {
+            Sfx.shadow();
+            vibrate(30);
+            this.board.burst(event.newShadows, 'shadow');
+            this.showToast(this.TEXT.shadowWarn, 1600, true);
+        }
+        this.updateHud();
+
+        if (event.solved) {
+            Sfx.win();
+            vibrate([18, 60, 18]);
+            this.solveTimer = setTimeout(() => this.finishSolved(), SOLVE_DELAY_MS);
+        }
+    }
+
+    finishSolved() {
+        if (this.state !== 'playing' || !this.session.solved) return;
+        if (this.mode === 'daily') this.finishDaily();
+        else this.finishLevel();
+    }
+
+    /* ── 结算 ── */
+
+    finishLevel() {
+        const stars = starsFor(this.flips, this.par);
+        if (stars > (this.stars[this.levelIdx] || 0)) {
+            this.stars[this.levelIdx] = stars;
+            saveStars(this.stars);
+        }
+        this.state = 'won-level'; this.contextualRestart?.sync();
+        if (stars >= 3) Sfx.star3();
+        this.view.showClear({ stars, flips: this.flips, par: this.par });
+        this.refreshRecords();
+        track('lumen', 'finish');
+    }
 
     finishDaily() {
-        const t = this.TEXT;
         const date = todayKey();
         const score = this.flips;
         this.state = 'won-daily'; this.contextualRestart?.sync();
-        const prev = Number(storageGet('lm_daily_' + date)) || 0;
-        const isBest = !prev || score < prev;
-        if (isBest) storageSet('lm_daily_' + date, String(score));
-
-        if (this.el['over-title']) this.el['over-title'].textContent = `📅 ${t.dailyDone}`;
-        if (this.el['over-score']) this.el['over-score'].textContent = `${score} ${t.flipsWord}`;
-        if (this.el['over-sub']) {
-            this.el['over-sub'].textContent = isBest
-                ? `🌟 ${t.bestToday}`
-                : `${t.bestToday}: ${Math.min(prev, score)}`;
-        }
-        if (this.el.username) this.el.username.value = ensurePlayerName() || '';
-        if (this.el.over) this.el.over.classList.remove('hidden');
-        this.updateDailyBest();
-        this.updateSideRecords();
+        const record = recordDailyScore(date, score);
+        this.view.showDailyResult({ score, ...record, playerName: ensurePlayerName() || '' });
+        this.refreshRecords();
         track('lumen', 'finish');
-
-        const game = `lumen-d${date}`;
-        // 网络层收敛到 src/platform/leaderboard.js（false=未进全球榜，走本地兜底）
-        submitScore({ game, name: ensurePlayerName() || 'Anonymous', score }).then(ok => {
-            if (ok) return this.fetchDailyBoard(game);
-            this.pushLocalScore(date, score);
-            this.renderLocalBoard();
-            if (this.el['lb-status']) this.el['lb-status'].textContent = t.lbOffline;
-        });
-    }
-
-    localBoardKey() {
-        return `lm_local_${todayKey()}`;
-    }
-
-    pushLocalScore(date, score) {
-        let local = [];
-        try {
-            local = JSON.parse(storageGet(`lm_local_${date}`)) || [];
-        } catch (e) { local = []; }
-        local.push({ name: ensurePlayerName() || 'Anonymous', score });
-        local.sort((a, b) => a.score - b.score);
-        storageSet(`lm_local_${date}`, JSON.stringify(local.slice(0, 10)));
-    }
-
-    renderLocalBoard() {
-        const list = this.el['lb-list'];
-        if (!list) return;
-        list.textContent = '';
-        let local = [];
-        try {
-            local = JSON.parse(storageGet(this.localBoardKey())) || [];
-        } catch (e) { local = []; }
-        if (!Array.isArray(local) || local.length === 0) {
-            const empty = document.createElement('div');
-            empty.className = 'lm-lb-empty game-lb-empty';
-            empty.textContent = this.TEXT.noScores;
-            list.appendChild(empty);
-            return;
-        }
-        local.slice(0, 10).forEach((s, i) => list.appendChild(this.buildLbRow(i, s)));
-    }
-
-    buildLbRow(rank, entry) {
-        const row = document.createElement('div');
-        row.className = 'lm-lb-row game-lb-row' + (rank < 3 ? ` lm-lb-top${rank + 1}` : '');
-        const rankEl = document.createElement('span');
-        rankEl.className = 'lm-lb-rank game-lb-rank';
-        rankEl.textContent = `${rank + 1}.`;
-        const nameEl = document.createElement('span');
-        nameEl.className = 'lm-lb-name game-lb-name';
-        nameEl.textContent = entry.name; // textContent 防注入
-        const scoreEl = document.createElement('span');
-        scoreEl.className = 'lm-lb-score game-lb-score';
-        scoreEl.textContent = `${entry.score}`;
-        row.append(rankEl, nameEl, scoreEl);
-        return row;
-    }
-
-    async fetchDailyBoard(game) {
-        const list = this.el['lb-list'];
-        const statusEl = this.el['lb-status'];
-        if (!list) return;
-        try {
-            const data = await fetchBoard(game);
-            if (this.state !== 'won-daily' || !this.el.over || this.el.over.classList.contains('hidden')) return;
-            list.textContent = '';
-            if (!Array.isArray(data) || data.length === 0) {
-                this.renderLocalBoard();
-                return;
-            }
-            data.slice(0, 10).forEach((entry, i) => list.appendChild(this.buildLbRow(i, entry)));
-            if (statusEl) statusEl.textContent = '';
-        } catch (e) {
-            this.renderLocalBoard();
-            if (statusEl) statusEl.textContent = this.TEXT.lbOffline;
-        }
+        this.dailyBoard.publish({ game: `lumen-d${date}`, date, name: ensurePlayerName() || 'Anonymous', score });
     }
 
     async copyResult() {
         const t = this.TEXT;
-        let ok = false;
-        const text = `折光 Lumen · ${todayKeyDisplay()} · ${this.flips} ${t.flipsWord}`;
-        try {
-            await navigator.clipboard.writeText(text);
-            ok = true;
-        } catch (e) {
-            try {
-                const ta = document.createElement('textarea');
-                ta.value = text;
-                document.body.appendChild(ta);
-                ta.select();
-                ok = document.execCommand('copy');
-                ta.remove();
-            } catch (e2) { /* 放弃 */ }
-        }
-        const btn = this.el['btn-copy'];
-        if (btn) {
-            const original = `${ICONS.copy}<span>${t.copyResult}</span>`;
-            btn.textContent = ok ? `✅ ${t.copied}` : `📋 ${t.copyResult}`;
-            setTimeout(() => { if (this.el['btn-copy']) this.el['btn-copy'].innerHTML = original; }, 1200);
-        }
+        const ok = await copyToClipboard(`折光 Lumen · ${todayKeyDisplay()} · ${this.flips} ${t.flipsWord} (${t.par} ${this.par})`);
+        this.view.copyFeedback(ok);
     }
-
-    /* ── 音量 ── */
 
     toggleMute() {
         setMuted(!getMuted());
-        this.updateMuteButtons();
-    }
-
-    updateMuteButtons() {
-        const muted = getMuted();
-        const t = this.TEXT;
-        ['mute-btn', 'start-mute'].forEach(k => {
-            const btn = this.el[k];
-            if (!btn) return;
-            btn.innerHTML = muted ? ICONS.soundOff : ICONS.soundOn;
-            btn.title = t.sound;
-            btn.setAttribute('aria-label', t.sound);
-            btn.setAttribute('aria-pressed', muted ? 'true' : 'false');
-        });
+        this.view.renderMute(getMuted());
     }
 
     /* ── 暂停（供底部统计抽屉调用） ── */
@@ -620,141 +281,35 @@ export class LumenGame {
         return !this.isPaused && this.state === 'playing';
     }
 
-    /* ── 输入 ── */
+    /* ── 输入接线 ── */
 
-    toLogical(e) {
-        const rect = this.canvas.getBoundingClientRect();
-        return {
-            x: (e.clientX - rect.left) / rect.width * W,
-            y: (e.clientY - rect.top) / rect.height * H,
-        };
-    }
-
-    bindInput() {
-        this.canvas.addEventListener('pointerdown', (e) => {
-            if (this.state !== 'playing') return;
-            e.preventDefault();
-            const p = this.toLogical(e);
-            const c = Math.floor(p.x / CELL);
-            const r = Math.floor(p.y / CELL);
-            if (r < 0 || r >= GRID_N || c < 0 || c >= GRID_N) return;
-            const ch = this.grid[r][c];
-            if (ch === '/' || ch === '\\') this.flipMirror(r, c);
+    bindControls() {
+        const click = fn => () => { Sfx.click(); fn(); };
+        this.view.bind({
+            home: () => { window.location.href = 'index.html'; },
+            levels: click(() => this.startLevel(0)),
+            daily: click(() => this.startDaily()),
+            pickLevel: i => { Sfx.click(); this.startLevel(i); },
+            next: click(() => this.nextLevel()),
+            replay: click(() => this.startLevel(this.levelIdx)),
+            menu: click(() => this.showMenu()),
+            again: click(() => this.startDaily()),
+            copy: () => this.copyResult(),
+            mute: () => this.toggleMute(),
+            rename: name => setPlayerName(name),
         });
-    }
-
-    bindUI() {
-        if (this.el['btn-home']) {
-            this.el['btn-home'].addEventListener('click', () => { window.location.href = 'index.html'; });
-        }
-        if (this.el['btn-levels']) {
-            this.el['btn-levels'].addEventListener('click', () => {
-                Sfx.click();
-                this.startLevel(0);
-            });
-        }
-        if (this.el['btn-daily']) {
-            this.el['btn-daily'].addEventListener('click', () => {
-                Sfx.click();
-                this.startDaily();
-            });
-        }
-        if (this.el['reset-btn']) {
+        if (this.view.el['reset-btn']) {
             this.contextualRestart = bindContextualRestart({
-                button: this.el['reset-btn'],
+                button: this.view.el['reset-btn'],
                 active: () => this.state === 'playing' && !this.isPaused,
                 hasProgress: () => this.flips > 0,
                 restart: () => { this.resetLevel(); },
             });
         }
-        if (this.el['btn-next']) {
-            this.el['btn-next'].addEventListener('click', () => {
-                Sfx.click();
-                this.nextLevel();
-            });
-        }
-        if (this.el['btn-replay']) {
-            this.el['btn-replay'].addEventListener('click', () => {
-                Sfx.click();
-                this.startLevel(this.levelIdx);
-            });
-        }
-        if (this.el['btn-menu1']) {
-            this.el['btn-menu1'].addEventListener('click', () => { Sfx.click(); this.showMenu(); });
-        }
-        if (this.el['btn-menu2']) {
-            this.el['btn-menu2'].addEventListener('click', () => { Sfx.click(); this.showMenu(); });
-        }
-        if (this.el['btn-again']) {
-            this.el['btn-again'].addEventListener('click', () => {
-                Sfx.click();
-                this.startDaily();
-            });
-        }
-        if (this.el['btn-copy']) {
-            this.el['btn-copy'].addEventListener('click', () => this.copyResult());
-        }
-        if (this.el['mute-btn']) {
-            this.el['mute-btn'].addEventListener('click', () => this.toggleMute());
-        }
-        if (this.el['start-mute']) {
-            this.el['start-mute'].addEventListener('click', () => this.toggleMute());
-        }
-        if (this.el.username) {
-            this.el.username.addEventListener('change', () => {
-                setPlayerName(this.el.username.value);
-            });
-        }
-
-        // 全站语言/静音设置变化（site-settings.js 派发）→ 本页重刷
-        window.addEventListener('site-settings:changed', () => this.applyLanguage());
-    }
-
-    /* ── 粒子与背景 ── */
-
-    buildStarfield() {
-        const out = [];
-        for (let i = 0; i < 70; i++) {
-            out.push({
-                x: Math.random() * W,
-                y: Math.random() * H,
-                r: 0.5 + Math.random() * 1.1,
-                a: 0.15 + Math.random() * 0.5,
-            });
-        }
-        return out;
-    }
-
-    burst(x, y, color, count) {
-        for (let i = 0; i < count; i++) {
-            if (this.particles.length >= 130) this.particles.shift();
-            const ang = Math.random() * Math.PI * 2;
-            const spd = 30 + Math.random() * 130;
-            this.particles.push({
-                x, y,
-                vx: Math.cos(ang) * spd,
-                vy: Math.sin(ang) * spd,
-                life: 0.4 + Math.random() * 0.4,
-                age: 0,
-                size: 1.3 + Math.random() * 2.2,
-                color,
-            });
-        }
-    }
-
-    /* ── 画布尺寸 ── */
-
-    resize() {
-        const cssW = this.canvas.clientWidth || 300;
-        const scale = cssW / W;
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        const renderScale = scale * dpr;
-        const pw = Math.round(W * renderScale);
-        if (this.canvas.width !== pw) {
-            this.canvas.width = pw;
-            this.canvas.height = Math.round(H * renderScale);
-        }
-        this.renderScale = renderScale;
+        bindBoardPointer(this.view.canvas, {
+            isActive: () => this.state === 'playing',
+            onCell: (r, c) => this.flipMirror(r, c),
+        });
     }
 
     /* ── 主循环 ── */
@@ -773,246 +328,9 @@ export class LumenGame {
                 return;
             }
             this.frameDt = dt;
-            this.time += dt;
-
-            // 粒子
-            let w = 0;
-            for (let i = 0; i < this.particles.length; i++) {
-                const p = this.particles[i];
-                p.age += dt;
-                if (p.age >= p.life) continue;
-                p.x += p.vx * dt;
-                p.y += p.vy * dt;
-                p.vx *= 0.93;
-                p.vy *= 0.93;
-                this.particles[w++] = p;
-            }
-            this.particles.length = w;
-
-            this.draw();
+            this.board.update(dt);
+            this.board.draw(this.session);
         };
         this.animationId = requestAnimationFrame(tick);
     }
-
-    /* ── 渲染 ── */
-
-    draw() {
-        const ctx = this.ctx;
-        const s = this.renderScale;
-        ctx.setTransform(s, 0, 0, s, 0, 0);
-        ctx.clearRect(0, 0, W, H);
-
-        // 深空底
-        const bg = ctx.createLinearGradient(0, 0, W, H);
-        bg.addColorStop(0, '#0a0f2e');
-        bg.addColorStop(0.55, '#0b1030');
-        bg.addColorStop(1, '#0d1338');
-        ctx.fillStyle = bg;
-        ctx.fillRect(0, 0, W, H);
-
-        // 星点
-        for (const st of this.starsBg) {
-            ctx.globalAlpha = st.a * (0.75 + 0.25 * Math.sin(this.time * 0.8 + st.x));
-            ctx.fillStyle = '#cdd8ff';
-            ctx.beginPath();
-            ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
-            ctx.fill();
-        }
-        ctx.globalAlpha = 1;
-
-        if (!this.grid) return;
-
-        // 网格线
-        ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        for (let i = 1; i < GRID_N; i++) {
-            ctx.moveTo(i * CELL, 0);
-            ctx.lineTo(i * CELL, H);
-            ctx.moveTo(0, i * CELL);
-            ctx.lineTo(W, i * CELL);
-        }
-        ctx.stroke();
-
-        this.drawLitFloor(ctx);
-        this.drawRays(ctx);
-
-        // 元件（墙 → 水晶 → 镜面 → 发射器）
-        for (let r = 0; r < GRID_N; r++) {
-            for (let c = 0; c < GRID_N; c++) {
-                const ch = this.grid[r][c];
-                if (ch === '#') this.drawWall(ctx, r, c);
-            }
-        }
-        for (let r = 0; r < GRID_N; r++) {
-            for (let c = 0; c < GRID_N; c++) {
-                const ch = this.grid[r][c];
-                if (ch === '*') {
-                    this.drawCrystal(ctx, r, c, this.trace.crystalLit.includes(r * GRID_N + c));
-                }
-            }
-        }
-        for (let r = 0; r < GRID_N; r++) {
-            for (let c = 0; c < GRID_N; c++) {
-                const ch = this.grid[r][c];
-                if (ch === '/' || ch === '\\') {
-                    const hit = this.trace.mirrorHits.includes(r * GRID_N + c);
-                    this.drawMirror(ctx, r, c, ch, hit);
-                } else if (ch in STEP) {
-                    this.drawEmitter(ctx, r, c, ch);
-                }
-            }
-        }
-
-        this.drawParticles(ctx);
-    }
-
-    /** 光路经过的空格铺一层淡光底（增强「光走过了这里」的体感） */
-    drawLitFloor(ctx) {
-        ctx.fillStyle = 'rgba(125, 250, 208, 0.055)';
-        for (let r = 0; r < GRID_N; r++) {
-            for (let c = 0; c < GRID_N; c++) {
-                if (this.trace.lit[r * GRID_N + c]) {
-                    ctx.fillRect(c * CELL + 2, r * CELL + 2, CELL - 4, CELL - 4);
-                }
-            }
-        }
-    }
-
-    drawRays(ctx) {
-        ctx.save();
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        const geoms = [];
-        for (const ray of this.trace.rays) {
-            if (ray.pts.length < 2) continue;
-            const geom = polylineGeom(ray.pts);
-            geoms.push(geom);
-            ctx.beginPath();
-            geom.px.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
-            ctx.shadowColor = 'rgba(125, 250, 208, 0.9)';
-            ctx.shadowBlur = 14;
-            ctx.strokeStyle = 'rgba(125, 250, 208, 0.5)';
-            ctx.lineWidth = 5;
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-            ctx.strokeStyle = 'rgba(240, 255, 250, 0.95)';
-            ctx.lineWidth = 1.8;
-            ctx.stroke();
-        }
-        // 流动光点：沿折线匀速推进（能量在光路里流动的体感）
-        for (const geom of geoms) {
-            const n = Math.max(1, Math.round(geom.total / 90));
-            for (let k = 0; k < n; k++) {
-                const p = pointAtDist(geom, this.time * 130 + k * (geom.total / n));
-                ctx.fillStyle = 'rgba(220, 255, 245, 0.9)';
-                ctx.shadowColor = 'rgba(125, 250, 208, 1)';
-                ctx.shadowBlur = 8;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, 2.4, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.shadowBlur = 0;
-            }
-        }
-        ctx.restore();
-    }
-
-    drawWall(ctx, r, c) {
-        const x = c * CELL, y = r * CELL;
-        ctx.fillStyle = 'rgba(22, 28, 62, 0.95)';
-        ctx.strokeStyle = 'rgba(154, 166, 216, 0.28)';
-        ctx.lineWidth = 1.5;
-        roundRectPath(ctx, x + 4, y + 4, CELL - 8, CELL - 8, 7);
-        ctx.fill();
-        ctx.stroke();
-    }
-
-    drawCrystal(ctx, r, c, lit) {
-        const { x, y } = cellCenter(r, c);
-        const s = CELL * 0.26;
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(Math.PI / 4);
-        if (lit) {
-            const pulse = 0.85 + 0.15 * Math.sin(this.time * 3 + (r + c));
-            ctx.shadowColor = 'rgba(125, 250, 208, 0.95)';
-            ctx.shadowBlur = 16 * pulse;
-            ctx.fillStyle = '#eafff6';
-            ctx.strokeStyle = '#7dfad0';
-        } else {
-            ctx.shadowBlur = 0;
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
-            ctx.strokeStyle = 'rgba(154, 166, 216, 0.55)';
-        }
-        ctx.lineWidth = 2;
-        roundRectPath(ctx, -s, -s, s * 2, s * 2, 4);
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-    }
-
-    drawMirror(ctx, r, c, ch, hit) {
-        const { x, y } = cellCenter(r, c);
-        const half = CELL * 0.3;
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(ch === '/' ? -Math.PI / 4 : Math.PI / 4);
-        ctx.shadowColor = hit ? 'rgba(125, 250, 208, 0.9)' : 'rgba(90, 123, 255, 0.4)';
-        ctx.shadowBlur = hit ? 14 : 7;
-        ctx.strokeStyle = hit ? '#aefee0' : '#8fb7ff';
-        ctx.lineWidth = 5;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.moveTo(-half, 0);
-        ctx.lineTo(half, 0);
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-        ctx.lineWidth = 1.4;
-        ctx.beginPath();
-        ctx.moveTo(-half, 0);
-        ctx.lineTo(half, 0);
-        ctx.stroke();
-        ctx.restore();
-    }
-
-    drawEmitter(ctx, r, c, ch) {
-        const { x, y } = cellCenter(r, c);
-        const s = CELL * 0.3;
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.shadowColor = 'rgba(125, 250, 208, 0.8)';
-        ctx.shadowBlur = 12;
-        ctx.fillStyle = 'rgba(18, 30, 46, 0.95)';
-        ctx.strokeStyle = '#7dfad0';
-        ctx.lineWidth = 2;
-        roundRectPath(ctx, -s, -s, s * 2, s * 2, 8);
-        ctx.fill();
-        ctx.stroke();
-        // 出光口：指向发射方向的小三角
-        const [dr, dc] = STEP[ch];
-        const ux = dc, uy = dr;
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = '#aefee0';
-        ctx.beginPath();
-        ctx.moveTo(ux * s * 0.75, uy * s * 0.75);
-        ctx.lineTo(ux * s * 0.1 - uy * s * 0.34, uy * s * 0.1 + ux * s * 0.34);
-        ctx.lineTo(ux * s * 0.1 + uy * s * 0.34, uy * s * 0.1 - ux * s * 0.34);
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
-    }
-
-    drawParticles(ctx) {
-        for (const p of this.particles) {
-            ctx.globalAlpha = 1 - p.age / p.life;
-            ctx.fillStyle = p.color;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fill();
-        }
-        ctx.globalAlpha = 1;
-    }
 }
-
-/* ────────────────────────── boot ────────────────────────── */

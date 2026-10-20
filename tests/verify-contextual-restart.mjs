@@ -83,7 +83,8 @@ for (const id of Object.keys(CASES)) {
 // Every destructive restart has an explicit progress owner and matching
 // rollback invariant; a new case cannot silently skip its confirmation test.
 const PROGRESS = {
-    'lumen': 'flips',
+    // Lumen: flips 是 PlaySession 的只读委托（session 是点击数唯一写入方），夹具直接写 session
+    'lumen': 'session.flips',
     'circuit': 'moves',
     'silk-dew': 'drags',
     'echo-cave': 'world.pulseCount',
@@ -387,6 +388,10 @@ try {
                             g.world.spent = 2;
                             return g.world.spent;
                         }
+                        if (path === 'session.flips') {
+                            g.session.flips = 1;
+                            return g.flips;
+                        }
                         const state = path === 'pulls' ? g.state : g;
                         state[path] = 1;
                         return state[path];
@@ -397,6 +402,7 @@ try {
                     if (path === 'anchors') return g.anchors.length;
                     if (path === 'world.spent') return g.world.spent;
                     if (path === 'world.pulseCount') return g.world.pulseCount;
+                    if (path === 'session.flips') return g.flips;
                     return (path === 'pulls' ? g.state : g)[path];
                 }, { key: global, path: field });
                 const scoreBefore = await mutateProgress();

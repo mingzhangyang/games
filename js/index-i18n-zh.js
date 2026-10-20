@@ -38,7 +38,7 @@ export default new Map([
     ['needle-awn.name','针尖对麦芒'],['needle-awn.desc','针尖对麦芒，双姿态切换、冻结时间，以毫厘精度完成极限弹反。'],
     ['needle-awn.tag','硬核动作'],['sword-flight.name','御剑飞行'],
     ['sword-flight.desc','踏剑穿越仙环与云海，斩开山岩，召出剑阵，一路破境飞升。'],['sword-flight.tag','国风仙侠'],
-    ['lumen.name','折光'],['lumen.desc','翻转镜面，偏折光束，点亮全部水晶。20 关手工关卡 + 每日谜题，用最少翻转通关！'],
+    ['lumen.name','折光'],['lumen.desc','翻转镜面，偏折光束，点亮水晶、避开暗晶。5 章 25 关 + 每日谜题，先想好光路再动手！'],
     ['lumen.tag','光路解谜'],['circuit.name','电路谜题'],
     ['circuit.desc','拨动开关，接通电流，点亮目标灯泡，并让带 × 的灯保持熄灭。20 关（已去掉一步就过的关）+ 每日谜题。'],['circuit.tag','电路解谜'],
     ['silk-dew.name','垂丝引露'],['silk-dew.desc','牵引丝线，带露珠穿过荆棘与气旋，落入玉壶。20 关 + 每日挑战。'],
