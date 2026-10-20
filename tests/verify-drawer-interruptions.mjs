@@ -15,12 +15,12 @@ const read = path => readFileSync(join(root, path), 'utf8');
 const migrated = [
     'planet-merge', 'hoop-shot', 'gravity-slingshot', 'sword-flight',
     'lumen', 'circuit', 'silk-dew', 'bond-forge', 'echo-cave',
-    'maxwell-demon', 'crystal-bloom', 'flame-verse', 'ripple-duet',
+    'crystal-bloom', 'flame-verse', 'ripple-duet',
 ];
 const existing = ['carrot-pull', 'needle-awn', 'shadow-loom'];
 const actual = registry.withCap('drawer').map(g => g.id).sort();
 assert.deepEqual(actual, [...migrated, ...existing, 'tetris'].sort(),
-    'all sixteen shared drawers and the dedicated Tetris drawer are accounted for');
+    'all fifteen shared drawers and the dedicated Tetris drawer are accounted for');
 
 const manualForeground = new Set(['planet-merge', 'hoop-shot', 'sword-flight']);
 for (const id of migrated) {

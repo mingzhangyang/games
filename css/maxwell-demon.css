@@ -138,30 +138,62 @@ body {
 
 
 
-/* ── 舞台 ── */
+/* ── 舞台：Immersive Stage（docs/contracts/layout.md §7）──
+   顶栏以下整块视口归场景。容器是 560×640 的固定逻辑场（模型几何不随屏幕变），
+   runtime.js 的 fitScene() 把它等比放进 #md-field 并写入整数 CSS 尺寸；
+   两颗动作钮默认排在容器下方，.is-side（宽矮屏 / 横屏）时分列容器两侧。 */
 
-.md-stage {
-    min-width: 280px;
-}
-
-.md-action-row {
+.md-scene {
     position: absolute;
-    inset: auto 16px 16px;
-    display: flex;
-    justify-content: space-between;
-    z-index: 15;
-    pointer-events: none;
+    inset: 0;
+    display: grid;
+    grid-template:
+        "field field" minmax(0, 1fr)
+        "scan  gate"  auto
+        / 1fr 1fr;
+    padding: 8px max(8px, env(safe-area-inset-right, 0px)) 14px max(8px, env(safe-area-inset-left, 0px));
+    gap: 10px 0;
 }
 
-.md-action-row.is-hidden { display: none; }
+.md-scene.is-side {
+    grid-template:
+        "scan field gate" minmax(0, 1fr)
+        / auto minmax(0, 1fr) auto;
+    gap: 0 12px;
+}
+
+.md-field {
+    grid-area: field;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    /* 窄高屏宽度受限，多出的高度留在容器与动作钮之间：容器贴顶、钮沉到拇指区 */
+    align-items: flex-start;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.md-scene.is-side .md-field { align-items: center; }
+
+/* 钮是网格项本身：外层行只负责一起显隐（visibility 会继承） */
+.md-action-row { display: contents; }
+
+/* 非 playing 态只隐身不收起：保留网格行高，菜单 ↔ 对局切换时容器尺寸不跳 */
+.md-action-row.is-hidden { visibility: hidden; }
+
+.md-scan-btn { grid-area: scan; justify-self: start; margin-left: 4px; }
+.md-gate-btn { grid-area: gate; justify-self: end; margin-right: 4px; }
+
+/* 两侧排列时钮落在拇指自然停放的下半段 */
+.md-scene.is-side .md-action-btn { align-self: end; margin-bottom: 18%; }
 
 #md-canvas {
     display: block;
-    width: 100%;
+    flex: none;
     border-radius: 18px;
     border: var(--md-canvas-border);
     box-shadow: var(--md-canvas-shadow);
-    /* 主要输入是底部两个动作钮；允许页面手势会让移动浏览器
+    /* 主要输入是两颗动作钮；允许页面手势会让移动浏览器
        在 pointer stream 归属明确前把它交给滚动容器。 */
     touch-action: none;
     cursor: pointer;
@@ -171,9 +203,9 @@ body {
 
 .md-action-btn {
     position: relative;
-    bottom: auto;
-    width: 64px;
-    height: 64px;
+    /* 高屏多出的高度给拇指：钮随视口高度放大，矮屏不小于 64px */
+    width: clamp(64px, 8.5dvh, 84px);
+    height: clamp(64px, 8.5dvh, 84px);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -186,14 +218,12 @@ body {
 }
 
 .md-scan-btn {
-    left: auto;
     color: var(--md-scan-btn-text);
     background: var(--md-scan-btn-bg);
     box-shadow: var(--md-scan-btn-shadow);
 }
 
 .md-gate-btn {
-    right: auto;
     color: var(--md-gate-btn-text);
     background: var(--md-gate-btn-bg);
     box-shadow: var(--md-gate-btn-shadow);
@@ -371,18 +401,59 @@ body {
 
 .md-username:focus { border-color: var(--md-username-focus-border); }
 
-/* ── 侧栏：记录行 ── */
+/* ── 开始界面：战绩行 + 原理与图例（原侧栏内容；沉浸布局没有侧栏） ── */
 
+.md-records {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--md-hud-level-text);
+    font-variant-numeric: tabular-nums;
+}
 
+.md-learn {
+    width: min(100%, 380px);
+    margin: 0 auto;
+    text-align: left;
+    font-size: 13px;
+    line-height: 1.55;
+}
 
+.md-learn-summary {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-weight: 700;
+    color: var(--md-hud-level-text);
+}
 
-/* ── 侧栏：热力学图例 ──
-   颜色必须与 src/games/maxwell-demon/runtime.js 渲染层的语义色一一对应：
+.md-learn-text { margin: 0 0 8px; }
+
+/* 图例颜色必须与 src/games/maxwell-demon/runtime.js 渲染层的语义色一一对应：
    快分子 --tok-hot / 慢分子 --tok-cold / 未观测灰 / 门 --tok-gold / 温差 = 光谱带 */
+.md-legend {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 6px;
+}
 
+.md-legend-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
 
-
-
+.md-legend-dot {
+    flex: none;
+    width: 10px;
+    height: 10px;
+    margin-top: 5px;
+    border-radius: 50%;
+}
 
 .md-legend-fast { background: var(--md-legend-fast-bg); box-shadow: var(--md-legend-fast-shadow); }
 .md-legend-slow { background: var(--md-legend-slow-bg); box-shadow: var(--md-legend-slow-shadow); }
@@ -392,7 +463,7 @@ body {
 /* 「温差」用光谱渐变条表示：不是单色语义，而是冷热两端之间的连续量 */
 .md-legend-band {
     width: 12px;
-    height: 12px;
+    height: 10px;
     border-radius: 3px;
     background: var(--md-legend-band-bg);
 }
@@ -401,23 +472,6 @@ body {
 
 @media (width <= 480px) {
     .md-hud-level { font-size: 12px; }
- 
- 
-
-    @layer pages {
-        .md-stage { flex-direction: column; align-items: stretch; }
-    }
-
-    .md-action-row {
-        position: relative;
-        inset: auto;
-        width: 100%;
-        min-height: 82px;
-        padding: 12px;
-        margin-top: 2px;
-    }
-    .md-action-btn { width: 58px; height: 58px; }
-    .md-scan-btn, .md-gate-btn { left: auto; right: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -426,20 +480,6 @@ body {
     }
     .md-toast { transition: none; }
     .md-btn, .md-icon-btn, .md-mode, .md-chip, .md-action-btn { transition: none; }
-}
-
-/* ── 统一骨架参数（默认值与公共骨架见 css/layout.css） ──
-   560×640 逻辑场 → --frame-ratio: 0.875；
-   舞台宽由「可用高度 × 画幅比」推导，见 layout.css 桌面 media 注释 */
-.md-shell {
-    --frame-max-wide: 940px;
-    --frame-stage: 560px;
-    --frame-side: 300px;
-    --frame-side-gap: 14px;
-    --frame-ratio: 0.875;
-    --frame-stage-h: 960px;
-    --frame-shell-max: calc(var(--stage-w) + var(--frame-main-gap) + var(--frame-side) + 24px);
-    --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
 }
 
 /* ── 画布调色板（src/games/maxwell-demon/runtime.js 经 bindPalette 读取；docs/contracts/theme.md §2.4）──
@@ -460,4 +500,14 @@ body {
     --md-cv-gap-hit: #9a6200;
     --md-cv-gap-text: #13222b;
     --md-cv-budget-text: #2c4050;
+}
+
+/* 沉浸舞台整块 touch-action:none；每日结算带排行榜与用户名，手机矮屏上会超出舞台，
+   这两层自身是滚动容器，必须放行纵向手势才能用手指滚到底部按钮 */
+@layer pages {
+    .md-overlay:not(.game-overlay--menu) {
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        touch-action: pan-y;
+    }
 }

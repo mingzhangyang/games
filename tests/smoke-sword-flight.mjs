@@ -195,17 +195,74 @@ try {
     }));
     check(touchAction.dashTimer > 0 && touchAction.qi < 100, '移动端破空按钮仍触发动作与真气消耗', JSON.stringify(touchAction));
 
-    await mobile.evaluate(() => { window.game.player.ultEnergy = 100; });
-    await mobile.touchscreen.touchStart(startX, startY);
-    await mobile.touchscreen.touchEnd();
-    await mobile.touchscreen.touchStart(startX + 2, startY + 2);
-    await mobile.touchscreen.touchEnd();
-    const doubleTap = await mobile.evaluate(() => ({
-        ultEnergy: window.game.player.ultEnergy,
-        qi: window.game.player.qi,
-    }));
-    check(doubleTap.ultEnergy === 0 && doubleTap.qi === 100,
-        '移动端画布双击仍触发万剑归宗', JSON.stringify(doubleTap));
+    // Double tap is a time-bounded *gesture* (two taps within 350ms).
+    // Four awaited Puppeteer touch commands can exceed that limit on loaded CI runners.
+    // Dispatch trusted Chromium touch inputs in one protocol turn, retaining the exact
+    // production gesture thresholds and recording their real browser delivery times.
+    await mobile.evaluate(() => {
+        const g = window.game;
+        g.player.ultEnergy = 100;
+        const original = g.triggerUltimate.bind(g);
+        window.__sfUltimateTouch = { inputs: [], effects: [] };
+        g.triggerUltimate = (...args) => {
+            const beforeEnergy = g.player.ultEnergy;
+            const result = original(...args);
+            window.__sfUltimateTouch.effects.push({
+                beforeEnergy, afterEnergy: g.player.ultEnergy,
+                qiAfter: g.player.qi, maxQi: g.player.maxQi,
+            });
+            return result;
+        };
+        const canvas = document.getElementById('sf-canvas');
+        for (const kind of ['touchstart', 'touchend']) {
+            canvas.addEventListener(kind, event => {
+                const touch = event.changedTouches[0];
+                if (touch) window.__sfUltimateTouch.inputs.push({
+                    kind, at: Date.now(), x: touch.clientX, y: touch.clientY,
+                });
+            });
+        }
+    });
+    const touchSession = await mobile.createCDPSession();
+    try {
+        const tapEvents = (x, y) => [
+            { type: 'touchStart', touchPoints: [{ x, y, id: 1 }] },
+            { type: 'touchEnd', touchPoints: [] },
+        ];
+        // CDP sends are queued in order without four network round trips between events.
+        await Promise.all([
+            ...tapEvents(startX, startY),
+            ...tapEvents(startX + 2, startY + 2),
+        ].map(event => touchSession.send('Input.dispatchTouchEvent', event)));
+    } finally {
+        await touchSession.detach();
+    }
+    const doubleTap = await mobile.evaluate(() => {
+        const { inputs, effects } = window.__sfUltimateTouch;
+        const [aStart, aEnd, bStart, bEnd] = inputs;
+        const distance = (a, b) => a && b ? Math.hypot(a.x - b.x, a.y - b.y) : Infinity;
+        const ordered = inputs.length === 4 &&
+            aStart.kind === 'touchstart' && aEnd.kind === 'touchend' &&
+            bStart.kind === 'touchstart' && bEnd.kind === 'touchend';
+        const durations = ordered ? [aEnd.at - aStart.at, bEnd.at - bStart.at] : [];
+        const gap = ordered ? bEnd.at - aEnd.at : Infinity;
+        const validGesture = ordered &&
+            durations.every(ms => ms >= 0 && ms <= 250) &&
+            gap >= 0 && gap <= 350 &&
+            distance(aStart, aEnd) <= 24 && distance(bStart, bEnd) <= 24 &&
+            distance(aEnd, bEnd) <= 64;
+        return {
+            validGesture, durations, gap, inputs, effects,
+            current: { ultEnergy: window.game.player.ultEnergy, qi: window.game.player.qi },
+        };
+    });
+    // maxQi increases with cultivation; comparing qi to a magic 100 is incorrect.
+    // Read the immediate ultimate effect before the ongoing simulation changes qi.
+    const ultimate = doubleTap.effects[0];
+    check(doubleTap.validGesture && doubleTap.effects.length === 1 &&
+        ultimate?.beforeEnergy === 100 && ultimate.afterEnergy === 0 &&
+        ultimate.qiAfter === ultimate.maxQi,
+    '移动端画布双击仍触发万剑归宗', JSON.stringify(doubleTap));
 
     await mobile.evaluate(() => window.game.returnToMenu());
     await mobile.waitForFunction(() => !window.game.isPlaying && !document.getElementById('sf-overlay-start').classList.contains('hidden'), { timeout: 5000 });

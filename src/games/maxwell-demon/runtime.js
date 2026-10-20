@@ -12,7 +12,9 @@
  * 关卡数据 / 分子内核在本包的 model/rules.js（纯模块，校验器共用）。
  * par 由 tests/verify-maxwell-demon-levels.mjs 的贪心模拟现算，绝不手填。
  *
- * 共享层（2026-09 契约）：game-frame / game-drawer / game-chrome /
+ * 布局：Immersive Stage（docs/contracts/layout.md §7）——容器按 560×640 等比放进舞台，
+ * 战绩 / 原理 / 图例收在开始界面（没有侧栏与统计抽屉）。
+ * 共享层（2026-09 契约）：game-frame / game-chrome /
  * leaderboard / daily / i18n / safe-storage / analytics / game-sfx / boot。
  */
 
@@ -155,9 +157,8 @@ export class MaxwellDemonGame {
         [
             'md-hud-level', 'md-budget', 'md-par', 'md-reset-btn', 'md-mute-btn', 'md-toast',
             'md-start', 'md-title', 'md-subtitle', 'md-howto', 'md-btn-levels', 'md-btn-daily',
-            'md-level-label', 'md-level-grid', 'md-daily-best', 'md-start-mute',
-            'md-side-howto-title', 'md-side-howto', 'md-side-records-title', 'md-side-records',
-            'md-side-legend-title', 'md-side-legend',
+            'md-level-label', 'md-level-grid', 'md-daily-best',
+            'md-records', 'md-legend', 'md-scene', 'md-field',
             'md-clear', 'md-clear-stars', 'md-clear-line', 'md-btn-next', 'md-btn-replay', 'md-btn-menu1',
             'md-over', 'md-over-title', 'md-over-score', 'md-over-sub',
             'md-btn-again', 'md-btn-copy', 'md-btn-menu2',
@@ -172,7 +173,7 @@ export class MaxwellDemonGame {
         this.progress = storageParseProgress();
 
         // 对局状态：menu | playing | won-level | won-daily | failed
-        // ⚠️ 字段名与 verify-stats-drawer.mjs 的 AUGMENT runningExpr 严格对应
+        // ⚠️ state / isPaused 是测试钩子（smoke / contextual-restart）直接读的字段名
         this.state = 'menu'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
         this.mode = 'levels';
@@ -218,10 +219,10 @@ export class MaxwellDemonGame {
     }
 
     /**
-     * 给共享层（bindChrome / createStatsDrawer）用的**整表**取用器。
+     * 给共享层（bindChrome）用的**整表**取用器。
      * ⚠️ 共享层的 `getText` 契约是 `() => object`（返回当前语言的文案对象），
      * 不是 `(key) => string` —— 传错形态会让共享文案全部静默退回英文
-     * （silk-dew 踩过的坑，verify-stats-drawer §②b 用死值断言防守）。
+     * （silk-dew 踩过的坑）。
      */
     textTable() {
         return LANGUAGES[this.lang] || LANGUAGES.en;
@@ -295,15 +296,6 @@ export class MaxwellDemonGame {
                 if (!next) Sfx.click();
             });
         }
-        if (el['start-mute']) {
-            el['start-mute'].innerHTML = getMuted() ? ICONS.soundOff : ICONS.soundOn;
-            el['start-mute'].addEventListener('click', () => {
-                const next = !getMuted();
-                setMuted(next);
-                el['start-mute'].innerHTML = next ? ICONS.soundOff : ICONS.soundOn;
-                if (el['mute-btn']) el['mute-btn'].innerHTML = next ? ICONS.soundOff : ICONS.soundOn;
-            });
-        }
         // Preserve pointerdown timing. Native keyboard clicks are a second
         // entrance to the same one-shot queue, never a second pointer charge.
         for (const [key, request] of [['gate-btn', 'wantGate'], ['scan-btn', 'wantScan']]) {
@@ -363,7 +355,7 @@ export class MaxwellDemonGame {
 
         this.renderLevelGrid();
         this.renderLegend();
-        this.renderSideRecords();
+        this.renderRecords();
         this.updateHud();
         document.documentElement.lang = this.lang === 'zh' ? 'zh-CN' : 'en';
     }
@@ -393,8 +385,9 @@ export class MaxwellDemonGame {
         });
     }
 
-    renderSideRecords() {
-        const box = this.el['side-records'];
+    /** 开始界面的战绩行（原侧栏「战绩」卡）：通关数 · 星数 · 已通关容器的最佳花费合计 */
+    renderRecords() {
+        const box = this.el['records'];
         if (!box) return;
         let cleared = 0, stars = 0, bestSum = 0, bestCount = 0;
         for (const spec of LEVELS) {
@@ -405,29 +398,16 @@ export class MaxwellDemonGame {
                 if (p.bestSpent > 0) { bestSum += p.bestSpent; bestCount++; }
             }
         }
-        const rows = [
-            [this.t('vessel'), `${cleared} / ${LEVELS.length}`],
-            [this.t('stars'), `${stars} / ${LEVELS.length * 3}`],
-            [this.t('spent'), bestCount ? String(bestSum) : '—'],
+        const parts = [
+            `${this.t('cleared')} ${cleared}/${LEVELS.length}`,
+            `★ ${stars}/${LEVELS.length * 3}`,
         ];
-        box.innerHTML = '';
-        for (const [k, v] of rows) {
-            const row = document.createElement('div');
-            row.className = 'md-side-row game-side-row';
-            const kk = document.createElement('span');
-            kk.className = 'md-side-k';
-            kk.textContent = k;
-            const vv = document.createElement('b');
-            vv.className = 'md-side-v';
-            vv.textContent = v;
-            row.appendChild(kk);
-            row.appendChild(vv);
-            box.appendChild(row);
-        }
+        if (bestCount) parts.push(`${this.t('bestSpentSum')} ${bestSum}`);
+        box.textContent = parts.join(' · ');
     }
 
     renderLegend() {
-        const box = this.el['side-legend'];
+        const box = this.el['legend'];
         if (!box) return;
         const rows = [
             ['fast', this.t('legendFast')],
@@ -438,12 +418,12 @@ export class MaxwellDemonGame {
         ];
         box.innerHTML = '';
         for (const [kind, text] of rows) {
-            const row = document.createElement('div');
-            row.className = 'md-legend-row game-legend-row';
+            const row = document.createElement('li');
+            row.className = 'md-legend-row';
             const dot = document.createElement('span');
-            dot.className = `md-legend-dot game-legend-dot md-legend-${kind}`;
+            dot.className = `md-legend-dot md-legend-${kind}`;
+            dot.setAttribute('aria-hidden', 'true');
             const tx = document.createElement('span');
-            tx.className = 'md-legend-text game-legend-text';
             tx.textContent = text;
             row.appendChild(dot);
             row.appendChild(tx);
@@ -500,6 +480,10 @@ export class MaxwellDemonGame {
         this.hide(this.el['start']);
         this.hide(this.el['clear']);
         this.hide(this.el['over']);
+        // The long phone menu scrolls the document; hiding it collapses the
+        // stage but may retain its old scroll offset above the locked canvas.
+        // Reset only after the menu has left layout.
+        window.scrollTo(0, 0);
         this.syncActionVisibility();
         this.updateHud();
         this.showToast(this.t(this.spec.tipKey || 'tipFirst'), 4.5);
@@ -536,7 +520,7 @@ export class MaxwellDemonGame {
         this.show(this.el['start']);
         this.syncActionVisibility();
         this.renderLevelGrid();
-        this.renderSideRecords();
+        this.renderRecords();
     }
 
     /* ---------------------- 结算 ---------------------- */
@@ -553,7 +537,7 @@ export class MaxwellDemonGame {
         this.progress[this.spec.id] = p;
         this.saveProgress();
         this.renderLevelGrid();
-        this.renderSideRecords();
+        this.renderRecords();
 
         if (this.mode === 'daily' && this.daily) {
             this.daily.totalSpent += spent;
@@ -783,9 +767,12 @@ export class MaxwellDemonGame {
             this.lang = getLang();
             this.applyLanguage();
         });
-        window.addEventListener('resize', () => this.resize());
-        // 桌面端 --frame-chrome 写入会改变舞台宽度 → 必须在 CSS 尺寸定下后重算后端缓冲区
-        window.addEventListener('game-frame:changed', () => this.resize());
+        const refit = () => { this.resize(); this.draw(); };
+        window.addEventListener('resize', refit);
+        // immersive 舞台高度 = 100dvh − 实测 --frame-chrome：写入后舞台尺寸才定下
+        window.addEventListener('game-frame:changed', refit);
+        // 开始菜单显隐也会改变舞台高度（< 1024px 菜单期间舞台让位给菜单）
+        if (typeof ResizeObserver !== 'undefined' && this.el['scene']) new ResizeObserver(refit).observe(this.el['scene']);
     }
 
     /* ---------------------- 暂停适配（抽屉契约） ---------------------- */
@@ -797,6 +784,7 @@ export class MaxwellDemonGame {
     /* ---------------------- 尺寸 ---------------------- */
 
     resize() {
+        this.fitScene();
         // ⚠️ 必须用 clientWidth（整数）而非 getBoundingClientRect().width（亚像素），
         // 否则后端缓冲区比 CSS 盒窄 1–3px，校验器报「画面糊」（silk-dew 实测坑）。
         const canvas = this.canvas;
@@ -811,6 +799,29 @@ export class MaxwellDemonGame {
         }
         this.renderScale = renderScale;
         this.dpr = dpr;
+    }
+
+    /**
+     * 容器（逻辑 560×640，模型几何不变）等比放进 #md-field，CSS 尺寸取整像素。
+     * 两颗动作钮的位置二选一：排在容器下方（窄高屏）或分列容器两侧（宽矮屏 / 横屏，
+     * 拇指正好落在两侧）——两种都实测一次 field 尺寸，取让容器更大的那种。
+     */
+    fitScene() {
+        const scene = this.el['scene'];
+        const field = this.el['field'];
+        if (!scene || !field) return;
+        const fit = () => Math.min(field.clientWidth / W, field.clientHeight / H);
+        scene.classList.remove('is-side');
+        const below = fit();
+        scene.classList.add('is-side');
+        const side = fit();
+        const useSide = side > below * 1.04;
+        scene.classList.toggle('is-side', useSide);
+        const s = useSide ? side : below;
+        if (!(s > 0)) return;
+        const cssW = Math.max(160, Math.floor(W * s));
+        this.canvas.style.width = `${cssW}px`;
+        this.canvas.style.height = `${Math.round(cssW * H / W)}px`;
     }
 
     /* ---------------------- 循环 ---------------------- */
@@ -917,8 +928,7 @@ export class MaxwellDemonGame {
 
         this.drawBackdrop(ctx);
         if (this.world && this.state !== 'menu') {
-            // 顺序：先 vessel/tint 再 bars —— T 读数要画进腔体内部，
-            // 若 bars 在 vessel 之前，readout 会被 vessel 的不透明底色盖掉。
+            // bars 只画在容器外的上下条带里，与腔体内的分子互不遮挡。
             this.drawVessel(ctx);
             this.drawChamberTint(ctx);
             this.drawBars(ctx);
@@ -945,63 +955,83 @@ export class MaxwellDemonGame {
         }
     }
 
-    /** 顶部：左右腔温度条 + 中央 ΔT；底部：预算条 */
+    /**
+     * 顶部条带（0..pad）：`T 左 ▬▬  ΔT x / 目标  ▬▬ T 右`；
+     * 底部条带（H−pad..H）：`预算 n ▬▬▬▬ 已花 · 目标`。
+     * 文字按实际像素可读字号放大（手机上逻辑字号可到 20px+），所以条长一律由
+     * measureText 现算、夹在文字之间：固定坐标的条会被放大的 ΔT / 预算文字压住，
+     * T 读数放进腔体顶角又会和角螺栓、分子叠在一起（手机实测截图）。
+     */
     drawBars(ctx) {
         const w = this.world;
         const scale = Math.min(1, (this.canvas.clientWidth || W) / W);
-        ctx.font = `700 ${Math.max(12, 11 / scale)}px system-ui, sans-serif`;
+        const x0 = 40, x1 = W - 40;
+        const gapPx = 10;
+        const barH = 10;
         ctx.textBaseline = 'middle';
 
-        const barY = 16;
-        const barH = 10;
-        const drawTemp = (x0, x1, temp, side) => {
-            const wdt = x1 - x0;
+        /* ── 顶部 ── */
+        const topY = VESSEL_PAD / 2;
+        const shown = Math.abs(w.gap) < 0.005 ? 0 : w.gap; // -0.004.toFixed(2) 会显示 "-0.00"
+        const gapText = `ΔT ${shown >= 0 ? '+' : ''}${shown.toFixed(2)} / ${this.spec.target.toFixed(2)}`;
+        ctx.font = `800 ${Math.max(15, 11 / scale)}px system-ui, sans-serif`;
+        const gapHalf = ctx.measureText(gapText).width / 2;
+        ctx.font = `700 ${Math.max(12, 11 / scale)}px system-ui, sans-serif`;
+        const tL = `T ${w.tempL.toFixed(2)}`;
+        const tR = `T ${w.tempR.toFixed(2)}`;
+        const tw = Math.max(ctx.measureText(tL).width, ctx.measureText(tR).width);
+        const drawTemp = (bx0, bx1, temp) => {
+            const wdt = bx1 - bx0;
+            if (wdt < 16) return;
+            const by = topY - barH / 2;
             ctx.fillStyle = P.barTrack;
-            this.roundRect(ctx, x0, barY, wdt, barH, 5);
+            this.roundRect(ctx, bx0, by, wdt, barH, 5);
             ctx.fill();
             const k = clamp(temp / 2, 0, 1);
-            ctx.fillStyle = mixHex('#3a5c8f', HOT, clamp((temp - 0.3) / 1.6, 0, 1));
             if (wdt * k > 2) {
-                this.roundRect(ctx, x0, barY, Math.max(2, wdt * k), barH, 5);
+                ctx.fillStyle = mixHex('#3a5c8f', HOT, clamp((temp - 0.3) / 1.6, 0, 1));
+                this.roundRect(ctx, bx0, by, Math.max(2, wdt * k), barH, 5);
                 ctx.fill();
             }
-            // 读数画在**各自腔体内**的顶角：放在 canvas 顶部条下面会压住 vessel
-            // 边框（barY+barH+11 = 37 恰好骑在 vessel 顶边 34 上），视觉像被裁断。
-            ctx.fillStyle = 'rgba(201,214,255,0.8)';
-            ctx.textAlign = side === 'left' ? 'left' : 'right';
-            ctx.fillText(`T ${temp.toFixed(2)}`, side === 'left' ? VESSEL_PAD + 12 : W - VESSEL_PAD - 12, VESSEL_PAD + 16);
         };
-        drawTemp(40, 252, w.tempL, 'left');
-        drawTemp(308, 520, w.tempR, 'right');
-
-        // 中央 ΔT（极小值归零：-0.004.toFixed(2) 会显示 "-0.00"）
-        ctx.textAlign = 'center';
-        const shown = Math.abs(w.gap) < 0.005 ? 0 : w.gap;
-        const hit = w.gap >= this.spec.target;
-        ctx.fillStyle = hit ? P.gapHit : P.gapText;
-        ctx.font = `800 ${Math.max(15, 11 / scale)}px system-ui, sans-serif`;
-        ctx.fillText(`ΔT ${shown >= 0 ? '+' : ''}${shown.toFixed(2)} / ${this.spec.target.toFixed(2)}`, DOOR_X, barY + 5);
-
-        // 底部预算条
-        const by = H - 26;
-        const bx0 = 40, bx1 = 520;
-        ctx.fillStyle = P.barTrack;
-        this.roundRect(ctx, bx0, by, bx1 - bx0, 8, 4);
-        ctx.fill();
-        const left = budgetLeft(w);
-        const k = clamp(left / w.total, 0, 1);
-        if (k > 0.001) {
-            ctx.fillStyle = k > 0.35 ? GOLD : '#ff6b7a';
-            this.roundRect(ctx, bx0, by, Math.max(2, (bx1 - bx0) * k), 8, 4);
-            ctx.fill();
-        }
-        ctx.font = `700 ${11 / scale}px system-ui, sans-serif`;
+        drawTemp(x0 + tw + gapPx, DOOR_X - gapHalf - gapPx * 1.5, w.tempL);
+        drawTemp(DOOR_X + gapHalf + gapPx * 1.5, x1 - tw - gapPx, w.tempR);
         ctx.fillStyle = P.budgetText;
-        // 标签放条**下方**：by-9 = 605 会压在 vessel 底边（606）上
         ctx.textAlign = 'left';
-        ctx.fillText(`${this.t('budget')} ${left}`, bx0, by + 14);
+        ctx.fillText(tL, x0, topY);
         ctx.textAlign = 'right';
-        ctx.fillText(`${this.t('spent')} ${w.spent} · ${this.t('par')} ${this.spec.par}`, bx1, by + 14);
+        ctx.fillText(tR, x1, topY);
+
+        ctx.textAlign = 'center';
+        ctx.fillStyle = w.gap >= this.spec.target ? P.gapHit : P.gapText;
+        ctx.font = `800 ${Math.max(15, 11 / scale)}px system-ui, sans-serif`;
+        ctx.fillText(gapText, DOOR_X, topY);
+
+        /* ── 底部预算 ── */
+        const botY = H - VESSEL_PAD / 2;
+        const left = budgetLeft(w);
+        const budgetText = `${this.t('budget')} ${left}`;
+        const spentText = `${this.t('spent')} ${w.spent} · ${this.t('par')} ${this.spec.par}`;
+        ctx.font = `700 ${Math.max(12, 11 / scale)}px system-ui, sans-serif`;
+        const bx0 = x0 + ctx.measureText(budgetText).width + gapPx;
+        const bx1 = x1 - ctx.measureText(spentText).width - gapPx;
+        if (bx1 - bx0 >= 16) {
+            const by = botY - 4;
+            ctx.fillStyle = P.barTrack;
+            this.roundRect(ctx, bx0, by, bx1 - bx0, 8, 4);
+            ctx.fill();
+            const k = clamp(left / w.total, 0, 1);
+            if (k > 0.001) {
+                ctx.fillStyle = k > 0.35 ? GOLD : '#ff6b7a';
+                this.roundRect(ctx, bx0, by, Math.max(2, (bx1 - bx0) * k), 8, 4);
+                ctx.fill();
+            }
+        }
+        ctx.fillStyle = P.budgetText;
+        ctx.textAlign = 'left';
+        ctx.fillText(budgetText, x0, botY);
+        ctx.textAlign = 'right';
+        ctx.fillText(spentText, x1, botY);
         ctx.textAlign = 'start';
     }
 

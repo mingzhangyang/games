@@ -396,7 +396,7 @@ CSS 契约顺序 + `<main>` 语义 + h1，**不套** shell/topbar/sidebar 几何
 ## 7. Immersive Stage（2026-09-26，`games.config.json` 的 `"layout": "immersive"`）
 
 与标准骨架（§1–§6）**互斥**的第二种页面布局，给「场景就是游戏」的重场景游戏用（消费方包括
-firefly-signal、tower-defense 与 loop-jail；未来《影织》等可复用）。**保留共享顶栏**，顶栏以下的整块视口都属于游戏场景；
+firefly-signal、tower-defense、loop-jail 与 maxwell-demon；未来《影织》等可复用）。**保留共享顶栏**，顶栏以下的整块视口都属于游戏场景；
 HUD 是舞台里的浮层而不是面板；没有侧栏 / 抽屉 / 桌面纵向预算。
 
 **为什么是字段不是 cap**：caps 是可以叠加的能力（sidebar + drawer + leaderboard…），布局类型是互斥的
@@ -426,6 +426,7 @@ HUD 是舞台里的浮层而不是面板；没有侧栏 / 抽屉 / 桌面纵向�
 | 宽度 | 默认视口 ≤ `--frame-immersive-max`（640px）时贴边铺满；tower-defense 在 shell 上覆盖为 800px；更宽时按页面上限居中 |
 | 顶栏 | 默认最大宽度同舞台；左右内距 `max(10px, 安全区)`。tower-defense 手机横屏战斗时改为 fixed 悬浮 HUD，避免占用战场高度 |
 | 页面级参数 | tower-defense：registry stage = `800×600`、`--frame-immersive-max: 800px`、landscape-first、无 sidebar / drawer / frame-budget；手机横屏战斗隐藏随流页脚并把 4:3 canvas 等比放大到完整视口高度；默认 immersive 页仍为 640px |
+| 固定逻辑场 | maxwell-demon：模型几何是 560×640，不随屏幕变。页面把画布等比放进舞台内的 `#md-field`（runtime `fitScene()` 写整数 CSS 尺寸）；两颗动作钮默认排在容器下方（容器贴顶、钮在拇指区），实测两侧排列能让容器更大时（横屏 / 宽矮屏）切 `.is-side` 分列两侧。原侧栏的战绩 / 原理 / 图例 / 更多游戏收进开始菜单 |
 | 两侧延展 | 舞台窄于视口时，页面自己负责把夜色 / 场景横向延展（firefly-signal：背景层列平均成 1px 竖条铺在 fixed 背景层上；tower-defense：深石墨蓝场外延展） |
 | 手势 | 舞台 `touch-action:none` + `user-select:none` + 禁长按菜单 / 点击高亮：不滚页、不双击缩放、不选字 |
 | body 标记 | `has-immersive-stage`（**不打** `has-frame-budget`，因此不会命中侧栏限高规则） |

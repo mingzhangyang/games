@@ -1363,6 +1363,7 @@
       "href": "maxwell-demon.html",
       "entry": "src/games/maxwell-demon/index.js",
       "emoji": "😈",
+      "layout": "immersive",
       "title": {
         "doc": "麦克斯韦妖 Maxwell's Demon — Heat & Entropy Puzzle",
         "seo": "麦克斯韦妖 Maxwell's Demon — Heat & Entropy Puzzle"
@@ -1381,9 +1382,6 @@
         "EducationalGame"
       ],
       "caps": [
-        "sidebar",
-        "drawer",
-        "frame-budget",
         "leaderboard",
         "daily",
         "analytics",

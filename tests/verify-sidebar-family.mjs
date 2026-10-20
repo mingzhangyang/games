@@ -8,8 +8,8 @@ import { registry } from './lib/registry.mjs';
 import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
 
 const BASE = process.argv.slice(2).find(arg => arg.startsWith('http')) || 'http://127.0.0.1:8899';
-const PREFIXES = new Set(['cc', 'cb', 'ec', 'fv', 'gd', 'lm', 'md', 'rd', 'sd', 'bf']);
-const LEGEND_PREFIXES = new Set(['cb', 'ec', 'fv', 'md', 'rd']);
+const PREFIXES = new Set(['cc', 'cb', 'ec', 'fv', 'gd', 'lm', 'rd', 'sd', 'bf']);
+const LEGEND_PREFIXES = new Set(['cb', 'ec', 'fv', 'rd']);
 const VIEWPORTS = [[390, 844], [768, 1024], [844, 390], [1280, 900]];
 const PARTICIPANTS = registry.all().filter(game => PREFIXES.has(game.prefix));
 const CASES = PARTICIPANTS.filter(game => keepPage(game.id));
