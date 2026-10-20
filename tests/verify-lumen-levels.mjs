@@ -18,7 +18,7 @@
 // 用法：node tests/verify-lumen-levels.mjs
 
 import {
-    CHAPTERS, LEVELS_PER_CHAPTER, LUMEN_LEVELS, DAILY_POOL, DAILY_RULES, dailyLevel,
+    CHAPTERS, LEVELS_PER_CHAPTER, LUMEN_LEVELS, LEVEL_SPECS, DAILY_POOL, DAILY_RULES, campaignLevels, dailyLevel,
 } from '../src/games/lumen/model/levels.js';
 import {
     GRID_N, buildLevel, traceGrid, tapGrid, unitCells, isMirror,
@@ -90,6 +90,20 @@ console.log('▶ 25 章节关');
 ok(CHAPTERS.length === 5 && LEVELS_PER_CHAPTER === 5, '5 章 × 5 关');
 ok(LUMEN_LEVELS.length === CHAPTERS.length * LEVELS_PER_CHAPTER, `关卡数 = 25（实际 ${LUMEN_LEVELS.length}）`);
 ok(new Set(LUMEN_LEVELS.map(lv => lv.id)).size === LUMEN_LEVELS.length, '关卡 id 唯一（星级按 id 存）');
+// 已发布的 id 是玩家存档主键：只能新增，不能改名 / 删除（调序、插关随意）
+const PUBLISHED_IDS = CHAPTERS.flatMap(ch => [1, 2, 3, 4, 5].map(n => `${ch.id}-${n}`));
+const liveIds = new Set(LUMEN_LEVELS.map(lv => lv.id));
+ok(PUBLISHED_IDS.every(id => liveIds.has(id)), '已发布的 25 个关卡 id 全部仍在',
+    PUBLISHED_IDS.filter(id => !liveIds.has(id)).join(', '));
+{
+    // id 跟着谜题走，不跟着位置走：交换同章两关后，每个 id 仍指向原来那张盘面
+    const swapped = LEVEL_SPECS.slice();
+    [swapped[5], swapped[6]] = [swapped[6], swapped[5]];
+    const moved = campaignLevels(swapped);
+    const byId = new Map(LUMEN_LEVELS.map(lv => [lv.id, lv.sol.join('')]));
+    ok(moved.every(lv => byId.get(lv.id) === lv.sol.join('')), '调序后 id 仍指向同一张盘面（星级不串关）');
+    ok(moved[5].index === 5 && moved[5].chapter === 1, '调序只改显示编号与章节位置');
+}
 
 const greedyRates = [];
 console.log('  关卡       par 单元 预见 贪心3★ 贪心2★');

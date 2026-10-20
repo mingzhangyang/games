@@ -112,14 +112,15 @@ export class LumenView {
             chip.dataset.chapter = String(lv.chapter);
             chip.dataset.level = String(i);
             const label = levelLabel(i);
+            const n = stars[i] || 0;
             chip.title = `${this.chapterName(lv.chapter)} · ${label}`;
-            chip.setAttribute('aria-label', chip.title);
+            // aria-label 会覆盖子节点文字：星级必须写进可访问名，否则读屏分不清玩过没玩过
+            chip.setAttribute('aria-label', `${chip.title} · ${this.t.stars} ${n}/3`);
             const num = document.createElement('span');
             num.className = 'lm-chip-num game-start-chip-num';
             num.textContent = label;
             const starLine = document.createElement('span');
             starLine.className = 'lm-chip-stars game-start-chip-stars';
-            const n = stars[i] || 0;
             starLine.textContent = n > 0 ? '⭐'.repeat(n) : '☆☆☆';
             chip.append(num, starLine);
             grid.appendChild(chip);

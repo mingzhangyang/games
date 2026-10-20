@@ -5,7 +5,8 @@
  * 几何/元素存在性只能证明"页面长得对"，测不出"游戏能玩"（见 docs/traps.md 教训）。
  * 本脚本走一条真实交互链：
  *   menu → startLevel(0) → canvas 位图非空 → mouse 点击 1-1 镜面 (4,6)
- *   → 光路点亮水晶 → solved → 结算面板出现 → HUD flips=1 → 星级按 id 写入 game:lumen:v2:stars；
+ *   → 光路点亮水晶 → solved → 结算面板出现 → HUD flips=1 → 星级按 id 写入 game:lumen:v2:stars
+ *   → 回菜单，选关按钮的可访问名带星级；
  *   2-1 初盘暗晶被照到 → 画布该格像素偏红、未判胜；
  *   3-1 真实点击一面联动镜 → 整组一起翻转、flips 只 +1；
  *   5-5（终章末关）按最优解真实点击 par 次 → 三星通关。
@@ -91,6 +92,13 @@ if (after.flips !== '1') fail(`HUD flips 应为 1，got ${after.flips}`);
 if (!after.clearVisible) fail('过关面板未显示');
 if (!after.stars.includes('⭐')) fail(`星级未渲染: ${after.stars}`);
 if (after.starsStored !== 3) fail(`L1 翻 1 次应为 3 星，got ${after.starsStored}`);
+
+/* ── 4b. 回菜单：选关按钮的可访问名带星级（aria-label 会覆盖按钮里的星星文字） ── */
+await page.evaluate(() => window.lmGame.showMenu());
+const chipNames = await page.evaluate(() => [...document.querySelectorAll('#lm-level-grid button')]
+    .slice(0, 2).map(b => b.getAttribute('aria-label') || ''));
+if (!chipNames[0].includes('星星 3/3')) fail(`1-1 选关按钮可访问名应含「星星 3/3」，got ${chipNames[0]}`);
+if (!chipNames[1].includes('星星 0/3')) fail(`1-2 选关按钮可访问名应含「星星 0/3」，got ${chipNames[1]}`);
 
 /** 格中心的 page 坐标 */
 const cellPoint = (r, c) => page.evaluate((r, c) => {
