@@ -212,7 +212,15 @@ body {
 /* ── 提示 ── */
 
 .rd-toast {
-    top: 14px;
+    /* 落在读数板下半（READOUT y 418–530 / 640）：顶部会盖住第一关就要拖的 S1，
+       而「还不够静」这类反馈本来就该贴着读数条出现 */
+    top: 71%;
+    /* 开局提示是整句：用满舞台宽再换行（只靠 left:50% 时最宽半个舞台，挤成三行胶囊） */
+    width: max-content;
+    max-width: calc(100% - 32px);
+    text-align: center;
+    line-height: 1.45;
+    border-radius: 16px;
     font-size: 13px;
     font-weight: 700;
     color: var(--tok-on-accent);

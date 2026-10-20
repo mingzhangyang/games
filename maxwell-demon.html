@@ -70,17 +70,19 @@
 
             <!-- 两个动作钮：观测（看清速度） / 开门（放行窗口） -->
             <div class="md-action-row" id="md-action-row">
-                <button type="button" class="md-action-btn md-scan-btn" id="md-scan-btn" title="Scan" aria-label="Scan">
+                <button type="button" class="md-action-btn md-scan-btn" id="md-scan-btn" title="Scan">
                     <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/>
                         <circle cx="12" cy="12" r="3.2"/>
                     </svg>
+                    <span class="sci-action-label" data-i18n="scan">Scan</span>
                 </button>
-                <button type="button" class="md-action-btn md-gate-btn" id="md-gate-btn" title="Open gate" aria-label="Open gate">
+                <button type="button" class="md-action-btn md-gate-btn" id="md-gate-btn" title="Open gate">
                     <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M4 3v18M20 3v18"/>
                         <path d="M9.5 4.5h5v15h-5z" fill="currentColor" stroke="none"/>
                     </svg>
+                    <span class="sci-action-label" data-i18n="gateShort">Open</span>
                 </button>
             </div>
 
@@ -100,7 +102,7 @@
                         <circle cx="32" cy="32" r="26" stroke="#a8b8ff" stroke-width="1.6" opacity="0.35"/>
                     </svg>
                 </div>
-                <p class="md-howto game-start-howto" id="md-howto" data-i18n="howto"></p>
+                <p class="md-howto game-start-howto sci-howto-steps" id="md-howto" data-i18n="howto" data-i18n-touch="howtoTouch"></p>
                 <div class="md-mode-row game-start-mode-row">
                     <button class="md-mode game-start-mode" id="md-btn-levels"></button>
                     <button class="md-mode md-mode-daily game-start-mode game-start-mode--daily" id="md-btn-daily"></button>
@@ -154,7 +156,8 @@
             <div id="mdStatsPanels">
                 <div class="md-side-card game-side-card">
                     <div class="md-side-title game-side-title" id="md-side-howto-title" data-i18n="sideHowTo"></div>
-                    <p class="md-side-text game-side-text" id="md-side-howto" data-i18n="howto"></p>
+                    <p class="md-side-text game-side-text sci-howto-steps" id="md-side-howto" data-i18n="howto" data-i18n-touch="howtoTouch"></p>
+                    <p class="md-side-text game-side-text sci-howto-science" id="md-side-science" data-i18n="howtoScience"></p>
                 </div>
                 <div class="md-side-card game-side-card">
                     <div class="md-side-title game-side-title" id="md-side-records-title" data-i18n="sideRecords"></div>
@@ -183,7 +186,7 @@
          统计抽屉、结算浮层抢层级，也不吃竖版画布高度）。
          ⚠️ 只保留操作提示；导航与状态控件统一留在 header / 页面主体。 -->
     <footer class="md-footer game-footer">
-        <p class="md-footer-hint game-footer-hint" id="md-hint" data-i18n="hint"></p>
+        <p class="md-footer-hint game-footer-hint" id="md-hint" data-i18n="hint" data-i18n-touch="hintTouch"></p>
     </footer>
     </div>
     <!-- 底部统计抽屉（移动端）：面板由 JS 从侧栏搬进来 -->

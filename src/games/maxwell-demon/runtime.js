@@ -497,7 +497,7 @@ export class MaxwellDemonGame {
         this.hide(this.el['over']);
         this.syncActionVisibility();
         this.updateHud();
-        this.showToast(this.t(this.spec.tipKey || 'tipFirst'));
+        this.showToast(this.t(this.spec.tipKey || 'tipFirst'), 4.5);
     }
 
     restartLevel() {
@@ -719,12 +719,15 @@ export class MaxwellDemonGame {
         if (el['scan-btn']) el['scan-btn'].classList.toggle('is-broke', broke);
     }
 
-    showToast(text) {
+    showToast(text, seconds = 2.8) {
         const el = this.el['toast'];
         if (!el) return;
         el.textContent = text;
+        // 初始态带 `hidden`（game-hidden-contract 下是 display:none !important），
+        // 只加 is-on 不摘它，提示永远不可见 —— 开局玩法提示曾因此整批失踪。
+        el.classList.remove('hidden');
         el.classList.add('is-on');
-        this.toastTimer = 2.8;
+        this.toastTimer = seconds;
     }
 
     hideToast() {

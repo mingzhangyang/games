@@ -730,6 +730,9 @@ export class SilkfallGame {
         const el = this.el['toast'];
         if (!el) return;
         el.textContent = text;
+        // 初始态带 `hidden`（game-hidden-contract 下是 display:none !important），
+        // 只加 is-on 不摘它，提示永远不可见 —— 开局玩法提示曾因此整批失踪。
+        el.classList.remove('hidden');
         el.classList.add('is-on');
         this.toastTimer = 2.6;
     }
