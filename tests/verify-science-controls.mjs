@@ -80,7 +80,7 @@ try {
                             point: [Math.round(x), Math.round(y)],
                             rect: [r.left, r.top, r.right, r.bottom].map(Math.round),
                             viewport: [innerWidth, innerHeight],
-                            scroll: [scrollX, scrollY],
+                            scroll: [window.scrollX, window.scrollY],
                             hitStack: document.elementsFromPoint(x, y).slice(0, 6).map(describe),
                             visibleOverlays: [...document.querySelectorAll('.game-overlay,.game-drawer')]
                                 .filter(node => {
