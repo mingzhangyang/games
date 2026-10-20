@@ -739,7 +739,10 @@ export class SilkfallGame {
 
     hideToast() {
         const el = this.el['toast'];
-        if (el) el.classList.remove('is-on');
+        if (!el) return;
+        el.classList.remove('is-on');
+        // .sd-toast 没有 opacity 渐隐（只有入场动画），收起只能靠 hidden
+        el.classList.add('hidden');
     }
 
     // ⚠️ 类名必须是 `hidden`（css/silk-dew.css:24 与所有 HTML 的初始态都用它）。
