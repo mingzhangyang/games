@@ -69,17 +69,19 @@
             <div class="fv-toast hidden game-toast" id="fv-toast"></div>
 
             <!-- 两个动作钮：清空重撒（+2）/ 送检（判定） -->
-            <button type="button" class="fv-action-btn fv-clear-btn" id="fv-clear-btn" title="Empty" aria-label="Empty">
+            <button type="button" class="fv-action-btn fv-clear-btn" id="fv-clear-btn" title="Empty">
                 <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M4 7h16"/>
                     <path d="M9.5 7V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v2"/>
                     <path d="M6.5 7 8 19.5a1.5 1.5 0 0 0 1.5 1.3h5a1.5 1.5 0 0 0 1.5-1.3L17.5 7"/>
                 </svg>
+                <span class="sci-action-label" data-i18n="dumpShort">Empty</span>
             </button>
-            <button type="button" class="fv-action-btn fv-run-btn" id="fv-run-btn" title="Assay" aria-label="Assay">
+            <button type="button" class="fv-action-btn fv-run-btn" id="fv-run-btn" title="Assay">
                 <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
                     <path d="M8 5.2v13.6l11-6.8z"/>
                 </svg>
+                <span class="sci-action-label" data-i18n="assay">Assay</span>
             </button>
 
             <!-- 盐架画在 canvas 上（与条码一起跟着舞台等比缩放；DOM 盐罐会在
@@ -97,7 +99,7 @@
                         <path d="M14 55v6M27 53v8M40 54v7M50 56v5" stroke="#ffd34d" stroke-width="2" opacity="0.75"/>
                     </svg>
                 </div>
-                <p class="fv-howto game-start-howto" id="fv-howto" data-i18n="howto"></p>
+                <p class="fv-howto game-start-howto sci-howto-steps" id="fv-howto" data-i18n="howto" data-i18n-touch="howtoTouch"></p>
                 <div class="fv-mode-row game-start-mode-row">
                     <button class="fv-mode game-start-mode" id="fv-btn-levels"></button>
                     <button class="fv-mode fv-mode-daily game-start-mode game-start-mode--daily" id="fv-btn-daily"></button>
@@ -151,7 +153,8 @@
             <div id="fvStatsPanels">
                 <div class="fv-side-card game-side-card">
                     <div class="fv-side-title game-side-title" id="fv-side-howto-title" data-i18n="sideHowTo"></div>
-                    <p class="fv-side-text game-side-text" id="fv-side-howto" data-i18n="howto"></p>
+                    <p class="fv-side-text game-side-text sci-howto-steps" id="fv-side-howto" data-i18n="howto" data-i18n-touch="howtoTouch"></p>
+                    <p class="fv-side-text game-side-text sci-howto-science" id="fv-side-science" data-i18n="howtoScience"></p>
                 </div>
                 <div class="fv-side-card game-side-card">
                     <div class="fv-side-title game-side-title" id="fv-side-records-title" data-i18n="sideRecords"></div>
@@ -180,7 +183,7 @@
          统计抽屉、结算浮层抢层级，也不吃竖版画布高度）。
          ⚠️ 只保留操作提示；导航与状态控件统一留在 header / 页面主体。 -->
     <footer class="fv-footer game-footer">
-        <p class="fv-footer-hint game-footer-hint" id="fv-hint" data-i18n="hint"></p>
+        <p class="fv-footer-hint game-footer-hint" id="fv-hint" data-i18n="hint" data-i18n-touch="hintTouch"></p>
     </footer>
     </div>
     <!-- 底部统计抽屉（移动端）：面板由 JS 从侧栏搬进来 -->

@@ -23,6 +23,7 @@ const ORIGIN = new URL(BASE).origin;
 const TOUCH_PAGES = new Set([
     'gomoku', 'hoop-shot', 'minesweeper', 'needle-awn', 'planet-merge', 'sword-flight',
     'tetris', 'tower-defense', 'word-daily', 'firefly-signal', 'carrot-pull', 'loop-jail',
+    'maxwell-demon', 'crystal-bloom', 'flame-verse', 'ripple-duet',
 ]);
 const KEY_MOUSE = [
     /\b(?:click|right-click|mouse|keyboard|keys?:|space|enter|esc|arrows?|wasd)\b/i,

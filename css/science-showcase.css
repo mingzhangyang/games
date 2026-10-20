@@ -306,6 +306,41 @@ body.science-theme-ripple {
     border-color: var(--showcase-focus) !important;
 }
 
+/* Icon + verb: icon-only round buttons left first-time players guessing
+   which one scans and which one opens.  The label is the button's
+   accessible name, so these buttons carry no aria-label. */
+.science-showcase .cb-action-btn,
+.science-showcase .md-action-btn,
+.science-showcase .fv-action-btn {
+    flex-direction: column;
+    gap: 3px;
+}
+
+.science-showcase .cb-action-btn svg,
+.science-showcase .md-action-btn svg,
+.science-showcase .fv-action-btn svg {
+    width: 22px;
+    height: 22px;
+}
+
+.science-showcase .sci-action-label {
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+/* How-to copy is a goal line plus numbered steps separated by \n in i18n. */
+.science-showcase .sci-howto-steps {
+    white-space: pre-line;
+    text-align: left;
+}
+
+.science-showcase .sci-howto-science {
+    margin-top: 8px;
+    color: var(--showcase-text-muted) !important;
+}
+
 .science-showcase .cb-overlay,
 .science-showcase .ec-overlay,
 .science-showcase .md-overlay,

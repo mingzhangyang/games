@@ -244,6 +244,9 @@ export class RippleDuetGame {
         this.hide(this.el['clear']);
         this.hide(this.el['over']);
         this.updateHud();
+        // 还没通过的海面开局提示一次操作要点（i18n 里的 tip* 是物理提示，不是操作说明）
+        const rec = this.progress[spec.id];
+        if (!(rec && rec.stars)) this.showToast(this.t('dragHint'), 4);
         track('ripple-duet', 'play');
     }
 
@@ -613,12 +616,14 @@ export class RippleDuetGame {
         if (el['par']) el['par'].textContent = `${this.t('par')} ${this.spec ? this.spec.par : 0}`;
     }
 
-    showToast(msg) {
+    showToast(msg, seconds = 2.2) {
         const el = this.el['toast'];
         if (!el) return;
         el.textContent = msg;
+        // 两个类都要动：hidden 是 display:none，而 .rd-toast 默认 opacity:0，只有 is-on 才显形
         el.classList.remove('hidden');
-        this.toastTimer = 2.2;
+        el.classList.add('is-on');
+        this.toastTimer = seconds;
     }
 
     buildLevelGrid() {
@@ -692,7 +697,7 @@ export class RippleDuetGame {
         if (!this.isPaused) this.time += dt;
         if (this.toastTimer > 0) {
             this.toastTimer -= dt;
-            if (this.toastTimer <= 0 && this.el['toast']) this.el['toast'].classList.add('hidden');
+            if (this.toastTimer <= 0 && this.el['toast']) this.el['toast'].classList.remove('is-on');
         }
         this.render();
         this.animationId = requestAnimationFrame(this.loop);

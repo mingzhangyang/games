@@ -223,6 +223,12 @@ body {
 
 .md-toast {
     top: 14px;
+    /* 开局提示是整句：用满舞台宽再换行（只靠 left:50% 时最宽半个舞台，挤成三行胶囊） */
+    width: max-content;
+    max-width: calc(100% - 32px);
+    text-align: center;
+    line-height: 1.45;
+    border-radius: 16px;
     font-size: 13px;
     font-weight: 700;
     color: var(--tok-on-accent);

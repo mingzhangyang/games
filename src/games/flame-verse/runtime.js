@@ -527,7 +527,7 @@ export class FlameVerseGame {
         this.hide(this.el['over']);
         this.syncActionVisibility();
         this.updateHud();
-        this.showToast(this.t(this.spec.tipKey || 'tipSalt'));
+        this.showToast(this.t(this.spec.tipKey || 'tipSalt'), 4.5);
     }
 
     restartLevel() {
@@ -809,12 +809,15 @@ export class FlameVerseGame {
         }
     }
 
-    showToast(text) {
+    showToast(text, seconds = 3.2) {
         const el = this.el['toast'];
         if (!el) return;
         el.textContent = text;
+        // 初始态带 `hidden`（game-hidden-contract 下是 display:none !important），
+        // 只加 is-on 不摘它，提示永远不可见 —— 开局玩法提示曾因此整批失踪。
+        el.classList.remove('hidden');
         el.classList.add('is-on');
-        this.toastTimer = 3.2;
+        this.toastTimer = seconds;
     }
 
     hideToast() {

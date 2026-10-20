@@ -730,13 +730,19 @@ export class SilkfallGame {
         const el = this.el['toast'];
         if (!el) return;
         el.textContent = text;
+        // 初始态带 `hidden`（game-hidden-contract 下是 display:none !important），
+        // 只加 is-on 不摘它，提示永远不可见 —— 开局玩法提示曾因此整批失踪。
+        el.classList.remove('hidden');
         el.classList.add('is-on');
         this.toastTimer = 2.6;
     }
 
     hideToast() {
         const el = this.el['toast'];
-        if (el) el.classList.remove('is-on');
+        if (!el) return;
+        el.classList.remove('is-on');
+        // .sd-toast 没有 opacity 渐隐（只有入场动画），收起只能靠 hidden
+        el.classList.add('hidden');
     }
 
     // ⚠️ 类名必须是 `hidden`（css/silk-dew.css:24 与所有 HTML 的初始态都用它）。
