@@ -175,7 +175,7 @@ class MinesweeperGame {
         ['ms-mines', 'ms-timer', 'ms-face', 'ms-btn-home', 'ms-mute-btn',
             'ms-counter-mines', 'ms-counter-timer',
             'ms-flagmode', 'ms-hint', 'ms-start', 'ms-title', 'ms-subtitle', 'ms-howto',
-            'ms-btn-play', 'ms-best-grid', 'ms-start-mute',
+            'ms-btn-play', 'ms-best-grid',
             'ms-result', 'ms-result-title', 'ms-result-time', 'ms-result-best',
             'ms-lb-title', 'ms-lb-list', 'ms-lb-status', 'ms-username', 'ms-username-label',
             'ms-btn-again', 'ms-btn-copy', 'ms-btn-close'
@@ -903,7 +903,6 @@ class MinesweeperGame {
         // ⚠️ 键是 'mute-btn'（id 去掉 ms- 前缀），写成 this.el.mute 会永远是 undefined，
         //    顶栏静音钮因此从未绑上过 —— tests/verify-chrome.mjs 的"点一次必须翻转"断言抓到的。
         if (this.el['mute-btn']) this.el['mute-btn'].addEventListener('click', () => this.toggleMute());
-        if (this.el['start-mute']) this.el['start-mute'].addEventListener('click', () => this.toggleMute());
 
         if (this.el.username) {
             this.el.username.addEventListener('change', () => {
@@ -935,7 +934,6 @@ class MinesweeperGame {
         const muted = Sfx.toggleMuted();
         const icon = muted ? ICONS.soundOff : ICONS.soundOn;
         if (this.el['mute-btn']) this.el['mute-btn'].innerHTML = icon;
-        if (this.el['start-mute']) this.el['start-mute'].innerHTML = icon;
         if (!muted) Sfx.click();
     }
 }
@@ -950,7 +948,6 @@ onReady(() => {
     // 初始静音按钮状态
     const icon = Sfx.muted ? ICONS.soundOff : ICONS.soundOn;
     if (game.el['mute-btn']) game.el['mute-btn'].innerHTML = icon;
-    if (game.el['start-mute']) game.el['start-mute'].innerHTML = icon;
     // 初始难度高亮
     document.querySelectorAll('.ms-diff').forEach(b => b.classList.toggle('active', b.dataset.diff === game.diff));
 });

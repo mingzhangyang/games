@@ -202,8 +202,6 @@ body {
 
 .hs-stat-line { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
-.hs-start-footer { display: flex; gap: 10px; }
-
 .hs-lang-btn {
     font-size: 13px;
     font-weight: 600;

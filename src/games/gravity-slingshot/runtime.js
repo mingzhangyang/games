@@ -97,7 +97,7 @@ class GravityGame {
         ['gd-btn-home', 'gd-hole-label', 'gd-launches', 'gd-par', 'gd-total-box', 'gd-total',
             'gd-reset-btn', 'gd-mute-btn', 'gd-toast',
             'gd-start', 'gd-title', 'gd-subtitle', 'gd-howto', 'gd-btn-levels', 'gd-btn-daily',
-            'gd-level-label', 'gd-level-grid', 'gd-daily-best', 'gd-start-mute',
+            'gd-level-label', 'gd-level-grid', 'gd-daily-best',
             'gd-side-howto-title', 'gd-side-howto', 'gd-side-records-title', 'gd-side-records',
             'gd-hole', 'gd-hole-stars', 'gd-hole-line', 'gd-btn-next', 'gd-btn-replay', 'gd-btn-menu1',
             'gd-over', 'gd-over-title', 'gd-over-score', 'gd-over-sub',
@@ -684,7 +684,6 @@ class GravityGame {
         });
 
         if (this.el['mute-btn']) this.el['mute-btn'].addEventListener('click', () => this.toggleMute());
-        if (this.el['start-mute']) this.el['start-mute'].addEventListener('click', () => this.toggleMute());
         if (this.el.username) {
             this.el.username.addEventListener('change', () => {
                 setPlayerName(this.el.username.value);
@@ -711,7 +710,6 @@ class GravityGame {
     updateMuteButtons() {
         const icon = Sfx.muted ? ICONS.soundOff : ICONS.soundOn;
         if (this.el['mute-btn']) this.el['mute-btn'].innerHTML = icon;
-        if (this.el['start-mute']) this.el['start-mute'].innerHTML = icon;
     }
 
     async copyResult() {

@@ -587,8 +587,6 @@ body {
 
 .ms-best-chip b { color: var(--tok-cyan); font-weight: 700; }
 
-.ms-start-footer { display: flex; gap: 10px; margin-top: 4px; }
-
 .ms-lang-btn {
     font-size: 13px;
     font-weight: 600;

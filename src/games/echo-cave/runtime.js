@@ -131,7 +131,7 @@ export class EchoCaveGame {
         [
             'ec-hud-level', 'ec-pulses', 'ec-par', 'ec-reset-btn', 'ec-mute-btn', 'ec-toast',
             'ec-start', 'ec-title', 'ec-subtitle', 'ec-howto', 'ec-btn-levels', 'ec-btn-daily',
-            'ec-level-label', 'ec-level-grid', 'ec-daily-best', 'ec-start-mute',
+            'ec-level-label', 'ec-level-grid', 'ec-daily-best',
             'ec-side-howto-title', 'ec-side-howto', 'ec-side-records-title', 'ec-side-records',
             'ec-side-legend-title', 'ec-side-legend',
             'ec-clear', 'ec-clear-stars', 'ec-clear-line', 'ec-btn-next', 'ec-btn-replay', 'ec-btn-menu1',
@@ -271,15 +271,6 @@ export class EchoCaveGame {
                 setMuted(next);
                 el['mute-btn'].innerHTML = next ? ICONS.soundOff : ICONS.soundOn;
                 if (!next) Sfx.click();
-            });
-        }
-        if (el['start-mute']) {
-            el['start-mute'].innerHTML = getMuted() ? ICONS.soundOff : ICONS.soundOn;
-            el['start-mute'].addEventListener('click', () => {
-                const next = !getMuted();
-                setMuted(next);
-                el['start-mute'].innerHTML = next ? ICONS.soundOff : ICONS.soundOn;
-                if (el['mute-btn']) el['mute-btn'].innerHTML = next ? ICONS.soundOff : ICONS.soundOn;
             });
         }
         if (el['pulse-btn']) {

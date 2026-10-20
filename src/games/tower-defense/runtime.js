@@ -61,7 +61,7 @@ export class TowerDefenseGame {
         ['td-lives', 'td-gold', 'td-wave', 'td-wave-btn', 'td-wave-text', 'td-wave-preview',
             'td-stat-lives', 'td-stat-gold', 'td-stat-wave', 'td-stack-badge',
             'td-panel', 'td-toast', 'td-start', 'td-title', 'td-subtitle', 'td-howto', 'td-tower-intro',
-            'td-btn-play', 'td-best-line', 'td-start-mute',
+            'td-btn-play', 'td-best-line',
             'td-level-cards', 'td-level-brief', 'td-brief-waves', 'td-brief-gold', 'td-brief-lives',
             'td-select-title', 'td-brief-lbl-waves', 'td-brief-lbl-gold', 'td-brief-lbl-lives',
             'td-pause', 'td-pause-title', 'td-btn-resume', 'td-btn-menu',

@@ -371,22 +371,12 @@ class GameEngine {
             const isMuted = getMuted();
             const svg = isMuted ? ICONS.soundOff : ICONS.soundOn;
             this.dom.btnSound.innerHTML = svg;
-            const startSound = document.getElementById('na-start-sound');
-            if (startSound) startSound.innerHTML = svg;
         };
 
         this.dom.btnSound.addEventListener('click', () => {
             setMuted(!getMuted());
             updateSoundIcons();
         });
-
-        const startSound = document.getElementById('na-start-sound');
-        if (startSound) {
-            startSound.addEventListener('click', () => {
-                setMuted(!getMuted());
-                updateSoundIcons();
-            });
-        }
 
         // 玩家名称输入
         this.dom.playerInput.value = ensurePlayerName();

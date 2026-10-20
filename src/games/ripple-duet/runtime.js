@@ -153,7 +153,7 @@ export class RippleDuetGame {
         [
             'rd-hud-level', 'rd-budget', 'rd-par', 'rd-reset-btn', 'rd-mute-btn', 'rd-toast',
             'rd-start', 'rd-title', 'rd-subtitle', 'rd-howto', 'rd-btn-levels', 'rd-btn-daily',
-            'rd-level-label', 'rd-level-grid', 'rd-daily-best', 'rd-start-mute',
+            'rd-level-label', 'rd-level-grid', 'rd-daily-best',
             'rd-side-howto-title', 'rd-side-howto', 'rd-side-records-title', 'rd-side-records',
             'rd-side-legend-title', 'rd-side-legend',
             'rd-clear', 'rd-clear-stars', 'rd-clear-line', 'rd-btn-next', 'rd-btn-replay', 'rd-btn-menu1',
@@ -1014,12 +1014,9 @@ export class RippleDuetGame {
             el['username'].addEventListener('change', () => setPlayerName(el['username'].value.trim()));
         }
 
-        const muteBtns = [el['mute-btn'], el['start-mute']].filter(Boolean);
-        muteBtns.forEach((btn) => {
-            btn.addEventListener('click', () => {
-                setMuted(!getMuted());
-                this.syncMuteIcons();
-            });
+        el['mute-btn']?.addEventListener('click', () => {
+            setMuted(!getMuted());
+            this.syncMuteIcons();
         });
         this.syncMuteIcons();
 
@@ -1052,9 +1049,7 @@ export class RippleDuetGame {
     syncMuteIcons() {
         const on = !getMuted();
         const svg = on ? ICONS.soundOn : ICONS.soundOff;
-        [this.el['mute-btn'], this.el['start-mute']].forEach((btn) => {
-            if (btn) btn.innerHTML = svg;
-        });
+        if (this.el['mute-btn']) this.el['mute-btn'].innerHTML = svg;
     }
 
     pauseQuiet() { this.isPaused = true; this.contextualRestart?.sync(); }

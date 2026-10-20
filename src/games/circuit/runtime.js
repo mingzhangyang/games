@@ -196,7 +196,7 @@ export class CircuitGame {
         this.el = {};
         ['cc-btn-home', 'cc-hud-level', 'cc-move-box', 'cc-moves', 'cc-par', 'cc-reset-btn', 'cc-mute-btn', 'cc-toast',
             'cc-start', 'cc-title', 'cc-subtitle', 'cc-howto', 'cc-btn-levels', 'cc-btn-daily',
-            'cc-level-label', 'cc-level-grid', 'cc-daily-best', 'cc-start-mute',
+            'cc-level-label', 'cc-level-grid', 'cc-daily-best',
             'cc-side-howto-title', 'cc-side-howto', 'cc-side-records-title', 'cc-side-records',
             'cc-clear', 'cc-clear-stars', 'cc-clear-line', 'cc-btn-next', 'cc-btn-replay', 'cc-btn-menu1',
             'cc-over', 'cc-over-title', 'cc-over-score', 'cc-over-sub',
@@ -688,14 +688,12 @@ export class CircuitGame {
     updateMuteButtons() {
         const muted = getMuted();
         const t = this.TEXT;
-        ['mute-btn', 'start-mute'].forEach(k => {
-            const btn = this.el[k];
-            if (!btn) return;
-            btn.innerHTML = muted ? ICONS.soundOff : ICONS.soundOn;
-            btn.title = t.sound;
-            btn.setAttribute('aria-label', t.sound);
-            btn.setAttribute('aria-pressed', muted ? 'true' : 'false');
-        });
+        const btn = this.el['mute-btn'];
+        if (!btn) return;
+        btn.innerHTML = muted ? ICONS.soundOff : ICONS.soundOn;
+        btn.title = t.sound;
+        btn.setAttribute('aria-label', t.sound);
+        btn.setAttribute('aria-pressed', muted ? 'true' : 'false');
     }
 
     /* ── 暂停（供底部统计抽屉调用） ── */
@@ -804,9 +802,6 @@ export class CircuitGame {
         }
         if (this.el['mute-btn']) {
             this.el['mute-btn'].addEventListener('click', () => this.toggleMute());
-        }
-        if (this.el['start-mute']) {
-            this.el['start-mute'].addEventListener('click', () => this.toggleMute());
         }
         if (this.el.username) {
             this.el.username.addEventListener('change', () => {

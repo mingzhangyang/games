@@ -416,8 +416,6 @@ body {
 
 .rv-stat-line { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
-.rv-start-footer { display: flex; gap: 10px; }
-
 .rv-lang-btn {
     font-size: 13px;
     font-weight: 600;

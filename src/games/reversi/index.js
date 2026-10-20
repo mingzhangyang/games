@@ -152,7 +152,7 @@ class ReversiGame {
             'rv-count-black', 'rv-count-white', 'rv-mute-btn', 'rv-status',
             'rv-toast', 'rv-start', 'rv-title', 'rv-subtitle', 'rv-howto',
             'rv-mode-ai-label', 'rv-mode-2p-label', 'rv-diff-easy', 'rv-diff-medium', 'rv-diff-hard',
-            'rv-btn-play', 'rv-streak-line', 'rv-start-mute',
+            'rv-btn-play', 'rv-streak-line',
             'rv-over', 'rv-over-title', 'rv-over-verdict', 'rv-over-score', 'rv-over-streak',
             'rv-btn-again', 'rv-btn-copy', 'rv-btn-menu', 'rv-lb-box',
             'rv-lb-title', 'rv-lb-list', 'rv-lb-status', 'rv-username', 'rv-username-label',
@@ -607,7 +607,6 @@ class ReversiGame {
     updateMuteButtons() {
         const icon = Sfx.muted ? ICONS.soundOff : ICONS.soundOn;
         if (this.el['mute-btn']) this.el['mute-btn'].innerHTML = icon;
-        if (this.el['start-mute']) this.el['start-mute'].innerHTML = icon;
     }
 
     /* ── 事件绑定 ── */
@@ -666,11 +665,6 @@ class ReversiGame {
         if (this.el['mute-btn']) this.el['mute-btn'].addEventListener('click', () => {
             Sfx.toggleMuted();
             this.updateMuteButtons();
-        });
-        if (this.el['start-mute']) this.el['start-mute'].addEventListener('click', () => {
-            Sfx.toggleMuted();
-            this.updateMuteButtons();
-            if (!Sfx.muted) Sfx.click();
         });
 
         if (this.el.username) {

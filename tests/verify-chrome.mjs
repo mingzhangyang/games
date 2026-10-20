@@ -15,6 +15,9 @@
 //      可用，所以用户只见顶栏坏）。每页只测一次、且是本轮最后一个操作（会真的离开页面）。
 //   ⑧ 首屏可见的 game overlay 不得再塞一个 Home 链接。顶栏已经提供 Home，
 //      两者叠在同一屏会出现 tower-defense / reversi / minesweeper / needle-awn 的重复 Home。
+//   ⑨ 全页只能有一个声音开关：顶栏 data-chrome="sound"。开始菜单底部曾各自再挂一颗
+//      xx-start-mute（lumen 等 15 页），同一个开关出现两处。按运行时 DOM 计数，
+//      运行时插入的副本也逃不掉。
 //
 // ⚠️ 语言存储键是 site_lang（src/platform/site-settings.js 的 LANG_KEY），不是 'lang'。
 //    游戏页只读不写：语言切换入口只在首页，boot 时的 site_lang 决定本页初始语言。
@@ -122,6 +125,11 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
                     htmlLang: document.documentElement.lang,
                     docTitle: document.title,
                     muted: (() => { try { return localStorage.getItem('site_muted'); } catch (e) { return null; } })(),
+                    soundControls: Array.from(document.querySelectorAll('button, [role="button"], [role="switch"]'))
+                        .filter(n => n.getAttribute('data-chrome') === 'sound'
+                            || /(^|-)(mute|sound)(-|$)/i.test(n.id || '')
+                            || /^(sound|mute|unmute|声音|静音|取消静音)$/i.test((n.getAttribute('aria-label') || '').trim()))
+                        .map(n => n.getAttribute('data-chrome') === 'sound' ? 'topbar' : (n.id || n.className || n.tagName)),
                     visibleOverlayHomeCount: Array.from(document.querySelectorAll('.game-overlay a[href="index.html"]'))
                         .filter(vis).length,
                 };
@@ -178,6 +186,8 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
                 fail(name, vp.tag, lang, `页脚仍有 ${snap.footerMoreNavCount} 个 .game-footer-nav`);
             if (snap.visibleOverlayHomeCount > 0)
                 fail(name, vp.tag, lang, `首屏 overlay 内还有 ${snap.visibleOverlayHomeCount} 个 Home 链接，会与顶栏 Home 重复`);
+            if (snap.soundControls.length !== 1 || snap.soundControls[0] !== 'topbar')
+                fail(name, vp.tag, lang, `声音开关应只有顶栏一个，实际 ${snap.soundControls.length} 个：${snap.soundControls.join(', ')}`);
             if (snap.htmlLang && !snap.htmlLang.startsWith(lang))
                 warns.push(`${name} @${vp.tag}/${lang}: <html lang="${snap.htmlLang}">`);
 

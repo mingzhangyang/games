@@ -157,7 +157,12 @@ for (const g of GAMES) {
                 }
                 return samples;
             });
+            // start-footer is optional: the start-menu sound duplicate was removed (sound
+            // lives only in the topbar), so only pages that still have menu-local content
+            // there (maxwell-demon's more-games nav) carry a footer; when present it must
+            // still resolve to the shared geometry below.
             for (const [suffix, value] of Object.entries(audit)) {
+                if (suffix === 'start-footer') continue;
                 check(value !== null, `${g.id}@${w}：W4a .game-start-${suffix} 已实际采用`);
             }
             const required = [
@@ -176,6 +181,7 @@ for (const g of GAMES) {
                 ['card-line', 'fontSize', '14px'],
             ];
             for (const [suffix, property, wanted] of required) {
+                if (suffix === 'start-footer' && audit[suffix] === null) continue;
                 check(audit[suffix]?.[property] === wanted,
                     `${g.id}@${w}：W4a ${suffix}.${property}=${wanted}`,
                     String(audit[suffix]?.[property]));
