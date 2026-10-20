@@ -41,7 +41,7 @@ const LANGUAGES = makeText({
         pageTitle: 'Minesweeper — Classic Logic Puzzle',
         boardLabel: 'Minesweeper board',
         title: 'Minesweeper',
-        subtitle: 'Logic · Deduction · Nerves of steel',
+        subtitle: 'Logic\u00a0· Deduction\u00a0· Nerves of steel', // NBSP：只在 · 之后折行
         howto: 'Tap to reveal a square. Numbers show adjacent mines. Right-click / long-press to flag. Clear every safe square without detonating a mine — your first click is always safe!',
         play: 'Play',
         easy: 'Easy', medium: 'Medium', hard: 'Expert',

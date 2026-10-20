@@ -495,6 +495,11 @@ html[lang="zh-CN"] .sl-brand-zh {
     .sl-btn { padding: 9px 13px; font-size: 13px; }
 }
 
+/* 320px 级窄屏：英文名「Shadow Loom」比顶栏中槽宽 ~20px，会被省略成「Shadow L…」 */
+@media (width <= 340px) {
+    html:not([lang="zh-CN"]) .sl-brand-zh { font-size: 13px; letter-spacing: 0.02em; }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .sl-target-btn.is-hint,
     .sl-result { animation: none; }

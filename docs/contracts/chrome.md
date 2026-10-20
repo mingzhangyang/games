@@ -34,6 +34,9 @@ Stats / Pause，它的屏幕位置都一致。页面专属钮一律排在右簇�
 
 **唯一性：** 全页只有顶栏这一个声音开关。开始菜单 / 结算层 / 暂停层不得再放第二颗（如历史上的
 `xx-start-mute` / `na-start-sound`，2026-10-20 已从 15 页移除）；`tests/verify-chrome.mjs` ⑨ 按运行时 DOM 计数。
+唯一的这颗必须**指针可达**：视口级全屏开始层（reversi / minesweeper）不得盖住顶栏，顶栏抬到其上、
+开始层内容按 `--game-topbar-bottom`（`src/platform/topbar-clearance.js`）让位，开局前的局内 HUD 用 `visibility` 隐藏；
+`verify-chrome` ⑤ 做命中测试 + 真实指针点击，`tests/verify-topbar-row.mjs` 锁窄屏单行 / 无截断 / HUD 显隐。
 
 > **2026-09-21 变更：语言切换 UI 收敛到首页 index.html。** 游戏页不再有语言钮
 > （顶栏 `data-chrome="lang"`、开始浮层语言钮、math-rain 的两处 language-selector

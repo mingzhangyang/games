@@ -525,6 +525,12 @@ body {
     z-index: 16;
 }
 
+/* 开始界面打开时顶栏只留 Home / Sound：计数器、笑脸、暂停都是局内状态，开局前无意义，
+   还会和开始界面的标题抢视线。用 visibility 而非 display，顶栏高度不变，开局时不跳。 */
+.ms-shell:has(#ms-start:not(.hidden)) :is(.ms-topbar-center, #ms-btn-pause) {
+    visibility: hidden;
+}
+
 .ms-start {
     position: fixed;
     inset: 0;
@@ -559,11 +565,13 @@ body {
     letter-spacing: 0.16em;
     text-transform: uppercase;
     margin-top: -8px;
+    text-wrap: balance;
 }
 
 .ms-hero {
     font-size: 54px;
     line-height: 1;
+    margin-top: 8px; /* ms-bob 上浮 9px，不留余量火花会压到副标题 */
     animation: ms-bob 1.8s ease-in-out infinite;
 }
 
@@ -611,6 +619,13 @@ body {
     .ms-face { width: 42px; height: 42px; font-size: 21px; }
     .ms-counter { padding: 5px 9px; }
     .ms-counter-value { font-size: 16px; }
+}
+
+/* 320px 级窄屏：顶栏（Home · 雷数 · 笑脸 · 计时 · 暂停 · 声音）差几 px 就折成两行 */
+@media (width <= 360px) {
+    .ms-topbar-center { gap: 4px; }
+    .ms-counter { gap: 4px; padding: 5px 6px; }
+    .ms-face { width: 40px; height: 40px; font-size: 20px; }
     .ms-diff { font-size: 12px; padding: 7px 4px; }
     .ms-title { font-size: 30px; }
 }
