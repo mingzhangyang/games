@@ -63,13 +63,22 @@
         <!-- 舞台 -->
         <main class="rd-main game-main">
         <div class="rd-stage game-stage" id="rd-stage">
-            <canvas class="game-canvas" id="rd-canvas" width="560" height="640"></canvas>
+            <canvas class="game-canvas" id="rd-canvas" width="560" height="418"></canvas>
 
             <!-- 提示 -->
             <div class="rd-toast hidden game-toast" id="rd-toast"></div>
 
-            <!-- 海面、目标读数、源控制台全画在 canvas 上（舞台是 flex-row，
-                 正常流塞不进控制台；absolute 的浮动钮又会盖住海面） -->
+            <section class="rd-console" id="rd-console" aria-label="Wave controls">
+                <div class="rd-sources" id="rd-sources"></div>
+                <div class="rd-phase-controls">
+                    <button type="button" id="rd-minus" aria-label="Phase −45°">−</button>
+                    <output id="rd-phase"></output>
+                    <button type="button" id="rd-plus" aria-label="Phase +45°">+</button>
+                    <button type="button" id="rd-freeze"></button>
+                </div>
+                <p class="rd-measure-note" id="rd-measure-note"></p>
+                <div class="rd-measures" id="rd-measures" role="status" aria-live="polite"></div>
+            </section>
 
             <!-- 开始界面 -->
             <div class="rd-overlay game-overlay game-overlay--menu" id="rd-start">

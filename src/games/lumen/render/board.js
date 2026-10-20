@@ -3,7 +3,7 @@
  * 自己只持有纯视觉状态（星空、动画时钟、Effects），不参与任何判定。
  */
 import { GRID_N } from '../model/beam.js';
-import { H, W } from './geometry.js';
+import { CELL, H, W } from './geometry.js';
 import { Effects } from './effects.js';
 import {
     drawBackdrop, drawCrystal, drawEmitter, drawGridLines, drawLinkRing, drawLinkTethers,
@@ -35,6 +35,7 @@ export class BoardRenderer {
         this.effects = new Effects();
         this.links = [];
         this.groupOf = new Map();   // 联动镜 idx → 组号
+        this.selected = [];
         this.split = new Set();     // 分光镜 idx
     }
 
@@ -45,15 +46,18 @@ export class BoardRenderer {
         this.links.forEach((group, gi) => group.forEach(idx => this.groupOf.set(idx, gi)));
         this.split = new Set(level.split || []);
         this.effects.clear();
+        this.selected = [];
     }
 
     /** 重开本关：盘面回到初盘，残留的补间 / 粒子一并清掉 */
     clearEffects() {
         this.effects.clear();
+        this.selected = [];
     }
 
     /** 一次点击的视觉反馈（转动补间 + 涟漪），由 session.tap() 的事件驱动 */
     animateTap(event, after) {
+        this.selected = event.cells.slice();
         this.effects.tap(event.cells, event.before, after, idx => this.groupOf.get(idx));
     }
 
@@ -90,6 +94,15 @@ export class BoardRenderer {
         const { grid, trace } = view;
 
         drawGridLines(ctx);
+        ctx.save();
+        ctx.strokeStyle = 'rgba(224,239,255,0.76)';
+        ctx.lineWidth = 1.5;
+        for (const index of this.selected) {
+            const size = CELL;
+            const x = index % GRID_N * size, y = Math.floor(index / GRID_N) * size;
+            ctx.strokeRect(x + 5, y + 5, size - 10, size - 10);
+        }
+        ctx.restore();
         drawLitFloor(ctx, trace.lit);
         drawLinkTethers(ctx, this.links, time);
         drawRays(ctx, trace.rays, time);

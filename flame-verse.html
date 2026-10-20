@@ -63,29 +63,21 @@
         <!-- 舞台 -->
         <main class="fv-main game-main">
         <div class="fv-stage game-stage" id="fv-stage">
-            <canvas class="game-canvas" id="fv-canvas" width="560" height="640"></canvas>
+            <canvas class="game-canvas" id="fv-canvas" width="560" height="424"></canvas>
 
             <!-- 提示 -->
             <div class="fv-toast hidden game-toast" id="fv-toast"></div>
 
-            <!-- 两个动作钮：清空重撒（+2）/ 送检（判定） -->
-            <button type="button" class="fv-action-btn fv-clear-btn" id="fv-clear-btn" title="Empty">
-                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M4 7h16"/>
-                    <path d="M9.5 7V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v2"/>
-                    <path d="M6.5 7 8 19.5a1.5 1.5 0 0 0 1.5 1.3h5a1.5 1.5 0 0 0 1.5-1.3L17.5 7"/>
-                </svg>
-                <span class="sci-action-label" data-i18n="dumpShort">Empty</span>
-            </button>
-            <button type="button" class="fv-action-btn fv-run-btn" id="fv-run-btn" title="Assay">
-                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
-                    <path d="M8 5.2v13.6l11-6.8z"/>
-                </svg>
-                <span class="sci-action-label" data-i18n="assay">Assay</span>
-            </button>
-
-            <!-- 盐架画在 canvas 上（与条码一起跟着舞台等比缩放；DOM 盐罐会在
-                 窄屏被浮动动作钮压住，且中英盐名要跟着 canvas 一起缩放） -->
+            <section class="fv-lab" id="fv-lab" aria-label="Salt rack">
+                <div class="fv-reagents" id="fv-reagents"></div>
+                <p class="fv-dose" id="fv-dose"></p>
+                <div class="fv-lab-actions">
+                    <button type="button" class="fv-lab-button fv-add" id="fv-add-btn"></button>
+                    <button type="button" class="fv-lab-button" id="fv-clear-btn"><span class="sci-action-label"></span><span class="fv-empty-cost"></span></button>
+                    <button type="button" class="fv-lab-button fv-assay" id="fv-run-btn"><span class="sci-action-label"></span></button>
+                </div>
+                <p class="fv-lab-status" id="fv-lab-status" role="status" aria-live="polite"></p>
+            </section>
 
             <!-- 开始界面 -->
             <div class="fv-overlay game-overlay game-overlay--menu" id="fv-start">

@@ -27,7 +27,7 @@ onReady(() => {
     window.cbRuntime = mountGameRuntime({
         self: 'crystal-bloom.html',
         game: window.cbGame,
-        frame: { logicalWidth: W },
+        frame: { logicalWidth: W, extraChrome: () => document.getElementById('cb-cooling').getBoundingClientRect().height },
         more: '#cbSideMore',
         drawer: {
             idPrefix: 'cb',
@@ -43,5 +43,6 @@ onReady(() => {
         },
     });
 
+    new ResizeObserver(() => window.cbRuntime.frame?.refresh()).observe(document.getElementById('cb-cooling'));
     window.cbDrawer = window.cbRuntime.drawer;
 });

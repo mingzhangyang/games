@@ -25,19 +25,11 @@ import { hashStringFNV, mulberry32 } from '../../../platform/daily.js';
 
 /* ────────────────────────── 几何 ────────────────────────── */
 
-export const STAGE = { w: 560, h: 640 };
+export const STAGE = { w: 560, h: 424 };
 
-/**
- * 焰窗（火焰粒子）/ 目标条码 / 自己条码 / 盐架 / 状态带。
- * ⚠️ y 512 以下一律留空：两个浮动动作钮（css 里 bottom:12–16px、58–64px 见方）
- *    在窄屏上换算进逻辑坐标会盖住 y≈531–621 —— 盐架绝不能伸进这条带，
- *    否则最左/最右的盐罐被钮压住点不到（移动端实测必现）。空带正好放状态文字。
- */
 export const FLAME = { x: 20, y: 10, w: 520, h: 190 };
 export const TARGET = { x: 20, y: 208, w: 520, h: 100 };
 export const MINE = { x: 20, y: 316, w: 520, h: 100 };
-export const RACK = { x: 20, y: 424, w: 520, h: 88 };
-export const STATUS = { x: 20, y: 528, w: 520, h: 34 };
 
 /** 可见光波段（nm）：条码横轴 */
 export const WL = [400, 700];

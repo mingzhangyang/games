@@ -21,6 +21,7 @@
 
 import { bindContextualRestart } from '../../platform/contextual-restart.js';
 import { LANGUAGES } from './i18n.js';
+import { createCoolingConsole } from './ui/cooling-console.js';
 
 import {
     STAGE,
@@ -207,6 +208,7 @@ export class CrystalBloomGame {
         this.animationId = null;
         this.lastFrame = 0;
 
+        this.coolingConsole = createCoolingConsole(this);
         this.initUI();
         this.applyLanguage();
         this.bindInput();
@@ -257,6 +259,7 @@ export class CrystalBloomGame {
         if (this.el['run-btn']) this.el['run-btn'].classList.toggle('is-dimmed', !on);
         // 搅拌只在晶体真的在长时才有意义：draw 阶段按下去是白花一点代价
         if (this.el['stir-btn']) this.el['stir-btn'].classList.toggle('is-dimmed', !(on && this.phase === 'grow'));
+        this.coolingConsole?.sync();
     }
 
     /* ---------------------- UI 初始化 ---------------------- */
@@ -490,6 +493,7 @@ export class CrystalBloomGame {
         this.anchors = [];
         this.stirs = [];
         this.phase = 'draw';
+        this.coolingConsole?.reset();
         this.stepAcc = 0;
         this.stirFlash = 0;
         // 每日模式用日期键播种，保证全世界同一天拿到同一颗晶体
@@ -778,6 +782,7 @@ export class CrystalBloomGame {
     /* ---------------------- HUD / Toast ---------------------- */
 
     updateHud() {
+        this.coolingConsole?.sync();
         const el = this.el;
         if (el['budget']) el['budget'].textContent = String(costOf(this.anchors, this.stirs));
         if (el['par']) el['par'].textContent = `${this.t('par')} ${this.spec ? this.spec.par : 0}`;
@@ -885,8 +890,8 @@ export class CrystalBloomGame {
 
     /* ---------------------- 暂停适配（抽屉契约） ---------------------- */
 
-    pauseQuiet() { this.isPaused = true; this.contextualRestart?.sync(); }
-    resumeQuiet() { if (this.pauseOwnership?.isHeld()) return; this.lastFrame = 0; this.isPaused = false; this.contextualRestart?.sync(); }
+    pauseQuiet() { this.isPaused = true; this.contextualRestart?.sync(); this.coolingConsole.sync(); }
+    resumeQuiet() { if (this.pauseOwnership?.isHeld()) return; this.lastFrame = 0; this.isPaused = false; this.contextualRestart?.sync(); this.coolingConsole.sync(); }
     isRunning() { return this.state === 'playing' && !this.isPaused; }
 
     /* ---------------------- 尺寸 ---------------------- */
@@ -1129,7 +1134,7 @@ export class CrystalBloomGame {
 
         // 刻度：温度 10/50/90
         ctx.fillStyle = P.tick;
-        ctx.font = '10px ui-sans-serif, system-ui, sans-serif';
+        ctx.font = `${Math.max(10, 11 * W / (this.canvas.clientWidth || W))}px ui-sans-serif, system-ui, sans-serif`;
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
         for (const T of [TLo, 50, THi]) {
@@ -1172,6 +1177,13 @@ export class CrystalBloomGame {
             ctx.strokeStyle = 'rgba(8,12,28,0.9)';
             ctx.lineWidth = 1.4;
             ctx.stroke();
+            if (a === this.anchors[this.anchors.length - 1]) {
+                ctx.strokeStyle = P.curve;
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                ctx.arc(x, y, 9, 0, Math.PI * 2);
+                ctx.stroke();
+            }
         }
 
         // 游标：晶体现在走到哪一步
@@ -1190,18 +1202,10 @@ export class CrystalBloomGame {
         }
     }
 
-    /** 皿与图之间那条信息带：目标晶形 / 当前档位 / 过饱和度 */
+    /** 过饱和度条；可读数值与晶形状态由 DOM 控制台显示。 */
     drawHudStrip(ctx) {
-        const spec = this.spec;
         const w = this.world;
         const y = DISH.y + DISH.h + 8;
-        ctx.font = '12px ui-sans-serif, system-ui, sans-serif';
-        ctx.textBaseline = 'middle';
-        ctx.textAlign = 'left';
-        ctx.fillStyle = P.hudText;
-        const sizeText = `${this.t('target')} ${this.habitName(spec.target)} · ${this.t('size')} ${w.cells}/${spec.minCells} · ${this.t('endTemp')} ${spec.tEndMin}–${spec.tEndMax}°`;
-        ctx.fillText(sizeText, DISH.x + 2, y + 8);
-
         // 过饱和度条：S 越高越红，档位分界线画成刻度
         const bx = DISH.x + 2, bw = DISH.w - 4, by = y + 22;
         ctx.fillStyle = P.hudTrack;
@@ -1214,12 +1218,6 @@ export class CrystalBloomGame {
             ctx.fillStyle = col;
             ctx.fillRect(x - 0.5, by - 2, 1, 10);
         }
-        ctx.fillStyle = P.hudSub;
-        ctx.textAlign = 'left';
-        ctx.fillText(`S ${w.s.toFixed(2)} · ${this.regimeName(w.regime)}`, bx, by + 18);
-        ctx.textAlign = 'right';
-        ctx.fillText(this.phase === 'grow' ? this.t('running') : this.t('grow'), bx + bw, by + 18);
-        ctx.textAlign = 'left';
     }
 
     /** 菜单态：皿里飘几粒未成形的晶核，图上一条默认曲线 */

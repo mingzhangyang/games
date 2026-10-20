@@ -676,6 +676,9 @@ body {
     --bf-cv-charge-neg: rgb(96,165,250,0.95);
     --bf-cv-charge-ring: rgb(10,12,28,0.85);
     --bf-cv-charge-text: #10142a;
+    --bf-cv-preview-bg: #13232e;
+    --bf-cv-preview-text: #edf4f8;
+    --bf-cv-reject: #ff8898;
     --bf-cv-atom-outline: rgb(8,10,24,0.9);
     --bf-cv-select-ring: rgb(64,216,255,0.5);
     --bf-cv-tray-bg: rgb(12,16,38,0.72);
@@ -697,6 +700,9 @@ body {
     --bf-cv-charge-neg: rgb(70,140,240,0.95);
     --bf-cv-charge-ring: rgb(15,23,42,0.55);
     --bf-cv-charge-text: #10142a;
+    --bf-cv-preview-bg: #f4f7fb;
+    --bf-cv-preview-text: #17213a;
+    --bf-cv-reject: #b4233f;
     --bf-cv-atom-outline: rgb(15,23,42,0.55);
     --bf-cv-select-ring: rgb(11,132,173,0.55);
     --bf-cv-tray-bg: rgb(255,255,255,0.82);

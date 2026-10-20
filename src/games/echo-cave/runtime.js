@@ -1014,14 +1014,15 @@ export class EchoCaveGame {
         for (let idx = 0; idx < this.world.memory.length; idx++) {
             const m = this.world.memory[idx];
             if (m <= 0.005) continue;
-            this.strokeCellEdges(mctx, this.world, idx, m, grid[idx] === 2 ? '#7fa08c' : '#8fb8e8');
+            this.strokeCellEdges(mctx, this.world, idx, m, grid[idx] === 2 ? '#7fa08c' : '#8fb8e8', true);
         }
         void cols;
         this.memDirty = false;
     }
 
     /** 画一格岩壁朝向地板的边线（外圈一层软光） */
-    strokeCellEdges(ctx, world, idx, alpha, color) {
+    strokeCellEdges(ctx, world, idx, alpha, color, remembered = false) {
+        ctx.setLineDash(remembered ? [3, 5] : []);
         const { cols, rows, cell } = GRID;
         const cx = idx % cols;
         const cy = (idx - cx) / cols;
@@ -1048,6 +1049,7 @@ export class EchoCaveGame {
         if (floor(cx, cy + 1)) { ctx.moveTo(x0, y0 + cell - 0.5); ctx.lineTo(x0 + cell, y0 + cell - 0.5); }
         ctx.stroke();
         ctx.globalAlpha = 1;
+        ctx.setLineDash([]);
     }
 
     /** 亮层：glow > 0 的岩壁（当前脉冲扫过的余辉） */
@@ -1069,6 +1071,14 @@ export class EchoCaveGame {
                 ? `rgba(83,116,103,${(0.20 * a).toFixed(3)})`
                 : `rgba(96,127,139,${(0.24 * a).toFixed(3)})`;
             ctx.fillRect(x, y, cell, cell);
+            // A facet only exists while this exact rock cell is echo-lit.
+            ctx.strokeStyle = `rgba(183,214,203,${(0.16 * a).toFixed(3)})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(x + 4, y + cell * 0.72);
+            ctx.lineTo(x + cell * (idx % 2 ? 0.58 : 0.38), y + 5);
+            ctx.lineTo(x + cell - 4, y + cell * 0.45);
+            ctx.stroke();
             this.strokeCellEdges(ctx, world, idx, a, rock ? '#9fc4ae' : '#b8d7d2');
         }
     }

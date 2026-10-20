@@ -212,9 +212,8 @@ body {
 /* ── 提示 ── */
 
 .rd-toast {
-    /* 落在读数板下半（READOUT y 418–530 / 640）：顶部会盖住第一关就要拖的 S1，
-       而「还不够静」这类反馈本来就该贴着读数条出现 */
-    top: 71%;
+    /* Feedback stays over the water, clear of the responsive control panel. */
+    top: 14px;
     /* 开局提示是整句：用满舞台宽再换行（只靠 left:50% 时最宽半个舞台，挤成三行胶囊） */
     width: max-content;
     max-width: calc(100% - 32px);
@@ -412,14 +411,14 @@ body {
 }
 
 /* ── 统一骨架参数（默认值与公共骨架见 css/layout.css） ──
-   560×640 逻辑场 → --frame-ratio: 0.875；
+   560×418 海面画布；控制台高度由 extraChrome 实测；
    舞台宽由「可用高度 × 画幅比」推导，见 layout.css 桌面 media 注释 */
 .rd-shell {
     --frame-max-wide: 940px;
     --frame-stage: 560px;
     --frame-side: 300px;
     --frame-side-gap: 14px;
-    --frame-ratio: 0.875;
+    --frame-ratio: 1.339713;
     --frame-stage-h: 960px;
     --frame-shell-max: calc(var(--stage-w) + var(--frame-main-gap) + var(--frame-side) + 24px);
     --frame-stage-cap: min(var(--stage-w), calc(100% - var(--frame-main-gap) - var(--frame-side)));
@@ -465,4 +464,56 @@ body {
     --rd-cv-freeze-edge: #8f3520;
     --rd-cv-button-edge: rgb(60,90,110,0.4);
     --rd-cv-round-edge: rgb(60,90,110,0.5);
+}
+
+@layer pages {
+    .rd-stage { flex-direction: column; align-items: stretch; }
+
+    .rd-console {
+        padding: 10px;
+        border: 1px solid var(--showcase-border);
+        border-radius: 12px;
+        background: var(--showcase-panel);
+        color: var(--showcase-text);
+        font: 12px/1.4 system-ui, sans-serif;
+    }
+
+    .rd-sources, .rd-phase-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .rd-sources { margin-bottom: 8px; }
+    .rd-phase-controls output { flex: 1; text-align: center; }
+
+    .rd-console button {
+        min-width: 44px;
+        min-height: 44px;
+        border: 1px solid var(--showcase-border-strong);
+        border-radius: 8px;
+        padding: 6px 10px;
+        background: var(--showcase-panel-raised);
+        color: var(--showcase-text);
+        font: 600 14px/1.2 system-ui, sans-serif;
+        cursor: pointer;
+    }
+
+    .rd-sources button[aria-pressed="true"] {
+        border-color: var(--showcase-focus);
+        box-shadow: inset 0 0 0 1px var(--showcase-focus);
+        background: var(--showcase-accent-soft);
+    }
+
+    #rd-freeze[data-ready="true"] {
+        background: var(--showcase-accent-strong);
+        color: var(--showcase-on-accent);
+    }
+
+    .rd-console button:disabled { opacity: 0.55; }
+    .rd-measure-note { margin: 8px 0; color: var(--showcase-text-soft); }
+    .rd-measures { display: grid; gap: 5px; }
+    .rd-measures > div { display: flex; justify-content: space-between; gap: 8px; }
+    .rd-measures b { font-family: ui-monospace, monospace; font-weight: 500; }
+
 }

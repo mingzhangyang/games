@@ -262,12 +262,16 @@ const won = await page.evaluate(() => {
         quality: g.world ? +g.world.quality.toFixed(3) : -1,
         cost: g.world ? g.world.cost : -1,
         clearVisible: !document.getElementById('cb-clear').classList.contains('hidden'),
+        consoleInert: document.getElementById('cb-cooling').inert,
+        addDisabled: document.getElementById('cb-anchor-add').disabled,
+        stirDisabled: document.getElementById('cb-stir-btn').disabled,
         starsText: document.getElementById('cb-clear-stars').textContent.trim(),
         progress: (() => { try { return JSON.parse(localStorage.getItem('game:crystal-bloom:v1:progress') || '{}'); } catch (e) { return null; } })(),
     };
 });
 if (won.state !== 'won-level') fail(`通关后 state 应为 won-level，got ${won.state}（habit=${won.habit} cells=${won.cells}）`);
 else if (!won.clearVisible) fail('通关后未弹出结算面板');
+else if (!won.consoleInert || !won.addDisabled || !won.stirDisabled) fail('自然通关后控制台必须不可聚焦且禁止锚点/搅拌');
 else if (won.habit !== LV1.target) fail(`长出的晶形应为 ${LV1.target}，got ${won.habit}`);
 else if (won.cells < LV1.minCells) fail(`尺寸应 ≥${LV1.minCells}，got ${won.cells}`);
 else if (!won.progress || !won.progress.cb1) fail('星级未写入 game:crystal-bloom:v1:progress');
@@ -294,10 +298,14 @@ const failed = await page.evaluate(() => {
         stars: document.getElementById('cb-clear-stars').textContent.trim(),
         line: document.getElementById('cb-clear-line').textContent.trim(),
         nextHidden: document.getElementById('cb-btn-next').style.display === 'none',
+        consoleInert: document.getElementById('cb-cooling').inert,
+        addDisabled: document.getElementById('cb-anchor-add').disabled,
+        stirDisabled: document.getElementById('cb-stir-btn').disabled,
     };
 });
 if (failed.state !== 'failed') fail(`不降温应判负，got ${failed.state}`);
 else if (!failed.overVisible) fail('判负后未弹出面板');
+else if (!failed.consoleInert || !failed.addDisabled || !failed.stirDisabled) fail('自然失败后控制台必须不可聚焦且禁止锚点/搅拌');
 else if (!failed.line.includes('起步太慢')) fail(`判负原因应写明「起步太慢」（急冷未达标），got "${failed.line}"`);
 else if (failed.stars !== '还差一点') fail(`判负面板标题应为「还差一点」，got "${failed.stars}"`);
 else if (!failed.nextHidden) fail('判负后不应显示「下一皿」');
@@ -372,6 +380,8 @@ const reset = await page.evaluate(async () => {
             startVisible: !document.getElementById('cb-start').classList.contains('hidden'),
             clearHidden: document.getElementById('cb-clear').classList.contains('hidden'),
             runDimmed: document.getElementById('cb-run-btn').classList.contains('is-dimmed'),
+            consoleInert: document.getElementById('cb-cooling').inert,
+            addDisabled: document.getElementById('cb-anchor-add').disabled,
         },
     };
 });
@@ -386,6 +396,7 @@ else if (reset.menu.world !== null) fail('toMenu 后 world 应被清空（否则
 else if (!reset.menu.startVisible) fail('toMenu 后开始覆盖层未显示');
 else if (!reset.menu.clearHidden) fail('toMenu 后结算面板未隐藏');
 else if (!reset.menu.runDimmed) fail('菜单态动作钮应隐藏（is-dimmed）');
+else if (!reset.menu.consoleInert || !reset.menu.addDisabled) fail('菜单态控制台必须不可聚焦且禁止添加锚点');
 if (!fails.length) pass(`重开/回菜单：时刻/锚点/代价归零、仍在第 4 皿、world 清空、动作钮隐藏（重开前已长到 t=${reset.before.t}）`);
 
 if (errs.length) fail(`对局中 JS 运行时错误: ${errs.slice(0, 3).join(' | ')}`);

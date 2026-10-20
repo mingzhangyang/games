@@ -448,10 +448,40 @@ try {
     check(await page.evaluate(() => window.mgGame.preview?.pinned), 'Enter previews placing the tray magnet');
     await page.focus('#mg-clear-preview');
     await page.keyboard.press('Enter');
-    check(await page.evaluate(id => !window.mgGame.preview && document.activeElement?.dataset.magnet === id
-        && !document.getElementById('mg-trails').children.length
-        && document.getElementById('mg-preview-summary').textContent === '', LEVELS[0].magnets[0].id),
-    'clearing a tray preview focuses the tray magnet and leaves no preview state or description');
+    const clearedTray = await page.evaluate(id => ({
+        noPreview: !window.mgGame.preview,
+        trayFocused: document.activeElement?.dataset.magnet === id,
+        focus: document.activeElement?.id || document.activeElement?.dataset.magnet || document.activeElement?.tagName,
+        noTrails: document.getElementById('mg-trails').children.length === 0,
+        noDescription: document.getElementById('mg-preview-summary').textContent === '',
+    }), LEVELS[0].magnets[0].id);
+    check(clearedTray.noPreview && clearedTray.trayFocused && clearedTray.noTrails && clearedTray.noDescription,
+        `clearing a tray preview focuses its magnet and removes the preview (${JSON.stringify(clearedTray)})`);
+
+    // Reproduce the same-frame race: start schedules board auto-focus, but the
+    // user can preview and cancel before that frame. The later callback must
+    // not steal focus from the tray or manufacture a new hover preview.
+    const quicklyPinned = await page.evaluate(({ id, cell }) => {
+        window.mgGame.start(id);
+        const socket = document.querySelector(`[data-cell="${cell}"]`);
+        socket.focus();
+        socket.click();
+        const pinned = window.mgGame.preview?.pinned === true;
+        const clear = document.getElementById('mg-clear-preview');
+        clear.focus();
+        clear.click();
+        return pinned;
+    }, { id: LEVELS[0].id, cell: traySocket });
+    check(quicklyPinned, 'same-frame socket activation must create a pinned preview');
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(resolve)));
+    const rapidClear = await page.evaluate(id => ({
+        noPreview: !window.mgGame.preview,
+        trayFocused: document.activeElement?.dataset.magnet === id,
+        noTrails: document.getElementById('mg-trails').children.length === 0,
+        noDescription: document.getElementById('mg-preview-summary').textContent === '',
+    }), LEVELS[0].magnets[0].id);
+    check(Object.values(rapidClear).every(Boolean),
+        `pending start auto-focus must yield to same-frame preview cancellation (${JSON.stringify(rapidClear)})`);
 
     // All chapter eligibility is exercised by real authored actions. No score
     // is submitted for the first five gardens; the sixth submits their sum.

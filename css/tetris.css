@@ -629,6 +629,8 @@ input, textarea {
 }
 
 .hud-label {
+    /* The short Chinese label must not split into two lines beside a growing score. */
+    white-space: nowrap;
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.08em;

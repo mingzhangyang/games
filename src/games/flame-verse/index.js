@@ -26,7 +26,7 @@ onReady(() => {
     window.fvRuntime = mountGameRuntime({
         self: 'flame-verse.html',
         game: window.fvGame,
-        frame: { logicalWidth: W },
+        frame: { logicalWidth: W, extraChrome: () => document.getElementById('fv-lab').getBoundingClientRect().height },
         more: '#fvSideMore',
         drawer: {
             idPrefix: 'fv',
@@ -42,5 +42,6 @@ onReady(() => {
         },
     });
 
+    new ResizeObserver(() => window.fvRuntime.frame?.refresh()).observe(document.getElementById('fv-lab'));
     window.fvDrawer = window.fvRuntime.drawer;
 });

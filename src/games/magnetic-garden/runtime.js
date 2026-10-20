@@ -23,7 +23,7 @@ export class MagneticGardenGame {
         this.state = 'menu'; this.isPaused = false; this.animating = false;
         this.level = LEVELS[0]; this.sim = createState(this.level); this.actions = []; this.history = [];
         const saved = loadProgress(); this.best = saved.best; this.savedCurrent = saved.current; this.recovered = saved.recovered;
-        this.selected = null; this.preview = null; this.hintStage = 0; this.focusCell = 0; this.animationToken = 0; this.hintToken = 0; this.hintWorker = null; this.sessionFinished = false;
+        this.inputRevision = 0; this.selected = null; this.preview = null; this.hintStage = 0; this.focusCell = 0; this.animationToken = 0; this.hintToken = 0; this.hintWorker = null; this.sessionFinished = false;
         this.pauseOwnership = createPauseOwnership({
             isRunning: () => this.isRunning(),
             canResume: () => this.state === 'playing' && this.isPaused && $('mg-pause').classList.contains('hidden'),
@@ -79,7 +79,18 @@ export class MagneticGardenGame {
         // Reset after hiding the menu, before focus({ preventScroll: true }).
         if (window.scrollX || window.scrollY) window.scrollTo(0, 0);
         this.track('magnetic-garden', 'play'); this.save(); this.render();
-        requestAnimationFrame(() => $('mg-board').querySelector(`[data-cell="${this.focusCell}"]`)?.focus({ preventScroll: true }));
+        // Auto-focus is for entering a garden, not for overriding a faster
+        // keyboard/touch interaction (or a newer start) before the next frame.
+        const focusAtStart = document.activeElement;
+        const focusToken = this.animationToken;
+        const focusRevision = this.inputRevision;
+        requestAnimationFrame(() => {
+            if (this.state !== 'playing' || this.animationToken !== focusToken
+                || this.inputRevision !== focusRevision || this.preview) return;
+            const active = document.activeElement;
+            if (active !== focusAtStart && active !== document.body && active !== document.documentElement) return;
+            $('mg-board').querySelector(`[data-cell="${this.focusCell}"]`)?.focus({ preventScroll: true });
+        });
         return true;
     }
     restart() { return this.start(this.level.id); }
@@ -152,6 +163,7 @@ export class MagneticGardenGame {
     chapterTotal(chapter) { const levels = LEVELS.filter(l => l.chapter === chapter); return levels.every(l => this.best[l.id]) ? levels.reduce((n, l) => n + this.best[l.id].moves, 0) : null; }
     selectCell(cell) {
         if (!this.isRunning() || this.animating) return;
+        this.inputRevision++;
         const magnet = this.sim.magnets.find(m => m.cell === cell);
         if (magnet) {
             if (magnet.fixed) { this.announce(this.t().fixed); return; }
@@ -198,7 +210,7 @@ export class MagneticGardenGame {
         if (status.textContent !== description) status.textContent = description;
     }
     // Panel last: moving focus may start a fresh transient preview, which must survive the cleanup.
-    clearPreview() { this.preview = null; this.syncPreviewSummary(); $('mg-trails')?.replaceChildren(); $('mg-board')?.querySelectorAll('.is-preview-end').forEach(n => n.classList.remove('is-preview-end')); if ($('mg-instruction')) $('mg-instruction').textContent = this.selected ? fill(this.t().selected, { id: this.selected }) : this.t().select; this.syncPreviewPanel(); }
+    clearPreview() { this.inputRevision++; this.preview = null; this.syncPreviewSummary(); $('mg-trails')?.replaceChildren(); $('mg-board')?.querySelectorAll('.is-preview-end').forEach(n => n.classList.remove('is-preview-end')); if ($('mg-instruction')) $('mg-instruction').textContent = this.selected ? fill(this.t().selected, { id: this.selected }) : this.t().select; this.syncPreviewPanel(); }
     flip() { if (this.selected) this.choose({ type: 'flip', magnetId: this.selected }); }
     cancelHint() { this.hintToken++; this.hintWorker?.terminate(); this.hintWorker = null; }
     bloomAnimation() {

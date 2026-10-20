@@ -22,11 +22,10 @@
  */
 
 import { bindContextualRestart } from '../../platform/contextual-restart.js';
+import { shouldHandleGameShortcut } from '../../platform/runtime/game-shortcut-target.js';
 import {
     STAGE,
     SEA,
-    READOUT,
-    CONSOLE,
     GRID,
     PHASES,
     K,
@@ -40,6 +39,7 @@ import {
 } from './model/rules.js';
 import { LEVELS } from './model/levels.js';
 import { LANGUAGES } from './i18n.js';
+import { createWaveConsole } from './ui/wave-console.js';
 import { ensurePlayerName, setPlayerName } from '../../platform/player.js';
 import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
 import { ICONS } from '../../platform/icons.js';
@@ -91,20 +91,8 @@ const TROUGH = [78, 180, 183];           // 波谷：深海青
 const BASEC = [13, 35, 42];              // 静止水面（也是相消带的颜色）
 const SRC_R = 21;                        // 波源命中半径（逻辑像素；窄屏换算后 ≈15px，靠视觉圆盘 42px 兜底）
 
-/* 控制台命中区（逻辑坐标，CONSOLE 内） */
-const BTN = {
-    minus: { x: 330, y: 552, w: 64, h: 64 },
-    plus: { x: 400, y: 552, w: 64, h: 64 },
-    freeze: { x: 470, y: 552, w: 70, h: 64 },
-};
-const CHIP = { x: 20, y: 552, w: 62, h: 64, gap: 6 };
-
 function clamp(v, min, max) {
     return v < min ? min : v > max ? max : v;
-}
-
-function inBox(p, b) {
-    return p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h;
 }
 
 /* ────────────────────────── 音效 ────────────────────────── */
@@ -209,6 +197,7 @@ export class RippleDuetGame {
         this.fieldCtx = this.fieldCanvas.getContext('2d');
         this.fieldImg = this.fieldCtx.createImageData(FW, FH);
 
+        this.waveConsole = createWaveConsole(this);
         this.buildLevelGrid();
         this.loadLevel(LEVELS[0]);
         this.rebuildField();
@@ -371,10 +360,6 @@ export class RippleDuetGame {
         return -1;
     }
 
-    chipBox(idx) {
-        return { x: CHIP.x + idx * (CHIP.w + CHIP.gap), y: CHIP.y, w: CHIP.w, h: CHIP.h };
-    }
-
     onPointerDown(ev) {
         if (this.state !== 'playing' || this.isPaused) return;
         const p = this.stagePos(ev);
@@ -386,16 +371,6 @@ export class RippleDuetGame {
             Sfx.click();
             return;
         }
-        for (let i = 0; i < this.place.length; i++) {
-            if (inBox(p, this.chipBox(i))) {
-                this.sel = i;
-                Sfx.click();
-                return;
-            }
-        }
-        if (inBox(p, BTN.minus)) { this.turnPhase(-1); return; }
-        if (inBox(p, BTN.plus)) { this.turnPhase(1); return; }
-        if (inBox(p, BTN.freeze)) { this.pressFreeze(); return; }
     }
 
     onPointerMove(ev) {
@@ -728,8 +703,7 @@ export class RippleDuetGame {
         ctx.lineWidth = 1;
         ctx.strokeRect(SEA.x + 0.5, SEA.y + 0.5, SEA.w - 1, SEA.h - 1);
 
-        this.drawReadout(ctx);
-        this.drawConsole(ctx);
+        this.waveConsole.sync();
     }
 
     /**
@@ -952,164 +926,6 @@ export class RippleDuetGame {
         });
     }
 
-    drawReadout(ctx) {
-        const box = READOUT;
-        ctx.save();
-        ctx.fillStyle = P.panel;
-        ctx.strokeStyle = P.panelEdge;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.roundRect(box.x, box.y, box.w, box.h, 10);
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-
-        const rows = this.spec.targets;
-        const rowH = Math.min(34, (box.h - 10) / Math.max(rows.length, 1));
-        const LABEL_FONT = 'bold 13px system-ui, sans-serif';
-        const STATE_FONT = '12px ui-monospace, monospace';
-        const lines = rows.map((t, i) => {
-            const m = measure(this.spec, this.place, i, this.k);
-            const label = t.kind === 'calm'
-                ? `× ${this.t('calm')}`
-                : t.kind === 'blaze' ? `◆ ${this.t('blaze')}` : `∥ ${this.t('lane')}`;
-            const state = t.kind === 'blaze'
-                ? (m.ok ? this.t('litUp') : this.t('needBrighter'))
-                : (m.ok ? this.t('readyToFreeze') : this.t('notReady'));
-            return { t, m, label, readout: `${m.value.toFixed(3)} · ${state}` };
-        });
-        // 进度条夹在最宽的标签与最宽的读数之间（按实际文字宽度量，换语言/加符号都不会压字）
-        ctx.save();
-        ctx.font = LABEL_FONT;
-        const labelW = Math.max(0, ...lines.map((l) => ctx.measureText(l.label).width));
-        ctx.font = STATE_FONT;
-        // 取所有状态文案里最长的一条：状态切换（未达标 → 达标）时进度条不跳宽
-        const readoutW = Math.max(0, ...['litUp', 'needBrighter', 'readyToFreeze', 'notReady']
-            .map((k) => ctx.measureText(`0.000 · ${this.t(k)}`).width));
-        ctx.restore();
-        const bx = box.x + 12 + labelW + 10;
-        const bw = Math.max(24, box.x + box.w - 12 - readoutW - 10 - bx);
-        lines.forEach(({ t, m, label, readout }, i) => {
-            const y = box.y + 6 + rowH * i + rowH / 2;
-            ctx.save();
-            ctx.fillStyle = m.ok ? (t.kind === 'blaze' ? P.accent : P.ok) : P.dim;
-            ctx.font = LABEL_FONT;
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(label, box.x + 12, y);
-
-            // 进度条：平静要"压下去"，点亮要"顶上去"
-            ctx.fillStyle = P.barTrack;
-            ctx.fillRect(bx, y - 6, bw, 12);
-            const ratio = t.kind === 'blaze'
-                ? clamp(m.value / Math.max(m.need, 0.001) / 1.5, 0, 1)
-                : clamp(1 - m.value / Math.max(m.need * 4, 0.001), 0, 1);
-            ctx.fillStyle = m.ok ? (t.kind === 'blaze' ? P.accent : P.ok) : P.barFill;
-            ctx.fillRect(bx, y - 6, bw * ratio, 12);
-
-            ctx.fillStyle = m.ok ? P.value : P.dim;
-            ctx.font = STATE_FONT;
-            ctx.textAlign = 'right';
-            ctx.fillText(readout, box.x + box.w - 12, y);
-            ctx.restore();
-        });
-    }
-
-    drawConsole(ctx) {
-        const box = CONSOLE;
-        ctx.save();
-        ctx.fillStyle = P.panel;
-        ctx.strokeStyle = P.panelEdge;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.roundRect(box.x, box.y, box.w, box.h, 10);
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-
-        const active = this.state === 'playing' && !this.isPaused;
-
-        // 源选择 chips
-        this.place.forEach((_, i) => {
-            const b = this.chipBox(i);
-            ctx.save();
-            ctx.fillStyle = i === this.sel ? P.chipSel : P.chip;
-            ctx.strokeStyle = i === this.sel ? P.accent : P.chipEdge;
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.roundRect(b.x, b.y, b.w, b.h, 10);
-            ctx.fill();
-            ctx.stroke();
-            ctx.fillStyle = i === this.sel ? P.accent : P.dim;
-            ctx.font = 'bold 16px system-ui, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(`S${i + 1}`, b.x + b.w / 2, b.y + b.h / 2);
-            ctx.restore();
-        });
-
-        // 相位读数 + 8 档点
-        const ph = this.place.length ? this.place[this.sel].ph : 0;
-        const cx = 244;
-        const cy = 584;
-        ctx.save();
-        ctx.fillStyle = P.glyph;
-        ctx.font = 'bold 15px ui-monospace, monospace';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(`${ph * 45}°`, cx, cy - 16);
-        for (let i = 0; i < PHASES; i++) {
-            const a = (i / PHASES) * Math.PI * 2 - Math.PI / 2;
-            const px = cx + Math.cos(a) * 20;
-            const py = cy + 12 + Math.sin(a) * 20;
-            ctx.beginPath();
-            ctx.arc(px, py, i === ph ? 5 : 3, 0, Math.PI * 2);
-            ctx.fillStyle = i === ph ? P.accent : P.dot;
-            ctx.fill();
-        }
-        ctx.restore();
-
-        // − / +
-        this.drawRoundButton(ctx, BTN.minus, '–', active);
-        this.drawRoundButton(ctx, BTN.plus, '+', active);
-
-        // 定格：达标才亮
-        const ready = this.allSatisfied();
-        ctx.save();
-        const b = BTN.freeze;
-        ctx.fillStyle = ready ? 'rgba(225,123,97,0.90)' : P.button;
-        ctx.strokeStyle = ready ? P.freezeEdge : P.buttonEdge;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.roundRect(b.x, b.y, b.w, b.h, 10);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = ready ? '#102027' : P.dim;
-        ctx.font = 'bold 15px system-ui, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(this.t('freeze'), b.x + b.w / 2, b.y + b.h / 2);
-        ctx.restore();
-    }
-
-    drawRoundButton(ctx, b, glyph, active) {
-        ctx.save();
-        ctx.globalAlpha = active ? 1 : 0.45;
-        ctx.fillStyle = P.button;
-        ctx.strokeStyle = P.roundEdge;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.roundRect(b.x, b.y, b.w, b.h, 10);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = P.glyph;
-        ctx.font = 'bold 26px system-ui, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(glyph, b.x + b.w / 2, b.y + b.h / 2 - 1);
-        ctx.restore();
-    }
-
     /* ---------------------- 通用 ---------------------- */
 
     show(el) { if (el) el.classList.remove('hidden'); }
@@ -1208,7 +1024,7 @@ export class RippleDuetGame {
         this.syncMuteIcons();
 
         window.addEventListener('keydown', (e) => {
-            if (e.target instanceof Element && e.target.closest('input, textarea, select, button, a, [contenteditable]:not([contenteditable="false"]), [role="button"]')) return;
+            if (!shouldHandleGameShortcut(e, document.getElementById('rd-console'))) return;
             if (this.state !== 'playing' || this.isPaused) return;
             if ((e.key === 'q' || e.key === 'Q') && !e.repeat) {
                 if (this.place.length) this.sel = (this.sel + 1) % this.place.length;
