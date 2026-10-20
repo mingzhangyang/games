@@ -97,7 +97,7 @@ try {
         let restartCopy = '';
         page.once('dialog', dialog => { restartCopy = dialog.message(); void dialog.dismiss(); });
         await page.keyboard.press('r');
-        assert.match(restartCopy, /重开/, 'R from the focused reagent must reach guarded restart');
+        assert.match(restartCopy, /重新开始/, 'R from the focused reagent must reach guarded restart');
         assert.equal(await page.evaluate(() => window.fvGame.refills), saltBefore[2] + 1, 'Declining restart preserves progress');
         await page.evaluate(() => {
             const input = document.createElement('input');
@@ -146,7 +146,7 @@ try {
         let waveRestartCopy = '';
         page.once('dialog', dialog => { waveRestartCopy = dialog.message(); void dialog.dismiss(); });
         await page.keyboard.press('r');
-        assert.match(waveRestartCopy, /重开/, 'R from a focused phase button must reach guarded restart');
+        assert.match(waveRestartCopy, /重新开始/, 'R from a focused phase button must reach guarded restart');
         assert.equal(await page.evaluate(() => window.rdGame.cost), waveBefore[1] + 4, 'Declining restart preserves phase costs');
         const before = await page.evaluate(() => [JSON.stringify(window.rdGame.place), window.rdGame.cost]);
         await page.setViewport({ width: 844, height: 390, hasTouch: true });
