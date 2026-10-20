@@ -437,6 +437,71 @@ for (const [vw, vh] of STRIP_VIEWPORTS) {
 }
 if (!fails.length) pass('读数条带 + 沉浸舞台：320/430/844 横屏/1280 × 中英文，文字不压条、不进容器、不出画布；画布等比放满舞台，动作钮不盖画布、不出舞台');
 
+/* ── 开局滚动复位：先在手机上滚到末尾关卡，再真实点击；确认顶栏/画布/动作钮回到视口，
+   并由原生触屏输入证实动作钮能付费，而非仅检查 DOM 几何。 ── */
+for (const [width, height] of [[320, 568], [390, 664], [430, 736]]) {
+    for (const lang of ['zh', 'en']) {
+        await page.setViewport({ width, height, hasTouch: true });
+        await page.evaluate(language => {
+            localStorage.setItem('site_lang', language);
+            window.dispatchEvent(new Event('site-settings:changed'));
+            window.mdGame.toMenu();
+            window.scrollTo(0, 0);
+        }, lang);
+        await page.waitForFunction(language =>
+            document.documentElement.lang === (language === 'zh' ? 'zh-CN' : 'en'), {}, lang);
+        const menu = await page.$eval('#md-level-grid button:last-child', button => {
+            button.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
+            const root = document.scrollingElement;
+            return { top: root.scrollTop, range: root.scrollHeight - root.clientHeight };
+        });
+        const label = width + '×' + height + ' ' + lang;
+        if (menu.range < 20 || menu.top < 20) {
+            fail(label + ': 末尾关卡必须从可滚动菜单进入: ' + JSON.stringify(menu));
+            continue;
+        }
+        // Real click, not a direct startLevel(): exercise CSS menu collapse and scroll anchoring.
+        await page.click('#md-level-grid button:last-child');
+        await page.waitForFunction(() => window.mdGame.state === 'playing');
+        // Wait for immersive fitScene/ResizeObserver reflow by browser frames, never a timeout.
+        await page.evaluate(() => new Promise(resolve =>
+            requestAnimationFrame(() => requestAnimationFrame(resolve))));
+        const visible = await page.evaluate(() => {
+            const selectors = {
+                header: '.md-topbar', canvas: '#md-canvas',
+                scan: '#md-scan-btn', gate: '#md-gate-btn',
+            };
+            const boxes = {};
+            for (const [name, selector] of Object.entries(selectors)) {
+                const element = document.querySelector(selector);
+                const r = element.getBoundingClientRect();
+                const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+                boxes[name] = {
+                    bounds: [r.left, r.top, r.right, r.bottom].map(Math.round),
+                    inViewport: r.width > 0 && r.height > 0 &&
+                        r.left >= -1 && r.top >= -1 &&
+                        r.right <= innerWidth + 1 && r.bottom <= innerHeight + 1,
+                    centerHit: element.contains(hit),
+                    hit: hit ? (hit.id || hit.tagName) : 'outside viewport',
+                };
+            }
+            return { scrollTop: document.scrollingElement.scrollTop, boxes };
+        });
+        if (visible.scrollTop > 1) fail(label + ': 开局仍有滚动偏移 ' + visible.scrollTop + 'px');
+        for (const [name, info] of Object.entries(visible.boxes)) {
+            if (!info.inViewport || !info.centerHit) {
+                fail(label + ': ' + name + ' 不完整可见或不可操作: ' + JSON.stringify(visible));
+            }
+        }
+        await page.tap('#md-scan-btn');
+        await page.waitForFunction(() => window.mdGame.world?.scanCount >= 1);
+        await page.tap('#md-gate-btn');
+        await page.waitForFunction(() => window.mdGame.world?.gateCount >= 1);
+        await page.evaluate(() => window.mdGame.toMenu());
+    }
+}
+if (!fails.length) pass('手机滚动菜单→末尾关卡：320/390/430 × 中英文，归零滚动、顶栏/画布/按钮全部可见且可命中，真实触屏观测与开门成功');
+
 if (errs.length) fail(`对局中 JS 运行时错误: ${errs.slice(0, 3).join(' | ')}`);
 
 await browser.close();

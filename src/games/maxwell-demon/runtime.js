@@ -480,6 +480,10 @@ export class MaxwellDemonGame {
         this.hide(this.el['start']);
         this.hide(this.el['clear']);
         this.hide(this.el['over']);
+        // The long phone menu scrolls the document; hiding it collapses the
+        // stage but may retain its old scroll offset above the locked canvas.
+        // Reset only after the menu has left layout.
+        window.scrollTo(0, 0);
         this.syncActionVisibility();
         this.updateHud();
         this.showToast(this.t(this.spec.tipKey || 'tipFirst'), 4.5);

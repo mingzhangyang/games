@@ -60,13 +60,44 @@ try {
                     const tag = `${id} ${width} ${lang} ${theme}`;
                     assert(metrics.below && metrics.inside && !metrics.overflow, `${tag}: console must sit below the canvas inside the stage`);
                     for (const input of metrics.inputs) assert(input.w >= 44 && input.h >= 44, `${tag}: ${input.id} touch target ${input.w}×${input.h}`);
-                    // A clipped element can have good geometry. Test actual center hits after scrolling.
+                    // Scroll instantly, then let two browser layout frames complete before the
+                    // same strict center hit; log the occluding stack and scroll state on failure.
                     const action = id === 'flame-verse' ? '#fv-add-btn' : id === 'ripple-duet' ? '#rd-plus' : '#cb-anchor-add';
-                    await page.$eval(action, element => element.scrollIntoView({ block: 'center' }));
-                    assert(await page.$eval(action, element => {
-                        const box = element.getBoundingClientRect();
-                        return element.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2));
-                    }), `${tag}: action center is actually reachable`);
+                    await page.$eval(action, element =>
+                        element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' }));
+                    await page.evaluate(() => new Promise(resolve =>
+                        requestAnimationFrame(() => requestAnimationFrame(resolve))));
+                    const hit = await page.$eval(action, element => {
+                        const r = element.getBoundingClientRect();
+                        const x = r.left + r.width / 2, y = r.top + r.height / 2;
+                        const top = document.elementFromPoint(x, y);
+                        const describe = node => node.tagName.toLowerCase() +
+                            (node.id ? '#' + node.id : '') +
+                            (typeof node.className === 'string' && node.className.trim() ?
+                                '.' + node.className.trim().split(/\s+/).join('.') : '');
+                        return {
+                            reachable: element.contains(top),
+                            point: [Math.round(x), Math.round(y)],
+                            rect: [r.left, r.top, r.right, r.bottom].map(Math.round),
+                            viewport: [innerWidth, innerHeight],
+                            scroll: [scrollX, scrollY],
+                            hitStack: document.elementsFromPoint(x, y).slice(0, 6).map(describe),
+                            visibleOverlays: [...document.querySelectorAll('.game-overlay,.game-drawer')]
+                                .filter(node => {
+                                    const style = getComputedStyle(node);
+                                    const box = node.getBoundingClientRect();
+                                    return style.display !== 'none' && style.visibility !== 'hidden' &&
+                                        box.width > 0 && box.height > 0;
+                                }).map(describe),
+                        };
+                    });
+                    assert(hit.reachable, `${tag}: action center is actually reachable: ${JSON.stringify(hit)}`);
+                    if (id === 'ripple-duet') {
+                        const cost = await page.evaluate(() => window.rdGame.cost);
+                        await page.tap(action);
+                        assert.equal(await page.evaluate(() => window.rdGame.cost), cost + 1,
+                            `${tag}: actual touch must reach phase +45° exactly once`);
+                    }
                     await page.close();
                 }
             }
