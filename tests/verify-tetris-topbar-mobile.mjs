@@ -319,6 +319,45 @@ for (const vp of VIEWPORTS) {
     await page.close();
 }
 
+// The HUD wraps at different widths in each language and grows with the score.
+// Cover the gap above the former 340px reserve breakpoint without relaxing the
+// original board-vs-controls assertion or relying on a particular font metric.
+for (const lang of ['en', 'zh']) {
+    for (const width of [320, 341, 360, 366, 374, 390, 480]) {
+        const page = await browser.newPage();
+        await page.setViewport({ width, height: 640, deviceScaleFactor: 2, hasTouch: true, isMobile: true });
+        await page.evaluateOnNewDocument(language => {
+            localStorage.setItem('site_lang', language);
+            localStorage.setItem('game:tetris:v1:scores', JSON.stringify([{ score: 999999 }]));
+        }, lang);
+        await page.goto(BASE + '/tetris.html', { waitUntil: 'load' });
+        await page.waitForFunction(() => window.game);
+        await page.evaluate(async () => {
+            await document.fonts.ready;
+            window.game.score = 999999;
+            window.game.level = 99;
+            window.game.updateDisplay();
+        });
+        const grown = await page.evaluate(() => {
+            const board = document.getElementById('tetris').getBoundingClientRect();
+            const bar = document.querySelector('.mobile-controls').getBoundingClientRect();
+            const hud = document.querySelector('.game-title-pill');
+            return {
+                bottom: board.bottom, barTop: bar.top,
+                fits: [...hud.querySelectorAll('span,b')].every(element => {
+                    const rect = element.getBoundingClientRect();
+                    return rect.left >= 0 && rect.right <= innerWidth;
+                }),
+                best: document.getElementById('scoreHudBest').textContent,
+            };
+        });
+        check(grown.bottom <= grown.barTop + 1, `${lang}/${width}: 大数字 HUD 换行后棋盘仍在固定底栏之上`,
+            `${grown.bottom.toFixed(2)} vs ${grown.barTop.toFixed(2)}`);
+        check(grown.fits && /999/.test(grown.best), `${lang}/${width}: 当前分数/最高分/等级完整可见`);
+        await page.close();
+    }
+}
+
 await browser.close();
 console.log('\n' + (fails.length ? `失败 ${fails.length} 项:\n - ` + fails.join('\n - ') : '全部通过'));
 console.log('截图: ' + OUT);
