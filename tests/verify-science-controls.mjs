@@ -180,7 +180,7 @@ try {
         await page.evaluate(() => window.cbGame.startLevel(0));
         const telemetry = await page.$eval('#cb-reading', node =>
             [node.tagName, node.getAttribute('role'), node.getAttribute('aria-live')]);
-        assert.deepEqual(telemetry, ['P', null, 'off'], 'Continuously refreshed readings remain accessible but are not a live status');
+        assert.deepEqual(telemetry, ['DIV', null, 'off'], 'Continuously refreshed readings remain accessible but are not a live status');
         assert.deepEqual(await page.$eval('#cb-anchor-feedback', node => [node.getAttribute('role'), node.getAttribute('aria-live')]),
             ['status', 'polite'], 'Discrete anchor placement feedback remains announced');
         await page.type('#cb-anchor-time', '45');
