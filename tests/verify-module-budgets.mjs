@@ -25,7 +25,11 @@ const budgets = {
     'src/games/carrot-pull/index.js': 16 * 1024,
     'src/games/carrot-pull/runtime.js': 32 * 1024,
     'src/games/lumen/index.js': 16 * 1024,
-    'src/games/lumen/runtime.js': 48 * 1024,
+    // Lumen 2026-10 拆分：runtime 只剩状态机与编排，画法 / DOM 各自成模块
+    'src/games/lumen/runtime.js': 16 * 1024,
+    'src/games/lumen/render/pieces.js': 14 * 1024,
+    'src/games/lumen/render/board.js': 8 * 1024,
+    'src/games/lumen/ui/view.js': 12 * 1024,
     'src/games/circuit/index.js': 16 * 1024,
     'src/games/circuit/runtime.js': 60 * 1024,
     'src/games/circuit/model/levels.js': 24 * 1024,

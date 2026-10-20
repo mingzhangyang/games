@@ -23,7 +23,8 @@ const runtimes = {
     'flame-verse': read('src/games/flame-verse/runtime.js'),
     'ripple-duet': read('src/games/ripple-duet/runtime.js'),
     'circuit': read('src/games/circuit/runtime.js'),
-    'lumen': read('src/games/lumen/runtime.js'),
+    // Lumen 的存储都收在 systems/records.js；runtime.js 只编排（下方另断言它不碰存储）
+    'lumen': read('src/games/lumen/systems/records.js'),
     'needle-awn': read('src/games/needle-awn/runtime.js'),
     'gravity-slingshot': read('src/games/gravity-slingshot/runtime.js'),
     'silk-dew': read('src/games/silk-dew/runtime.js'),
@@ -140,7 +141,7 @@ for (const [id, prefix, slotName] of [
     ['lumen', 'lm', 'LUMEN'],
 ]) {
     const source = runtimes[id];
-    check(source.includes("import { storageGet, storageSet } from '../../platform/safe-storage.js';"),
+    check(/import \{ storageGet, storageSet \} from '(?:\.\.\/)+platform\/safe-storage\.js';/.test(source),
         `${id}: protocol storage remains on the platform facade`);
     const legacyStarsAccess = new RegExp(
         `\\bstorage(?:Get|Set|Remove)\\s*\\(\\s*(['"\\x60])${prefix}_stars\\1`,
@@ -155,8 +156,13 @@ for (const [id, prefix, slotName] of [
         `${id}: daily compatibility keys remain unchanged`);
     check(source.includes(`${prefix}_local_`),
         `${id}: local leaderboard compatibility keys remain unchanged`);
-    check(source.includes("from './storage.js'"),
+    check(/from '\.\.?\/storage\.js'/.test(source),
         `${id}: runtime composes its GameStorage adapter`);
+}
+{
+    const lumenRuntime = read('src/games/lumen/runtime.js');
+    check(!/safe-storage|storage(Get|Set|Remove)\s*\(|LUMEN_STORAGE/.test(lumenRuntime),
+        'lumen: runtime.js leaves every storage access to systems/records.js');
 }
 
 

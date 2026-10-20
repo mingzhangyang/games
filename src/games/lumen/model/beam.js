@@ -134,6 +134,7 @@ export function unitCells(level, idx) {
 
 /** 在当前盘面上点击 (r,c)：返回 { grid, cells }；不可点击返回 null */
 export function tapGrid(level, grid, r, c) {
+    if (!(r >= 0 && r < GRID_N && c >= 0 && c < GRID_N)) return null;   // 防 idx 越行回绕
     const cells = unitCells(level, idxOf(r, c));
     if (!cells) return null;
     return { grid: flipCells(grid, cells), cells };

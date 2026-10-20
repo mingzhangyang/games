@@ -67,11 +67,34 @@
 星级改为按关卡 id 存（`game:lumen:v2:stars = { 'refract-1': 3, … }`）。旧版按下标存的星级对应的关卡已全部替换，
 迁移成空对象；`lm_stars` / v1 键原样保留不删。每日的 `lm_daily_*` / `lm_local_*` 协议键不变。
 
-## 4. 锁定
+## 4. 代码结构（2026-10 拆分）
+
+旧 `runtime.js` 48 KB，音效、存储、画法、DOM、网络、状态机全在一个类里。现在按 Sword Flight /
+Tower Defense 的分层放（`import` 只能向下）：
+
+| 层 | 文件 | 职责 |
+| --- | --- | --- |
+| 0 | `i18n.js` `storage.js` `audio.js` | 文案、GameStorage 适配、音效 |
+| 1 | `model/beam.js` `solver.js` `levels.js` `session.js` | 纯模块；`PlaySession` 是盘面 / 光迹 / 点击数的唯一写入方，`tap()` 返回「这一下改变了什么」的事件 |
+| 2 | `systems/records.js` | 本页唯一碰存储处（星级 v2 + `lm_daily_*` / `lm_local_*`） |
+| 3 | `render/geometry.js` `pieces.js` `effects.js` `board.js` | 坐标；纯函数元件画法；转动补间 / 涟漪 / 粒子；DPR 与每帧合成 |
+| 4 | `input/pointer.js` | 画布点击 → 格 |
+| 5 | `ui/view.js` `ui/daily-board.js` | DOM 文案 / HUD / 面板；每日榜单（唯一碰网络层） |
+| 6 | `runtime.js` | 状态机 `menu / playing / won-level / won-daily` + `isPaused`，把各层接起来 |
+| 7 | `index.js` | 组合根（frame / drawer / chrome / 暂停归属） |
+
+`runtime.js` 对外仍暴露 `state` / `isPaused` / `startLevel()` 等抽屉与校验器依赖的字段，
+`level` / `grid` / `trace` / `flips` / `par` 是委托给当前 `PlaySession` 的只读访问器。
+
+## 5. 锁定
 
 - `tests/verify-lumen-levels.mjs`（离线）：par = 独立 BFS 最少点击数、最优解唯一、无闲置镜面、
   各章机制在场、每颗暗晶有戏份；难度下限（教学关外预见 ≥ 1 且贪心 3★ ≤ 50%，
   章内第 2 关起预见 ≥ 2 且 ≤ 15%，章末关预见 ≥ 3，平均 ≤ 12%）；每日 730 天全扫描。
   反向验证：同一套难度断言跑旧版 25 关，23 个非教学关全部不达标。
 - `tests/smoke-lumen.mjs`（浏览器）：暗晶照红的像素、联动组真实点击整组翻转、5-5 按最优解真实点击三星通关。
+- `tests/verify-lumen-session.mjs`（离线）：25 关 + 每日按最优解回放恰好第 par 下通关、tap 事件 = 前后光迹差、
+  联动整组翻转、场外点击不回绕、reset、星级阈值。
+- `tests/verify-lumen-modules.mjs`（离线）：分层只向下、无环；model 纯净；存储 / 网络 / 音效 / 画布上下文各只有一个主人；
+  runtime.js 不画画、不拼 DOM、不碰存储与网络、不直接改盘面。反向验证：换回拆分前的 runtime.js，8 项不达标。
 - 调关卡后重跑 `node tests/verify-lumen-levels.mjs`；换关用生成器出候选，不要手改 spec 而不过校验器。
