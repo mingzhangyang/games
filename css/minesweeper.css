@@ -624,8 +624,10 @@ body {
 /* 320px 级窄屏：顶栏（Home · 雷数 · 笑脸 · 计时 · 暂停 · 声音）差几 px 就折成两行 */
 @media (width <= 360px) {
     .ms-topbar-center { gap: 4px; }
-    .ms-counter { gap: 4px; padding: 5px 6px; }
-    .ms-face { width: 40px; height: 40px; font-size: 20px; }
+    .ms-counter { gap: 3px; padding: 5px 6px; }
+    .ms-counter-icon { font-size: 13px; }
+    .ms-counter-value { font-size: 15px; }
+    .ms-face { width: 38px; height: 38px; font-size: 19px; }
     .ms-diff { font-size: 12px; padding: 7px 4px; }
     .ms-title { font-size: 30px; }
 }

@@ -6,6 +6,9 @@
 //      计时器被挤到第二行、顶栏高 92px，把开始界面压得很挤（PR #169 截图复盘）。
 //      tower-defense 的两行顶栏是设计（见 src/platform/game-frame.js 头注），列入 TWO_ROW。
 //   ② 顶栏里的文字不得被省略号截断：reversi 的「AI · Medium」曾被 max-width: 52px 截成「AI · Me…」。
+//   ④ 字体余量：本机 sans-serif 回退到 Inter，CI（Ubuntu）回退到更宽的 DejaVu Sans，真机又是
+//      Roboto / SF / Segoe —— 只按一种字体刚好塞下等于没修（PR #169 本地绿、CI 红）。
+//      320px 再用强制 DejaVu Sans 跑一遍 ①②，环境无关地要求留出余量。
 //   ③ START_HUD 表里的页：开始界面打开时，局内 HUD（计数器 / 比分卡 / 暂停）不可见；
 //      点开始后必须恢复可见 —— 防止「藏了就再也不出来」。
 import puppeteer from 'puppeteer-core';
@@ -23,6 +26,11 @@ const START_HUD = {
     minesweeper: { start: '#ms-start', play: '#ms-btn-play', hud: ['.ms-topbar-center', '#ms-btn-pause'] },
 };
 const VIEWPORTS = [[320, 568], [375, 553]];
+const WIDE_FONT = 'DejaVu Sans';
+const PASSES = [
+    ...VIEWPORTS.map(([w, h]) => ({ w, h, font: null })),
+    { w: 320, h: 568, font: WIDE_FONT },
+];
 
 const fails = [];
 let checks = 0;
@@ -31,14 +39,21 @@ const check = (ok, msg) => { checks++; if (!ok) fails.push(msg); };
 const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 'new', args: LAUNCH_ARGS });
 
 for (const id of PAGES) {
-    for (const [w, h] of VIEWPORTS) {
+    for (const { w, h, font } of PASSES) {
         for (const lang of ['zh', 'en']) {
-            const tag = `${id}@${w}x${h}/${lang}`;
+            const tag = `${id}@${w}x${h}/${lang}${font ? `/${font}` : ''}`;
             const page = await browser.newPage();
             await page.setViewport({ width: w, height: h });
             await page.evaluateOnNewDocument(l => {
                 try { localStorage.setItem('site_lang', l); } catch (e) { /* 隐私模式 */ }
             }, lang);
+            if (font) await page.evaluateOnNewDocument(f => {
+                document.addEventListener('DOMContentLoaded', () => {
+                    const st = document.createElement('style');
+                    st.textContent = `html, body, body * { font-family: "${f}" !important; }`;
+                    document.head.appendChild(st);
+                });
+            }, font);
             try {
                 await page.goto(`${BASE}/${id}.html`, { waitUntil: 'load', timeout: 25000 });
             } catch {
@@ -75,7 +90,7 @@ for (const id of PAGES) {
             check(snap.truncated.length === 0, `${tag}: 顶栏文字被截断：${snap.truncated.join(', ')}`);
 
             const spec = START_HUD[id];
-            if (spec) {
+            if (spec && !font) {
                 const visible = () => page.evaluate((s) => s.hud.map(sel => [...document.querySelectorAll(sel)]
                     .every(e => getComputedStyle(e).visibility === 'visible' && getComputedStyle(e).display !== 'none')), spec);
                 const startOpen = await page.evaluate(s => !document.querySelector(s.start)?.classList.contains('hidden'), spec);
@@ -99,4 +114,4 @@ if (fails.length) {
     fails.forEach(f => console.log('  ✗ ' + f));
     process.exit(1);
 }
-console.log(`✓ verify-topbar-row：${checks} 项断言通过（${PAGES.length} 页 × ${VIEWPORTS.length} 视口 × 2 语言）`);
+console.log(`✓ verify-topbar-row：${checks} 项断言通过（${PAGES.length} 页 × ${PASSES.length} 轮 × 2 语言，含 320px ${WIDE_FONT} 宽字体轮）`);

@@ -506,8 +506,9 @@ body {
 
 /* 320px 级窄屏：两张比分卡各只剩 ~100px，「AI · Medium」会被截断 —— 收紧卡内距、去掉中间的 · */
 @media (width <= 360px) {
-    .rv-player-box { gap: 6px; padding: 6px 8px; }
-    .rv-player-disc { width: 20px; height: 20px; }
+    .rv-player-box { gap: 5px; padding: 6px 7px; }
+    .rv-player-disc { width: 18px; height: 18px; }
+    .rv-player-name { font-size: 10px; }
     .rv-vs { display: none; }
 }
 
