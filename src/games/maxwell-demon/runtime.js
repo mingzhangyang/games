@@ -917,8 +917,7 @@ export class MaxwellDemonGame {
 
         this.drawBackdrop(ctx);
         if (this.world && this.state !== 'menu') {
-            // 顺序：先 vessel/tint 再 bars —— T 读数要画进腔体内部，
-            // 若 bars 在 vessel 之前，readout 会被 vessel 的不透明底色盖掉。
+            // bars 只画在容器外的上下条带里，与腔体内的分子互不遮挡。
             this.drawVessel(ctx);
             this.drawChamberTint(ctx);
             this.drawBars(ctx);
@@ -945,63 +944,83 @@ export class MaxwellDemonGame {
         }
     }
 
-    /** 顶部：左右腔温度条 + 中央 ΔT；底部：预算条 */
+    /**
+     * 顶部条带（0..pad）：`T 左 ▬▬  ΔT x / 目标  ▬▬ T 右`；
+     * 底部条带（H−pad..H）：`预算 n ▬▬▬▬ 已花 · 目标`。
+     * 文字按实际像素可读字号放大（手机上逻辑字号可到 20px+），所以条长一律由
+     * measureText 现算、夹在文字之间：固定坐标的条会被放大的 ΔT / 预算文字压住，
+     * T 读数放进腔体顶角又会和角螺栓、分子叠在一起（手机实测截图）。
+     */
     drawBars(ctx) {
         const w = this.world;
         const scale = Math.min(1, (this.canvas.clientWidth || W) / W);
-        ctx.font = `700 ${Math.max(12, 11 / scale)}px system-ui, sans-serif`;
+        const x0 = 40, x1 = W - 40;
+        const gapPx = 10;
+        const barH = 10;
         ctx.textBaseline = 'middle';
 
-        const barY = 16;
-        const barH = 10;
-        const drawTemp = (x0, x1, temp, side) => {
-            const wdt = x1 - x0;
+        /* ── 顶部 ── */
+        const topY = VESSEL_PAD / 2;
+        const shown = Math.abs(w.gap) < 0.005 ? 0 : w.gap; // -0.004.toFixed(2) 会显示 "-0.00"
+        const gapText = `ΔT ${shown >= 0 ? '+' : ''}${shown.toFixed(2)} / ${this.spec.target.toFixed(2)}`;
+        ctx.font = `800 ${Math.max(15, 11 / scale)}px system-ui, sans-serif`;
+        const gapHalf = ctx.measureText(gapText).width / 2;
+        ctx.font = `700 ${Math.max(12, 11 / scale)}px system-ui, sans-serif`;
+        const tL = `T ${w.tempL.toFixed(2)}`;
+        const tR = `T ${w.tempR.toFixed(2)}`;
+        const tw = Math.max(ctx.measureText(tL).width, ctx.measureText(tR).width);
+        const drawTemp = (bx0, bx1, temp) => {
+            const wdt = bx1 - bx0;
+            if (wdt < 16) return;
+            const by = topY - barH / 2;
             ctx.fillStyle = P.barTrack;
-            this.roundRect(ctx, x0, barY, wdt, barH, 5);
+            this.roundRect(ctx, bx0, by, wdt, barH, 5);
             ctx.fill();
             const k = clamp(temp / 2, 0, 1);
-            ctx.fillStyle = mixHex('#3a5c8f', HOT, clamp((temp - 0.3) / 1.6, 0, 1));
             if (wdt * k > 2) {
-                this.roundRect(ctx, x0, barY, Math.max(2, wdt * k), barH, 5);
+                ctx.fillStyle = mixHex('#3a5c8f', HOT, clamp((temp - 0.3) / 1.6, 0, 1));
+                this.roundRect(ctx, bx0, by, Math.max(2, wdt * k), barH, 5);
                 ctx.fill();
             }
-            // 读数画在**各自腔体内**的顶角：放在 canvas 顶部条下面会压住 vessel
-            // 边框（barY+barH+11 = 37 恰好骑在 vessel 顶边 34 上），视觉像被裁断。
-            ctx.fillStyle = 'rgba(201,214,255,0.8)';
-            ctx.textAlign = side === 'left' ? 'left' : 'right';
-            ctx.fillText(`T ${temp.toFixed(2)}`, side === 'left' ? VESSEL_PAD + 12 : W - VESSEL_PAD - 12, VESSEL_PAD + 16);
         };
-        drawTemp(40, 252, w.tempL, 'left');
-        drawTemp(308, 520, w.tempR, 'right');
-
-        // 中央 ΔT（极小值归零：-0.004.toFixed(2) 会显示 "-0.00"）
-        ctx.textAlign = 'center';
-        const shown = Math.abs(w.gap) < 0.005 ? 0 : w.gap;
-        const hit = w.gap >= this.spec.target;
-        ctx.fillStyle = hit ? P.gapHit : P.gapText;
-        ctx.font = `800 ${Math.max(15, 11 / scale)}px system-ui, sans-serif`;
-        ctx.fillText(`ΔT ${shown >= 0 ? '+' : ''}${shown.toFixed(2)} / ${this.spec.target.toFixed(2)}`, DOOR_X, barY + 5);
-
-        // 底部预算条
-        const by = H - 26;
-        const bx0 = 40, bx1 = 520;
-        ctx.fillStyle = P.barTrack;
-        this.roundRect(ctx, bx0, by, bx1 - bx0, 8, 4);
-        ctx.fill();
-        const left = budgetLeft(w);
-        const k = clamp(left / w.total, 0, 1);
-        if (k > 0.001) {
-            ctx.fillStyle = k > 0.35 ? GOLD : '#ff6b7a';
-            this.roundRect(ctx, bx0, by, Math.max(2, (bx1 - bx0) * k), 8, 4);
-            ctx.fill();
-        }
-        ctx.font = `700 ${11 / scale}px system-ui, sans-serif`;
+        drawTemp(x0 + tw + gapPx, DOOR_X - gapHalf - gapPx * 1.5, w.tempL);
+        drawTemp(DOOR_X + gapHalf + gapPx * 1.5, x1 - tw - gapPx, w.tempR);
         ctx.fillStyle = P.budgetText;
-        // 标签放条**下方**：by-9 = 605 会压在 vessel 底边（606）上
         ctx.textAlign = 'left';
-        ctx.fillText(`${this.t('budget')} ${left}`, bx0, by + 14);
+        ctx.fillText(tL, x0, topY);
         ctx.textAlign = 'right';
-        ctx.fillText(`${this.t('spent')} ${w.spent} · ${this.t('par')} ${this.spec.par}`, bx1, by + 14);
+        ctx.fillText(tR, x1, topY);
+
+        ctx.textAlign = 'center';
+        ctx.fillStyle = w.gap >= this.spec.target ? P.gapHit : P.gapText;
+        ctx.font = `800 ${Math.max(15, 11 / scale)}px system-ui, sans-serif`;
+        ctx.fillText(gapText, DOOR_X, topY);
+
+        /* ── 底部预算 ── */
+        const botY = H - VESSEL_PAD / 2;
+        const left = budgetLeft(w);
+        const budgetText = `${this.t('budget')} ${left}`;
+        const spentText = `${this.t('spent')} ${w.spent} · ${this.t('par')} ${this.spec.par}`;
+        ctx.font = `700 ${Math.max(12, 11 / scale)}px system-ui, sans-serif`;
+        const bx0 = x0 + ctx.measureText(budgetText).width + gapPx;
+        const bx1 = x1 - ctx.measureText(spentText).width - gapPx;
+        if (bx1 - bx0 >= 16) {
+            const by = botY - 4;
+            ctx.fillStyle = P.barTrack;
+            this.roundRect(ctx, bx0, by, bx1 - bx0, 8, 4);
+            ctx.fill();
+            const k = clamp(left / w.total, 0, 1);
+            if (k > 0.001) {
+                ctx.fillStyle = k > 0.35 ? GOLD : '#ff6b7a';
+                this.roundRect(ctx, bx0, by, Math.max(2, (bx1 - bx0) * k), 8, 4);
+                ctx.fill();
+            }
+        }
+        ctx.fillStyle = P.budgetText;
+        ctx.textAlign = 'left';
+        ctx.fillText(budgetText, x0, botY);
+        ctx.textAlign = 'right';
+        ctx.fillText(spentText, x1, botY);
         ctx.textAlign = 'start';
     }
 

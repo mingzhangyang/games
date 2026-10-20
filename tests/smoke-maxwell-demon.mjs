@@ -366,6 +366,60 @@ else if (!reset.menu.clearHidden) fail('toMenu 后结算面板未隐藏');
 else if (!reset.menu.scanDimmed) fail('菜单态动作钮应隐藏（is-dimmed），否则会挡住关卡格');
 if (!fails.length) pass('重开/回菜单：花费归零、world 清空、动作钮隐藏');
 
+/* ── 读数条带不重叠（手机实测回归：ΔT 压住温度条、T 读数撞角螺栓、预算文字压条并被舞台底边裁掉；
+      桌面动作钮浮在画布底角盖住分子与预算条）──
+   重放一帧 draw()：记下每个 fillText 的实际像素盒与每根读数条（roundRect 高 ≤ 12），
+   要求文字与条两两不相交、文字不进容器（分子活动区）、不出画布；动作钮与画布不相交。 */
+const STRIP_VIEWPORTS = [[320, 568], [430, 932], [1280, 800]];
+for (const [vw, vh] of STRIP_VIEWPORTS) {
+    for (const lang of ['zh', 'en']) {
+        await page.setViewport({ width: vw, height: vh });
+        await page.evaluate((l) => { localStorage.setItem('site_lang', l); window.dispatchEvent(new Event('site-settings:changed')); }, lang);
+        await wait(250);
+        const strip = await page.evaluate(() => {
+            const g = window.mdGame;
+            g.startLevel(0);
+            g.world.spent = g.world.total - 2;   // 最长的「已花 · 目标」文案
+            g.resize();
+            const ctx = g.ctx;
+            const texts = [];
+            const bars = [];
+            const origText = ctx.fillText;
+            const origRect = g.roundRect;
+            ctx.fillText = function (t, x, y) {
+                const m = this.measureText(t);
+                const a = this.textAlign;
+                const x0 = a === 'center' ? x - m.width / 2 : (a === 'right' || a === 'end') ? x - m.width : x;
+                texts.push({ t, x0, x1: x0 + m.width, y0: y - m.actualBoundingBoxAscent, y1: y + m.actualBoundingBoxDescent });
+                return origText.call(this, t, x, y);
+            };
+            g.roundRect = function (c, x, y, w, h, r) {
+                if (h <= 12) bars.push({ x0: x, x1: x + w, y0: y, y1: y + h });
+                return origRect.call(this, c, x, y, w, h, r);
+            };
+            try { g.draw(); } finally { ctx.fillText = origText; g.roundRect = origRect; }
+            const W = 560, H = 640, pad = 34;
+            const hit = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+            const bad = [];
+            for (const t of texts) {
+                for (const b of bars) if (hit(t, b)) bad.push(`"${t.t}" 压住读数条`);
+                if (hit(t, { x0: pad, x1: W - pad, y0: pad, y1: H - pad })) bad.push(`"${t.t}" 画进了容器`);
+                if (t.x0 < 0 || t.x1 > W || t.y0 < 0 || t.y1 > H) bad.push(`"${t.t}" 超出画布`);
+            }
+            const cv = document.getElementById('md-canvas').getBoundingClientRect();
+            for (const id of ['md-scan-btn', 'md-gate-btn']) {
+                const r = document.getElementById(id).getBoundingClientRect();
+                if (r.left < cv.right && cv.left < r.right && r.top < cv.bottom && cv.top < r.bottom) bad.push(`#${id} 盖在画布上`);
+            }
+            g.toMenu();
+            return { bad, nText: texts.length, nBars: bars.length };
+        });
+        if (strip.nText < 5 || strip.nBars < 4) fail(`${vw}×${vh} ${lang}: 读数条带未绘制完整（文字 ${strip.nText}、条 ${strip.nBars}）`);
+        else if (strip.bad.length) fail(`${vw}×${vh} ${lang}: ${strip.bad.slice(0, 3).join(' | ')}`);
+    }
+}
+if (!fails.length) pass('读数条带：320/430/1280 × 中英文，文字不压条、不进容器、不出画布；动作钮不盖画布');
+
 if (errs.length) fail(`对局中 JS 运行时错误: ${errs.slice(0, 3).join(' | ')}`);
 
 await browser.close();

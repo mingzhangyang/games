@@ -144,16 +144,26 @@ body {
     min-width: 280px;
 }
 
+/* 动作钮在画布**下方**的流式行里，所有宽度都一样：浮在画布角上会盖住
+   腔体角落的分子和底部预算条（桌面实测）。桌面纵向预算经 index.js 的
+   extraChrome 把这一行计入 chrome，画布据此缩小而不是被挤出一屏。 */
+@layer pages {
+    .md-stage { flex-direction: column; align-items: stretch; }
+}
+
 .md-action-row {
-    position: absolute;
-    inset: auto 16px 16px;
+    position: relative;
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 10px 12px 2px;
     z-index: 15;
     pointer-events: none;
 }
 
-.md-action-row.is-hidden { display: none; }
+/* 非 playing 态只隐身不收起：保留行高，菜单 ↔ 对局切换时画布尺寸不跳 */
+.md-action-row.is-hidden { visibility: hidden; }
 
 #md-canvas {
     display: block;
@@ -404,20 +414,8 @@ body {
  
  
 
-    @layer pages {
-        .md-stage { flex-direction: column; align-items: stretch; }
-    }
-
-    .md-action-row {
-        position: relative;
-        inset: auto;
-        width: 100%;
-        min-height: 82px;
-        padding: 12px;
-        margin-top: 2px;
-    }
+    .md-action-row { min-height: 82px; padding: 12px; margin-top: 2px; }
     .md-action-btn { width: 58px; height: 58px; }
-    .md-scan-btn, .md-gate-btn { left: auto; right: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {

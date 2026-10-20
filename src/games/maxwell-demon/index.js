@@ -28,7 +28,8 @@ onReady(() => {
     window.mdRuntime = mountGameRuntime({
         self: 'maxwell-demon.html',
         game: window.mdGame,
-        frame: { logicalWidth: W },
+        // 动作钮在画布下方占一行：计入桌面纵向预算（与 flame-verse 的实验台同模式）
+        frame: { logicalWidth: W, extraChrome: () => document.getElementById('md-action-row').getBoundingClientRect().height },
         more: '#mdSideMore',
         drawer: {
             idPrefix: 'md',
@@ -44,5 +45,6 @@ onReady(() => {
         },
     });
 
+    new ResizeObserver(() => window.mdRuntime.frame?.refresh()).observe(document.getElementById('md-action-row'));
     window.mdDrawer = window.mdRuntime.drawer;
 });
