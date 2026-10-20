@@ -37,7 +37,7 @@
     <link rel="stylesheet" href="css/more-games.css">
 </head>
 <body class="science-showcase science-theme-maxwell">
-    <div class="md-shell game-shell">
+    <div class="md-shell game-shell game-shell--immersive">
         <!-- 顶栏 HUD -->
         <header class="md-topbar game-topbar">
             <div class="md-topbar-lead game-topbar-group">
@@ -52,39 +52,44 @@
                     <span class="md-par game-start-par" id="md-par">Par 48</span>
                 </div>
             </div>
-            <!-- 右簇固定顺序：专属 → stats → sound -->
+            <!-- 右簇固定顺序：专属 → sound -->
             <div class="md-topbar-actions game-topbar-group">
                 <button type="button" data-contextual-restart="retry" class="md-icon-btn game-icon-btn hidden" id="md-reset-btn" title="Reset" aria-label="Reset"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
-                <button data-chrome="stats" type="button" class="md-icon-btn game-icon-btn md-stats-btn game-stats-btn" id="mdStatsToggle" aria-label="Stats" aria-haspopup="dialog" aria-expanded="false" aria-controls="mdStatsDrawer"></button>
                 <button type="button" class="md-icon-btn game-icon-btn" id="md-mute-btn" data-chrome="sound" title="Sound" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
             </div>
         </header>
 
-        <!-- 舞台 -->
+        <!-- 舞台：Immersive Stage（games.config.json layout: "immersive"，契约 docs/contracts/layout.md §7）。
+             顶栏以下整块视口归场景：容器按 560×640 等比放进 #md-field，两颗动作钮
+             窄高屏排在容器下方、宽矮屏分列容器两侧（runtime.js fitScene 实测择优） -->
         <main class="md-main game-main">
-        <div class="md-stage game-stage" id="md-stage">
-            <canvas class="game-canvas" id="md-canvas" width="560" height="640"></canvas>
+        <div class="md-stage game-stage game-stage--immersive" id="md-stage">
+            <div class="md-scene" id="md-scene">
+                <div class="md-field" id="md-field">
+                    <canvas class="md-canvas" id="md-canvas" width="560" height="640"></canvas>
+                </div>
+
+                <!-- 两个动作钮：观测（看清速度） / 开门（放行窗口） -->
+                <div class="md-action-row" id="md-action-row">
+                    <button type="button" class="md-action-btn md-scan-btn" id="md-scan-btn" title="Scan">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/>
+                            <circle cx="12" cy="12" r="3.2"/>
+                        </svg>
+                        <span class="sci-action-label" data-i18n="scan">Scan</span>
+                    </button>
+                    <button type="button" class="md-action-btn md-gate-btn" id="md-gate-btn" title="Open gate">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M4 3v18M20 3v18"/>
+                            <path d="M9.5 4.5h5v15h-5z" fill="currentColor" stroke="none"/>
+                        </svg>
+                        <span class="sci-action-label" data-i18n="gateShort">Open</span>
+                    </button>
+                </div>
+            </div>
 
             <!-- 提示 -->
             <div class="md-toast hidden game-toast" id="md-toast"></div>
-
-            <!-- 两个动作钮：观测（看清速度） / 开门（放行窗口） -->
-            <div class="md-action-row" id="md-action-row">
-                <button type="button" class="md-action-btn md-scan-btn" id="md-scan-btn" title="Scan">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/>
-                        <circle cx="12" cy="12" r="3.2"/>
-                    </svg>
-                    <span class="sci-action-label" data-i18n="scan">Scan</span>
-                </button>
-                <button type="button" class="md-action-btn md-gate-btn" id="md-gate-btn" title="Open gate">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M4 3v18M20 3v18"/>
-                        <path d="M9.5 4.5h5v15h-5z" fill="currentColor" stroke="none"/>
-                    </svg>
-                    <span class="sci-action-label" data-i18n="gateShort">Open</span>
-                </button>
-            </div>
 
             <!-- 开始界面 -->
             <div class="md-overlay game-overlay game-overlay--menu" id="md-start">
@@ -110,8 +115,15 @@
                 <p class="md-level-label game-start-level-label" id="md-level-label" data-i18n="levelSelect"></p>
                 <div class="md-level-grid game-start-level-grid" id="md-level-grid"></div>
                 <p class="md-daily-best game-start-daily-best" id="md-daily-best"></p>
+                <!-- 原桌面侧栏 / 手机抽屉里的战绩、原理与图例：沉浸布局没有侧栏，收进开始界面 -->
+                <p class="md-records" id="md-records"></p>
+                <details class="md-learn" id="md-learn">
+                    <summary class="md-learn-summary" id="md-learn-title" data-i18n="learnTitle"></summary>
+                    <p class="md-learn-text sci-howto-science" id="md-science" data-i18n="howtoScience"></p>
+                    <ul class="md-legend" id="md-legend"></ul>
+                </details>
                 <div class="md-start-footer game-start-footer">
-                    <button class="md-icon-btn game-icon-btn" id="md-start-mute" aria-label="Sound"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg></button>
+                    <nav class="more-games" id="mdStartMore"></nav>
                 </div>
             </div>
 
@@ -150,55 +162,14 @@
             </div>
         </div>
 
-            <aside class="md-sidebar game-sidebar">
-
-            <!-- 由 game-drawer.js 在侧栏 / 底部抽屉之间搬移的面板容器 -->
-            <div id="mdStatsPanels">
-                <div class="md-side-card game-side-card">
-                    <div class="md-side-title game-side-title" id="md-side-howto-title" data-i18n="sideHowTo"></div>
-                    <p class="md-side-text game-side-text sci-howto-steps" id="md-side-howto" data-i18n="howto" data-i18n-touch="howtoTouch"></p>
-                    <p class="md-side-text game-side-text sci-howto-science" id="md-side-science" data-i18n="howtoScience"></p>
-                </div>
-                <div class="md-side-card game-side-card">
-                    <div class="md-side-title game-side-title" id="md-side-records-title" data-i18n="sideRecords"></div>
-                    <div class="md-side-records game-side-records" id="md-side-records"></div>
-                </div>
-            </div>
-
-            <!-- 桌面侧栏专属：必须放在 #mdStatsPanels 外面 —— 那个节点会被
-                 src/platform/game-drawer.js 整体搬进移动端抽屉，放进去会与页脚「更多游戏」重复；
-                 放在外面则只在桌面侧栏出现（窄屏 aside 本来就被 has-stats-drawer 隐藏） -->
-            <div class="md-side-card game-side-card">
-                <div class="md-side-title game-side-title" id="md-side-legend-title" data-i18n="legendTitle"></div>
-                <div class="md-side-legend game-side-legend" id="md-side-legend"></div>
-            </div>
-
-            <div class="md-side-card game-side-card">
-                <nav class="more-games" id="mdSideMore"></nav>
-            </div>
-
-        </aside>
     </main>
 
 
 
-    <!-- 持久页脚：随流在底部（不用 sticky/fixed，避免与移动端底栏、
-         统计抽屉、结算浮层抢层级，也不吃竖版画布高度）。
-         ⚠️ 只保留操作提示；导航与状态控件统一留在 header / 页面主体。 -->
+    <!-- 持久页脚：immersive 布局下随流在首屏之下（不占场景高度），只保留操作提示 -->
     <footer class="md-footer game-footer">
         <p class="md-footer-hint game-footer-hint" id="md-hint" data-i18n="hint" data-i18n-touch="hintTouch"></p>
     </footer>
-    </div>
-    <!-- 底部统计抽屉（移动端）：面板由 JS 从侧栏搬进来 -->
-    <div class="game-drawer" id="mdStatsDrawer" hidden>
-        <div class="game-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="mdStatsDrawerTitle">
-            <div class="game-drawer-handle"></div>
-            <div class="game-drawer-head">
-                <span class="game-drawer-title" id="mdStatsDrawerTitle"></span>
-                <button type="button" class="icon-btn game-icon-btn game-drawer-close" id="mdStatsClose" aria-label="Close"></button>
-            </div>
-            <div class="game-drawer-body" id="mdStatsDrawerBody"></div>
-        </div>
     </div>
 
 

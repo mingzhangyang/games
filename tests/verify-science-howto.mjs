@@ -101,11 +101,14 @@ async function audit(id, lang, touch) {
     if (HOWTO_PAGES.has(id)) {
         howto = await page.evaluate(pp => {
             const start = document.getElementById(`${pp}-howto`);
-            const science = document.getElementById(`${pp}-side-science`);
+            // 沉浸布局的页（maxwell-demon）没有侧栏：「原理」段收在开始界面的 #<p>-science
+            const science = document.getElementById(`${pp}-side-science`) || document.getElementById(`${pp}-science`);
+            const side = document.getElementById(`${pp}-side-howto`);
             return {
                 text: start ? start.textContent.trim() : '',
                 whiteSpace: start ? getComputedStyle(start).whiteSpace : '',
-                side: (document.getElementById(`${pp}-side-howto`) || {}).textContent || '',
+                hasSide: !!side,
+                side: side ? side.textContent : '',
                 science: science ? science.textContent.trim() : '',
             };
         }, p);
@@ -114,8 +117,8 @@ async function audit(id, lang, touch) {
         check(['①', '②', '③'].every(m => howto.text.includes(m)), `${tag}: 玩法说明含 ①②③ 操作步骤`);
         check(howto.text.split('\n').length >= 4, `${tag}: 目标 + 三步分行`, `${howto.text.split('\n').length} 行`);
         check(howto.whiteSpace === 'pre-line', `${tag}: 说明按行排版（white-space: pre-line）`, howto.whiteSpace);
-        check(howto.side.trim() === howto.text, `${tag}: 侧栏玩法与开始界面同一份文案`);
-        check(howto.science.length > 20, `${tag}: 侧栏「原理」段非空`);
+        if (howto.hasSide) check(howto.side.trim() === howto.text, `${tag}: 侧栏玩法与开始界面同一份文案`);
+        check(howto.science.length > 20, `${tag}: 「原理」段非空`);
         if (touch) {
             const hit = KEY_MOUSE.find(re => re.test(howto.text));
             check(!hit, `${tag}: 触屏玩法说明不含键鼠字样`, hit ? `${hit} 命中` : '');

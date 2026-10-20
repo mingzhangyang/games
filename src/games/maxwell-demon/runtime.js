@@ -12,7 +12,9 @@
  * 关卡数据 / 分子内核在本包的 model/rules.js（纯模块，校验器共用）。
  * par 由 tests/verify-maxwell-demon-levels.mjs 的贪心模拟现算，绝不手填。
  *
- * 共享层（2026-09 契约）：game-frame / game-drawer / game-chrome /
+ * 布局：Immersive Stage（docs/contracts/layout.md §7）——容器按 560×640 等比放进舞台，
+ * 战绩 / 原理 / 图例收在开始界面（没有侧栏与统计抽屉）。
+ * 共享层（2026-09 契约）：game-frame / game-chrome /
  * leaderboard / daily / i18n / safe-storage / analytics / game-sfx / boot。
  */
 
@@ -155,9 +157,8 @@ export class MaxwellDemonGame {
         [
             'md-hud-level', 'md-budget', 'md-par', 'md-reset-btn', 'md-mute-btn', 'md-toast',
             'md-start', 'md-title', 'md-subtitle', 'md-howto', 'md-btn-levels', 'md-btn-daily',
-            'md-level-label', 'md-level-grid', 'md-daily-best', 'md-start-mute',
-            'md-side-howto-title', 'md-side-howto', 'md-side-records-title', 'md-side-records',
-            'md-side-legend-title', 'md-side-legend',
+            'md-level-label', 'md-level-grid', 'md-daily-best',
+            'md-records', 'md-legend', 'md-scene', 'md-field',
             'md-clear', 'md-clear-stars', 'md-clear-line', 'md-btn-next', 'md-btn-replay', 'md-btn-menu1',
             'md-over', 'md-over-title', 'md-over-score', 'md-over-sub',
             'md-btn-again', 'md-btn-copy', 'md-btn-menu2',
@@ -172,7 +173,7 @@ export class MaxwellDemonGame {
         this.progress = storageParseProgress();
 
         // 对局状态：menu | playing | won-level | won-daily | failed
-        // ⚠️ 字段名与 verify-stats-drawer.mjs 的 AUGMENT runningExpr 严格对应
+        // ⚠️ state / isPaused 是测试钩子（smoke / contextual-restart）直接读的字段名
         this.state = 'menu'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
         this.mode = 'levels';
@@ -218,10 +219,10 @@ export class MaxwellDemonGame {
     }
 
     /**
-     * 给共享层（bindChrome / createStatsDrawer）用的**整表**取用器。
+     * 给共享层（bindChrome）用的**整表**取用器。
      * ⚠️ 共享层的 `getText` 契约是 `() => object`（返回当前语言的文案对象），
      * 不是 `(key) => string` —— 传错形态会让共享文案全部静默退回英文
-     * （silk-dew 踩过的坑，verify-stats-drawer §②b 用死值断言防守）。
+     * （silk-dew 踩过的坑）。
      */
     textTable() {
         return LANGUAGES[this.lang] || LANGUAGES.en;
@@ -295,15 +296,6 @@ export class MaxwellDemonGame {
                 if (!next) Sfx.click();
             });
         }
-        if (el['start-mute']) {
-            el['start-mute'].innerHTML = getMuted() ? ICONS.soundOff : ICONS.soundOn;
-            el['start-mute'].addEventListener('click', () => {
-                const next = !getMuted();
-                setMuted(next);
-                el['start-mute'].innerHTML = next ? ICONS.soundOff : ICONS.soundOn;
-                if (el['mute-btn']) el['mute-btn'].innerHTML = next ? ICONS.soundOff : ICONS.soundOn;
-            });
-        }
         // Preserve pointerdown timing. Native keyboard clicks are a second
         // entrance to the same one-shot queue, never a second pointer charge.
         for (const [key, request] of [['gate-btn', 'wantGate'], ['scan-btn', 'wantScan']]) {
@@ -363,7 +355,7 @@ export class MaxwellDemonGame {
 
         this.renderLevelGrid();
         this.renderLegend();
-        this.renderSideRecords();
+        this.renderRecords();
         this.updateHud();
         document.documentElement.lang = this.lang === 'zh' ? 'zh-CN' : 'en';
     }
@@ -393,8 +385,9 @@ export class MaxwellDemonGame {
         });
     }
 
-    renderSideRecords() {
-        const box = this.el['side-records'];
+    /** 开始界面的战绩行（原侧栏「战绩」卡）：通关数 · 星数 · 已通关容器的最佳花费合计 */
+    renderRecords() {
+        const box = this.el['records'];
         if (!box) return;
         let cleared = 0, stars = 0, bestSum = 0, bestCount = 0;
         for (const spec of LEVELS) {
@@ -405,29 +398,16 @@ export class MaxwellDemonGame {
                 if (p.bestSpent > 0) { bestSum += p.bestSpent; bestCount++; }
             }
         }
-        const rows = [
-            [this.t('vessel'), `${cleared} / ${LEVELS.length}`],
-            [this.t('stars'), `${stars} / ${LEVELS.length * 3}`],
-            [this.t('spent'), bestCount ? String(bestSum) : '—'],
+        const parts = [
+            `${this.t('cleared')} ${cleared}/${LEVELS.length}`,
+            `★ ${stars}/${LEVELS.length * 3}`,
         ];
-        box.innerHTML = '';
-        for (const [k, v] of rows) {
-            const row = document.createElement('div');
-            row.className = 'md-side-row game-side-row';
-            const kk = document.createElement('span');
-            kk.className = 'md-side-k';
-            kk.textContent = k;
-            const vv = document.createElement('b');
-            vv.className = 'md-side-v';
-            vv.textContent = v;
-            row.appendChild(kk);
-            row.appendChild(vv);
-            box.appendChild(row);
-        }
+        if (bestCount) parts.push(`${this.t('bestSpentSum')} ${bestSum}`);
+        box.textContent = parts.join(' · ');
     }
 
     renderLegend() {
-        const box = this.el['side-legend'];
+        const box = this.el['legend'];
         if (!box) return;
         const rows = [
             ['fast', this.t('legendFast')],
@@ -438,12 +418,12 @@ export class MaxwellDemonGame {
         ];
         box.innerHTML = '';
         for (const [kind, text] of rows) {
-            const row = document.createElement('div');
-            row.className = 'md-legend-row game-legend-row';
+            const row = document.createElement('li');
+            row.className = 'md-legend-row';
             const dot = document.createElement('span');
-            dot.className = `md-legend-dot game-legend-dot md-legend-${kind}`;
+            dot.className = `md-legend-dot md-legend-${kind}`;
+            dot.setAttribute('aria-hidden', 'true');
             const tx = document.createElement('span');
-            tx.className = 'md-legend-text game-legend-text';
             tx.textContent = text;
             row.appendChild(dot);
             row.appendChild(tx);
@@ -536,7 +516,7 @@ export class MaxwellDemonGame {
         this.show(this.el['start']);
         this.syncActionVisibility();
         this.renderLevelGrid();
-        this.renderSideRecords();
+        this.renderRecords();
     }
 
     /* ---------------------- 结算 ---------------------- */
@@ -553,7 +533,7 @@ export class MaxwellDemonGame {
         this.progress[this.spec.id] = p;
         this.saveProgress();
         this.renderLevelGrid();
-        this.renderSideRecords();
+        this.renderRecords();
 
         if (this.mode === 'daily' && this.daily) {
             this.daily.totalSpent += spent;
@@ -783,9 +763,12 @@ export class MaxwellDemonGame {
             this.lang = getLang();
             this.applyLanguage();
         });
-        window.addEventListener('resize', () => this.resize());
-        // 桌面端 --frame-chrome 写入会改变舞台宽度 → 必须在 CSS 尺寸定下后重算后端缓冲区
-        window.addEventListener('game-frame:changed', () => this.resize());
+        const refit = () => { this.resize(); this.draw(); };
+        window.addEventListener('resize', refit);
+        // immersive 舞台高度 = 100dvh − 实测 --frame-chrome：写入后舞台尺寸才定下
+        window.addEventListener('game-frame:changed', refit);
+        // 开始菜单显隐也会改变舞台高度（< 1024px 菜单期间舞台让位给菜单）
+        if (typeof ResizeObserver !== 'undefined' && this.el['scene']) new ResizeObserver(refit).observe(this.el['scene']);
     }
 
     /* ---------------------- 暂停适配（抽屉契约） ---------------------- */
@@ -797,6 +780,7 @@ export class MaxwellDemonGame {
     /* ---------------------- 尺寸 ---------------------- */
 
     resize() {
+        this.fitScene();
         // ⚠️ 必须用 clientWidth（整数）而非 getBoundingClientRect().width（亚像素），
         // 否则后端缓冲区比 CSS 盒窄 1–3px，校验器报「画面糊」（silk-dew 实测坑）。
         const canvas = this.canvas;
@@ -811,6 +795,29 @@ export class MaxwellDemonGame {
         }
         this.renderScale = renderScale;
         this.dpr = dpr;
+    }
+
+    /**
+     * 容器（逻辑 560×640，模型几何不变）等比放进 #md-field，CSS 尺寸取整像素。
+     * 两颗动作钮的位置二选一：排在容器下方（窄高屏）或分列容器两侧（宽矮屏 / 横屏，
+     * 拇指正好落在两侧）——两种都实测一次 field 尺寸，取让容器更大的那种。
+     */
+    fitScene() {
+        const scene = this.el['scene'];
+        const field = this.el['field'];
+        if (!scene || !field) return;
+        const fit = () => Math.min(field.clientWidth / W, field.clientHeight / H);
+        scene.classList.remove('is-side');
+        const below = fit();
+        scene.classList.add('is-side');
+        const side = fit();
+        const useSide = side > below * 1.04;
+        scene.classList.toggle('is-side', useSide);
+        const s = useSide ? side : below;
+        if (!(s > 0)) return;
+        const cssW = Math.max(160, Math.floor(W * s));
+        this.canvas.style.width = `${cssW}px`;
+        this.canvas.style.height = `${Math.round(cssW * H / W)}px`;
     }
 
     /* ---------------------- 循环 ---------------------- */

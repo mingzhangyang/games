@@ -12,7 +12,7 @@
  *   · 武装超时作废：钱照花（gateExpire 事件）
  *   · 温差：达标后还要 holdTime 1.6s 才算赢
  *   · 破产：预算见底进入 graceTime 宽限，期内没达标才判负
- *   · 抽屉契约：pauseQuiet  freezes 物理（时间不前进）
+ *   · 暂停租约（切后台）：pauseQuiet 冻住物理（时间不前进）
  *
  * 关键：
  *   · 动作一律走真实键盘事件（不是直接调内核函数），否则测不到输入层。
@@ -65,25 +65,34 @@ await page.evaluate(() => {
 /* ── 1. bootstrap ── */
 const boot = await page.evaluate(() => ({
     hasGame: !!window.mdGame,
-    hasDrawer: !!window.mdDrawer,
+    hasPauseOwnership: !!(window.mdGame && window.mdGame.pauseOwnership),
     state: window.mdGame ? window.mdGame.state : null,
     startVisible: !document.getElementById('md-start').classList.contains('hidden'),
     levelChips: document.querySelectorAll('#md-level-grid button').length,
-    legendRows: document.querySelectorAll('#md-side-legend > *').length,
-    moreCards: document.querySelectorAll('#mdSideMore a').length,
+    legendRows: document.querySelectorAll('#md-legend > *').length,
+    moreCards: document.querySelectorAll('#mdStartMore a').length,
+    records: document.getElementById('md-records').textContent.trim(),
+    immersive: document.body.classList.contains('has-immersive-stage'),
+    drawerGone: !document.getElementById('mdStatsDrawer') && !document.querySelector('.game-sidebar'),
+    // 声音开关只有顶栏一个写入者：开始界面里曾有第二颗（图标与顶栏不同步）
+    soundSwitches: document.querySelectorAll('[data-chrome="sound"], #md-start button[aria-label="Sound"], #md-start-mute').length,
     canvasW: document.getElementById('md-canvas').width,
     hudLevel: document.getElementById('md-hud-level').textContent,
 }));
 if (!boot.hasGame) fail('window.mdGame 未创建（boot 失败）');
-if (!boot.hasDrawer) fail('createStatsDrawer 未初始化');
+if (!boot.hasPauseOwnership) fail('切后台暂停租约（pauseOwnership）未接线');
+if (!boot.immersive) fail('页面未进入 Immersive Stage（body 缺 has-immersive-stage）');
+if (!boot.drawerGone) fail('沉浸布局不应再有侧栏 / 统计抽屉');
+if (boot.soundSwitches !== 1) fail(`声音开关应只有顶栏一个，实际 ${boot.soundSwitches}`);
+if (!/0\s*\/\s*20/.test(boot.records)) fail(`开始界面战绩行应显示 0/20，got "${boot.records}"`);
 if (boot.state !== 'menu') fail(`初始 state 应为 menu，got ${boot.state}`);
 if (!boot.startVisible) fail('开始覆盖层未显示');
 if (boot.levelChips !== 20) fail(`容器格应渲染 20 个（实际 ${boot.levelChips}）`);
 if (boot.legendRows < 4) fail(`热力学图例至少应有 4 行（实际 ${boot.legendRows}）`);
-if (boot.moreCards < 1) fail('桌面侧栏「更多游戏」未渲染');
+if (boot.moreCards < 1) fail('开始界面「更多游戏」未渲染');
 if (!boot.canvasW || boot.canvasW < 200) fail(`canvas 后端缓冲未按 CSS 尺寸重算：${boot.canvasW}`);
 if (errs.length) fail(`首屏 JS 运行时错误: ${errs.slice(0, 2).join(' | ')}`);
-else pass('bootstrap：句柄/初始态/20 容器格/图例/更多游戏');
+else pass('bootstrap：句柄/沉浸舞台/初始态/20 容器格/战绩/图例/更多游戏');
 
 /* ── 2. 开局 ── */
 await page.evaluate(() => { window.__evClear(); window.mdGame.startLevel(0); });
@@ -311,7 +320,7 @@ else if (!/1\s*\/\s*5/.test(daily.hud)) fail(`每日 HUD 应显示 1/5，got "${
 else if (daily.state !== 'playing') fail(`每日应立即开局，got ${daily.state}`);
 else pass(`每日赛程：${daily.course} 容器、HUD "${daily.hud}"、立即开局`);
 
-/* ── 10. 暂停（抽屉契约）：pauseQuiet 必须冻住物理 ── */
+/* ── 10. 暂停租约（切后台）：pauseQuiet 必须冻住物理 ── */
 const pauseTest = await page.evaluate(async () => {
     const g = window.mdGame;
     g.startLevel(0);
@@ -329,7 +338,7 @@ const pauseTest = await page.evaluate(async () => {
 if (pauseTest.busy) fail('pauseQuiet 后 isRunning() 应为 false');
 else if (Math.abs(pauseTest.t1 - pauseTest.t0) > 0.02) fail(`暂停期间世界时间不应前进（${pauseTest.t0.toFixed(3)} → ${pauseTest.t1.toFixed(3)}）`);
 else if (pauseTest.t2 - pauseTest.t1 <= 0.05) fail(`resumeQuiet 后世界应继续推进（${pauseTest.t1.toFixed(3)} → ${pauseTest.t2.toFixed(3)}）`);
-else pass(`抽屉契约：暂停 0.4s 时间冻结、恢复后继续推进（${pauseTest.t1.toFixed(2)}→${pauseTest.t2.toFixed(2)}s）`);
+else pass(`暂停租约：暂停 0.4s 时间冻结、恢复后继续推进（${pauseTest.t1.toFixed(2)}→${pauseTest.t2.toFixed(2)}s）`);
 
 /* ── 11. 重开 / 回菜单必须复位 ── */
 const reset = await page.evaluate(() => {
@@ -370,7 +379,7 @@ if (!fails.length) pass('重开/回菜单：花费归零、world 清空、动作
       桌面动作钮浮在画布底角盖住分子与预算条）──
    重放一帧 draw()：记下每个 fillText 的实际像素盒与每根读数条（roundRect 高 ≤ 12），
    要求文字与条两两不相交、文字不进容器（分子活动区）、不出画布；动作钮与画布不相交。 */
-const STRIP_VIEWPORTS = [[320, 568], [430, 932], [1280, 800]];
+const STRIP_VIEWPORTS = [[320, 568], [430, 932], [844, 390], [1280, 800]];
 for (const [vw, vh] of STRIP_VIEWPORTS) {
     for (const lang of ['zh', 'en']) {
         await page.setViewport({ width: vw, height: vh });
@@ -407,10 +416,18 @@ for (const [vw, vh] of STRIP_VIEWPORTS) {
                 if (t.x0 < 0 || t.x1 > W || t.y0 < 0 || t.y1 > H) bad.push(`"${t.t}" 超出画布`);
             }
             const cv = document.getElementById('md-canvas').getBoundingClientRect();
+            const st = document.getElementById('md-stage').getBoundingClientRect();
+            const inside = r => r.left >= st.left - 1 && r.right <= st.right + 1 && r.top >= st.top - 1 && r.bottom <= st.bottom + 1;
             for (const id of ['md-scan-btn', 'md-gate-btn']) {
                 const r = document.getElementById(id).getBoundingClientRect();
                 if (r.left < cv.right && cv.left < r.right && r.top < cv.bottom && cv.top < r.bottom) bad.push(`#${id} 盖在画布上`);
+                if (!inside(r)) bad.push(`#${id} 超出沉浸舞台`);
+                if (r.width < 44) bad.push(`#${id} 触摸目标 ${r.width}px < 44`);
             }
+            // 沉浸舞台：容器等比放进舞台（不变形、不出界），且至少用满舞台宽或高的一边
+            if (!inside(cv)) bad.push('画布超出沉浸舞台');
+            if (Math.abs(cv.width / cv.height - W / H) > 0.01) bad.push(`画布比例 ${(cv.width / cv.height).toFixed(3)} ≠ ${(W / H).toFixed(3)}`);
+            if (cv.width < st.width * 0.6 && cv.height < st.height * 0.6) bad.push(`画布 ${Math.round(cv.width)}×${Math.round(cv.height)} 没用上舞台 ${Math.round(st.width)}×${Math.round(st.height)}`);
             g.toMenu();
             return { bad, nText: texts.length, nBars: bars.length };
         });
@@ -418,7 +435,7 @@ for (const [vw, vh] of STRIP_VIEWPORTS) {
         else if (strip.bad.length) fail(`${vw}×${vh} ${lang}: ${strip.bad.slice(0, 3).join(' | ')}`);
     }
 }
-if (!fails.length) pass('读数条带：320/430/1280 × 中英文，文字不压条、不进容器、不出画布；动作钮不盖画布');
+if (!fails.length) pass('读数条带 + 沉浸舞台：320/430/844 横屏/1280 × 中英文，文字不压条、不进容器、不出画布；画布等比放满舞台，动作钮不盖画布、不出舞台');
 
 if (errs.length) fail(`对局中 JS 运行时错误: ${errs.slice(0, 3).join(' | ')}`);
 

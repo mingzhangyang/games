@@ -23,7 +23,7 @@ if (OUT) mkdirSync(OUT, { recursive: true });
 const MIGRATED_DRAWERS = new Set([
     'planet-merge', 'hoop-shot', 'gravity-slingshot', 'sword-flight',
     'lumen', 'circuit', 'silk-dew', 'bond-forge', 'echo-cave',
-    'maxwell-demon', 'crystal-bloom', 'flame-verse', 'ripple-duet',
+    'crystal-bloom', 'flame-verse', 'ripple-duet',
 ]);
 const MANUAL_FOREGROUND = new Set(['planet-merge', 'hoop-shot', 'sword-flight']);
 
@@ -38,7 +38,6 @@ const AUGMENT = {
     'silk-dew':          { gameVar: 'sdGame',          runningExpr: 'g.state === "playing" && !g.isPaused', startMethod: 'startLevel', startArgs: [0] },
     'bond-forge':        { gameVar: 'bfGame',          runningExpr: 'g.state === "playing" && !g.isPaused', startMethod: 'startLevel', startArgs: [0] },
     'echo-cave':         { gameVar: 'ecGame',          runningExpr: 'g.state === "playing" && !g.isPaused', startMethod: 'startLevel', startArgs: [0] },
-    'maxwell-demon':     { gameVar: 'mdGame',          runningExpr: 'g.state === "playing" && !g.isPaused', startMethod: 'startLevel', startArgs: [0] },
     'crystal-bloom':     { gameVar: 'cbGame',          runningExpr: 'g.state === "playing" && !g.isPaused', startMethod: 'startLevel', startArgs: [0] },
     'flame-verse':       { gameVar: 'fvGame',          runningExpr: 'g.state === "playing" && !g.isPaused', startMethod: 'startLevel', startArgs: [0] },
     'ripple-duet':       { gameVar: 'rdGame',          runningExpr: 'g.state === "playing" && !g.isPaused', startMethod: 'startLevel', startArgs: [0] },
