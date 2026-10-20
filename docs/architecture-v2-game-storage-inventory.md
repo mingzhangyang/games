@@ -159,7 +159,7 @@ Branch: `refactor/game-storage-migration-d`
 | GameStorage slot | Legacy key | New key | Compatibility rule |
 | --- | --- | --- | --- |
 | `circuit / stars` | `cc_stars` | `game:circuit:v1:stars` | Keep `cc_daily_*` and `cc_local_*` on the compatibility facade |
-| `lumen / stars` | `lm_stars` | `game:lumen:v1:stars` | Keep `lm_daily_*` and `lm_local_*` on the compatibility facade |
+| `lumen / stars` | `lm_stars` | `game:lumen:v2:stars` | v2 (2026-10 level redesign) stores `{ levelId: stars }`; v1 / `lm_stars` index arrays belong to the retired levels and import as `{}` (old keys retained). Keep `lm_daily_*` and `lm_local_*` on the compatibility facade |
 
 Batch D is the first mixed-state migration: the runtime still legitimately uses
 the platform storage facade for Daily and local leaderboard/cache contracts, while

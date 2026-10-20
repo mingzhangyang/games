@@ -2,11 +2,14 @@
  * Lumen 折光 — 光束折射解谜
  * =========================
  * 玩法：点击镜面在 '/' 与 '\' 两态间翻转，折转发射器的光束，
- * 点亮全部水晶。翻转次数 ≤ Par 拿满三星。
+ * 点亮全部水晶、不碰暗晶。点击次数 ≤ Par 拿满三星，≤ Par + 2 两星。
+ * 元件：诱饵镜 / 暗晶（不能被照到）/ 联动镜（同色一起翻）/ 分光镜（一束变两束）。
  *
- * 关卡数据 / 光束追踪在 model/levels.js（纯模块，校验器共用）：
- *   - 20 手工关卡（解态可解、初盘不可解由 verify-lumen-levels.mjs 锁定）
- *   - 每日谜题：16 布局池 × FNV-1a('lumen-'+UTC+8 日期) 选关 × mulberry32 打乱
+ * 关卡数据 / 光束追踪 / 解空间在 model/（纯模块，校验器共用）：
+ *   - beam.js   网格、光束追踪、点击翻转
+ *   - solver.js 全枚举解空间：真 par、最优解唯一、预见步数、贪心机器人
+ *   - levels.js 5 章 × 5 关（性质由 verify-lumen-levels.mjs 锁定）+ 每日谜题
+ *     （24 双光束布局 × FNV-1a('lumen-'+UTC+8 日期) 选关 × solver.scramble 打乱）
  *
  * 共享层（2026-09 契约）：game-frame（桌面纵向预算）/ game-drawer（移动端统计
  * 抽屉）/ game-chrome（Home·Sound·Lang·More）/ leaderboard / daily / i18n /
@@ -15,9 +18,12 @@
 
 import { bindContextualRestart } from '../../platform/contextual-restart.js';
 import {
+    CHAPTERS,
     GRID_N,
+    LEVELS_PER_CHAPTER,
     LUMEN_LEVELS,
     dailyLevel,
+    tapGrid,
     traceGrid,
 } from './model/levels.js';
 import { ensurePlayerName, setPlayerName } from '../../platform/player.js';
@@ -37,7 +43,11 @@ import { createSfxEngine } from '../../platform/game-sfx.js';
 export const W = 560, H = 560;
 const CELL = W / GRID_N;
 const STEP = { '>': [0, 1], 'v': [1, 0], '<': [0, -1], '^': [-1, 0] };
-const MIRROR_SWAP = { '/': '\\', '\\': '/' };
+// 联动组配色（按组序号取；同组 = 同色光环 + 虚线系绳）
+const LINK_COLORS = ['#ffb547', '#ff7eb6', '#b18cff', '#7ee0ff'];
+const FLIP_DUR = 0.16;
+const RIPPLE_DUR = 0.42;
+const mirrorAngle = ch => (ch === '/' ? -Math.PI / 4 : Math.PI / 4);
 
 function clamp(v, min, max) {
     return v < min ? min : v > max ? max : v;
@@ -60,6 +70,10 @@ const Sfx = {
     /** 镜面翻转：干净的机械「嗒」 */
     flip() {
         sfxEngine.tone({ freq: 520, slideTo: 760, type: 'triangle', dur: 0.07, vol: 0.12 });
+    },
+    /** 暗晶被照到：低沉的嗡鸣 */
+    shadow() {
+        sfxEngine.tone({ freq: 196, slideTo: 140, type: 'sawtooth', dur: 0.22, vol: 0.07 });
     },
     /** 新水晶点亮：上扬双音 */
     crystal() {
@@ -122,15 +136,26 @@ function pointAtDist(geom, dist) {
 
 /* ────────────────────────── 存储 ────────────────────────── */
 
+/** 星级按关卡 id 存（storage v2）；运行时展开成按关卡下标的数组 */
 function storageParseStars() {
     try {
-        const arr = LUMEN_STORAGE.get(LUMEN_STORAGE_SLOTS.STARS, []);
-        const out = Array.isArray(arr) ? arr.slice() : [];
-        while (out.length < LUMEN_LEVELS.length) out.push(0);
-        return out;
+        const byId = LUMEN_STORAGE.get(LUMEN_STORAGE_SLOTS.STARS, {});
+        const map = byId && typeof byId === 'object' && !Array.isArray(byId) ? byId : {};
+        return LUMEN_LEVELS.map(lv => clamp(Number(map[lv.id]) || 0, 0, 3));
     } catch (e) {
         return new Array(LUMEN_LEVELS.length).fill(0);
     }
+}
+
+function storageSaveStars(stars) {
+    const byId = {};
+    LUMEN_LEVELS.forEach((lv, i) => { if (stars[i]) byId[lv.id] = stars[i]; });
+    LUMEN_STORAGE.set(LUMEN_STORAGE_SLOTS.STARS, byId);
+}
+
+/** 星级规则：≤ par 三星，≤ par + 2 两星，其余一星 */
+function starsFor(flips, par) {
+    return flips <= par ? 3 : flips <= par + 2 ? 2 : 1;
 }
 
 /* ────────────────────────── 游戏主体 ────────────────────────── */
@@ -165,15 +190,18 @@ export class LumenGame {
         this.levelIdx = 0;
         this.par = 1;
         this.flips = 0;
+        this.level = null;      // 当前关卡对象（章节关或每日）：{ sol, grid, par, split, links, … }
         this.baseGrid = null;   // 本关初盘（Reset 用）
         this.grid = null;       // 当前盘面（9 个字符串）
-        this.trace = null;      // traceGrid(grid) 结果
-        this.daily = null;      // 每日谜题 { grid, sol, par, dateKey }
+        this.trace = null;      // traceGrid(grid, level.split) 结果
+        this.daily = null;      // 每日谜题 { grid, sol, par, split, links, dateKey }
 
         // 视觉
         this.time = 0;
         this.frameDt = 0;
         this.particles = [];
+        this.flipAnims = new Map();   // idx → { from, to, age }：镜面转动补间（纯视觉，判定已即时生效）
+        this.ripples = [];            // 点击涟漪 { x, y, color, age }
         this.starsBg = this.buildStarfield();
 
         this.animationId = null;
@@ -230,12 +258,18 @@ export class LumenGame {
         if (!grid) return;
         grid.textContent = '';
         for (let i = 0; i < LUMEN_LEVELS.length; i++) {
+            const lv = LUMEN_LEVELS[i];
             const chip = document.createElement('button');
             chip.type = 'button';
             chip.className = 'lm-level-chip game-start-level-chip';
+            // 一章一行（5 列网格 × 5 关），章节色只调边框 / 编号颜色
+            chip.dataset.chapter = String(lv.chapter);
+            const label = this.levelLabel(i);
+            chip.title = `${this.chapterName(lv.chapter)} · ${label}`;
+            chip.setAttribute('aria-label', chip.title);
             const num = document.createElement('span');
             num.className = 'lm-chip-num game-start-chip-num';
-            num.textContent = String(i + 1);
+            num.textContent = label;
             const starLine = document.createElement('span');
             starLine.className = 'lm-chip-stars game-start-chip-stars';
             const n = this.stars[i] || 0;
@@ -247,6 +281,16 @@ export class LumenGame {
             });
             grid.appendChild(chip);
         }
+    }
+
+    chapterName(ch) {
+        const c = CHAPTERS[ch];
+        return c ? c.name[this.lang] || c.name.en : '';
+    }
+
+    /** 关卡编号「章-关」，如 2-3 */
+    levelLabel(i) {
+        return `${Math.floor(i / LEVELS_PER_CHAPTER) + 1}-${(i % LEVELS_PER_CHAPTER) + 1}`;
     }
 
     updateDailyBest() {
@@ -267,6 +311,11 @@ export class LumenGame {
             [`📅 ${t.bestToday}`, best ? `${best} ${t.flipsWord}` : '—'],
             [`⭐ ${t.stars}`, `${totalStars}/${LUMEN_LEVELS.length * 3}`],
         ];
+        CHAPTERS.forEach((ch, ci) => {
+            const slice = this.stars.slice(ci * LEVELS_PER_CHAPTER, (ci + 1) * LEVELS_PER_CHAPTER);
+            const got = slice.reduce((a, b) => a + (b || 0), 0);
+            rows.push([`${ci + 1} · ${this.chapterName(ci)}`, `${got}/${LEVELS_PER_CHAPTER * 3}`]);
+        });
         box.textContent = '';
         rows.forEach(([label, value]) => {
             const row = document.createElement('div');
@@ -282,16 +331,32 @@ export class LumenGame {
 
     /* ── 关卡装载与模式 ── */
 
-    loadLevel(idx) {
-        const lv = LUMEN_LEVELS[clamp(idx, 0, LUMEN_LEVELS.length - 1)];
-        this.levelIdx = lv.index;
-        this.mode = 'levels';
+    /** 装入一个关卡对象（章节关或每日共用） */
+    useLevel(lv) {
+        this.level = lv;
         this.baseGrid = lv.grid;
         this.grid = lv.grid.slice();
         this.par = lv.par;
         this.flips = 0;
-        this.trace = traceGrid(this.grid);
+        this.trace = traceGrid(this.grid, lv.split);
         this.particles.length = 0;
+        this.ripples.length = 0;
+        this.flipAnims.clear();
+        this.buildLinkGeometry();
+    }
+
+    loadLevel(idx) {
+        const lv = LUMEN_LEVELS[clamp(idx, 0, LUMEN_LEVELS.length - 1)];
+        this.levelIdx = lv.index;
+        this.mode = 'levels';
+        this.useLevel(lv);
+    }
+
+    /** 渲染查表：联动镜 idx → 组号、分光镜 idx 集合 */
+    buildLinkGeometry() {
+        this.linkOf = new Map();
+        this.splitSet = new Set(this.level?.split || []);
+        (this.level?.links || []).forEach((group, gi) => group.forEach(idx => this.linkOf.set(idx, gi)));
     }
 
     /** 关卡模式启动点（AUGMENT 启动参数 [0]） */
@@ -303,6 +368,8 @@ export class LumenGame {
         this.pauseOwnership?.invalidate();
         this.hideOverlays();
         this.updateHud();
+        const lv = LUMEN_LEVELS[this.levelIdx];
+        if (lv.intro) this.showToast(this.TEXT[`intro_${lv.intro}`], 3600);
         track('lumen', 'play');
     }
 
@@ -311,13 +378,7 @@ export class LumenGame {
         const d = dailyLevel(todayKey());
         this.mode = 'daily';
         this.daily = d;
-        this.levelIdx = 0;
-        this.baseGrid = d.grid;
-        this.grid = d.grid.slice();
-        this.par = d.par;
-        this.flips = 0;
-        this.trace = traceGrid(this.grid);
-        this.particles.length = 0;
+        this.useLevel(d);
         this.state = 'playing'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
         this.pauseOwnership?.invalidate();
@@ -331,9 +392,10 @@ export class LumenGame {
         if (this.state !== 'playing') return;
         clearTimeout(this.solveTimer);
         this.grid = this.baseGrid.slice();
-        this.trace = traceGrid(this.grid);
+        this.trace = traceGrid(this.grid, this.level.split);
         this.flips = 0;
         this.particles.length = 0;
+        this.flipAnims.clear();
         this.updateHud();
         Sfx.click();
     }
@@ -365,7 +427,7 @@ export class LumenGame {
         if (this.el['hud-level']) {
             this.el['hud-level'].textContent = this.mode === 'daily'
                 ? `📅 ${t.daily}`
-                : `${t.level} ${this.levelIdx + 1}/${LUMEN_LEVELS.length}`;
+                : `${t.level} ${this.levelLabel(this.levelIdx)}`;
         }
         if (this.el.flips) this.el.flips.textContent = String(this.flips);
         if (this.el.par) this.el.par.textContent = `· ${t.par} ${this.par}`;
@@ -381,27 +443,44 @@ export class LumenGame {
         this.toastTimer = setTimeout(() => toast.classList.add('hidden'), duration);
     }
 
-    /* ── 核心交互：翻转镜面 ── */
+    /* ── 核心交互：点击镜面（联动组整组翻转） ── */
 
     flipMirror(r, c) {
-        const ch = this.grid[r][c];
-        const swapped = MIRROR_SWAP[ch];
-        if (!swapped) return;
-        const rows = this.grid.slice();
-        rows[r] = rows[r].slice(0, c) + swapped + rows[r].slice(c + 1);
-        this.grid = rows;
+        const tap = tapGrid(this.level, this.grid, r, c);
+        if (!tap) return;
+        for (const idx of tap.cells) {
+            const r2 = Math.floor(idx / GRID_N), c2 = idx % GRID_N;
+            const prev = this.flipAnims.get(idx);
+            const from = prev ? this.animAngle(prev) : mirrorAngle(this.grid[r2][c2]);
+            this.flipAnims.set(idx, { from, to: mirrorAngle(tap.grid[r2][c2]), age: 0 });
+            const gi = this.linkOf.get(idx);
+            const { x, y } = cellCenter(r2, c2);
+            this.ripples.push({ x, y, color: gi === undefined ? '#8fb7ff' : LINK_COLORS[gi % LINK_COLORS.length], age: 0 });
+        }
+        this.grid = tap.grid;
         this.flips += 1;
 
-        const before = this.trace.crystalLit.length;
-        this.trace = traceGrid(this.grid);
-        const gained = this.trace.crystalLit.length - before;
+        const beforeLit = new Set(this.trace.crystalLit);
+        const beforeShadow = new Set(this.trace.shadowLit);
+        this.trace = traceGrid(this.grid, this.level.split);
+        const gained = this.trace.crystalLit.filter(idx => !beforeLit.has(idx));
+        const newShadows = this.trace.shadowLit.filter(idx => !beforeShadow.has(idx));
         Sfx.flip();
-        if (gained > 0) {
+        if (gained.length) {
             Sfx.crystal();
-            for (const idx of this.trace.crystalLit.slice(-gained)) {
-                const r2 = Math.floor(idx / GRID_N), c2 = idx % GRID_N;
-                this.burst(cellCenter(r2, c2).x, cellCenter(r2, c2).y, '#7dfad0', 14);
+            for (const idx of gained) {
+                const p = cellCenter(Math.floor(idx / GRID_N), idx % GRID_N);
+                this.burst(p.x, p.y, '#7dfad0', 14);
             }
+        }
+        if (newShadows.length) {
+            Sfx.shadow();
+            vibrate(30);
+            for (const idx of newShadows) {
+                const p = cellCenter(Math.floor(idx / GRID_N), idx % GRID_N);
+                this.burst(p.x, p.y, '#ff4d6d', 16);
+            }
+            this.showToast(this.TEXT.shadowWarn, 1600, true);
         }
         this.updateHud();
 
@@ -423,10 +502,10 @@ export class LumenGame {
 
     finishLevel() {
         const t = this.TEXT;
-        const stars = this.flips <= this.par ? 3 : this.flips <= this.par + 3 ? 2 : 1;
+        const stars = starsFor(this.flips, this.par);
         if (stars > (this.stars[this.levelIdx] || 0)) {
             this.stars[this.levelIdx] = stars;
-            LUMEN_STORAGE.set(LUMEN_STORAGE_SLOTS.STARS, this.stars);
+            storageSaveStars(this.stars);
         }
         this.state = 'won-level'; this.contextualRestart?.sync();
         if (stars >= 3) Sfx.star3();
@@ -555,7 +634,7 @@ export class LumenGame {
     async copyResult() {
         const t = this.TEXT;
         let ok = false;
-        const text = `折光 Lumen · ${todayKeyDisplay()} · ${this.flips} ${t.flipsWord}`;
+        const text = `折光 Lumen · ${todayKeyDisplay()} · ${this.flips} ${t.flipsWord} (${t.par} ${this.par})`;
         try {
             await navigator.clipboard.writeText(text);
             ok = true;
@@ -788,6 +867,16 @@ export class LumenGame {
                 this.particles[w++] = p;
             }
             this.particles.length = w;
+            for (const [idx, a] of this.flipAnims) {
+                a.age += dt;
+                if (a.age >= FLIP_DUR) this.flipAnims.delete(idx);
+            }
+            let rw = 0;
+            for (const rp of this.ripples) {
+                rp.age += dt;
+                if (rp.age < RIPPLE_DUR) this.ripples[rw++] = rp;
+            }
+            this.ripples.length = rw;
 
             this.draw();
         };
@@ -835,9 +924,10 @@ export class LumenGame {
         ctx.stroke();
 
         this.drawLitFloor(ctx);
+        this.drawLinkTethers(ctx);
         this.drawRays(ctx);
 
-        // 元件（墙 → 水晶 → 镜面 → 发射器）
+        // 元件（墙 → 水晶 / 暗晶 → 镜面 → 发射器）
         for (let r = 0; r < GRID_N; r++) {
             for (let c = 0; c < GRID_N; c++) {
                 const ch = this.grid[r][c];
@@ -849,6 +939,8 @@ export class LumenGame {
                 const ch = this.grid[r][c];
                 if (ch === '*') {
                     this.drawCrystal(ctx, r, c, this.trace.crystalLit.includes(r * GRID_N + c));
+                } else if (ch === 'x') {
+                    this.drawShadow(ctx, r, c, this.trace.shadowLit.includes(r * GRID_N + c));
                 }
             }
         }
@@ -856,15 +948,164 @@ export class LumenGame {
             for (let c = 0; c < GRID_N; c++) {
                 const ch = this.grid[r][c];
                 if (ch === '/' || ch === '\\') {
-                    const hit = this.trace.mirrorHits.includes(r * GRID_N + c);
-                    this.drawMirror(ctx, r, c, ch, hit);
+                    const idx = r * GRID_N + c;
+                    const hit = this.trace.mirrorHits.includes(idx);
+                    if (this.splitSet.has(idx)) this.drawSplitter(ctx, r, c, ch, hit);
+                    else this.drawMirror(ctx, r, c, ch, hit);
                 } else if (ch in STEP) {
                     this.drawEmitter(ctx, r, c, ch);
                 }
             }
         }
 
+        this.drawRipples(ctx);
         this.drawParticles(ctx);
+    }
+
+    animAngle(a) {
+        const k = clamp(a.age / FLIP_DUR, 0, 1);
+        const e = 1 - (1 - k) * (1 - k);
+        return a.from + (a.to - a.from) * e;
+    }
+
+    /** 当前绘制角度：转动补间中取插值，否则按字符朝向 */
+    angleAt(r, c, ch) {
+        const a = this.flipAnims.get(r * GRID_N + c);
+        return a ? this.animAngle(a) : mirrorAngle(ch);
+    }
+
+    /** 联动组的虚线系绳：同组镜面按行序依次相连 */
+    drawLinkTethers(ctx) {
+        const links = this.level?.links;
+        if (!links || !links.length) return;
+        ctx.save();
+        ctx.lineWidth = 1.6;
+        ctx.setLineDash([3, 6]);
+        ctx.lineDashOffset = -this.time * 12;
+        links.forEach((group, gi) => {
+            ctx.strokeStyle = LINK_COLORS[gi % LINK_COLORS.length];
+            ctx.globalAlpha = 0.32;
+            ctx.beginPath();
+            group.forEach((idx, i) => {
+                const p = cellCenter(Math.floor(idx / GRID_N), idx % GRID_N);
+                if (i) ctx.lineTo(p.x, p.y); else ctx.moveTo(p.x, p.y);
+            });
+            ctx.stroke();
+        });
+        ctx.restore();
+    }
+
+    /** 联动镜底座：组色光环 + 顶端小圆点 */
+    drawLinkRing(ctx, r, c) {
+        const gi = this.linkOf.get(r * GRID_N + c);
+        if (gi === undefined) return;
+        const color = LINK_COLORS[gi % LINK_COLORS.length];
+        const { x, y } = cellCenter(r, c);
+        const rad = CELL * 0.4;
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.globalAlpha = 0.75;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(x, y, rad, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = color;
+        for (let k = 0; k <= gi; k++) {
+            ctx.beginPath();
+            ctx.arc(x - (gi * 3.5) + k * 7, y - rad, 2.6, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    /** 暗晶：紫黑色晶体；被照到时转红、抖动、裂纹，提示「这里不该有光」 */
+    drawShadow(ctx, r, c, lit) {
+        const { x, y } = cellCenter(r, c);
+        const s = CELL * 0.26;
+        ctx.save();
+        if (lit) {
+            const jitter = Math.sin(this.time * 60 + r * 7 + c) * 0.9;
+            ctx.translate(x + jitter, y);
+        } else {
+            ctx.translate(x, y);
+        }
+        ctx.rotate(Math.PI / 4);
+        if (lit) {
+            const pulse = 0.75 + 0.25 * Math.sin(this.time * 9);
+            ctx.shadowColor = 'rgba(255, 77, 109, 0.95)';
+            ctx.shadowBlur = 18 * pulse;
+            ctx.fillStyle = 'rgba(120, 18, 40, 0.95)';
+            ctx.strokeStyle = '#ff4d6d';
+        } else {
+            ctx.shadowColor = 'rgba(138, 92, 255, 0.45)';
+            ctx.shadowBlur = 8;
+            ctx.fillStyle = 'rgba(16, 8, 30, 0.95)';
+            ctx.strokeStyle = 'rgba(160, 120, 255, 0.75)';
+        }
+        ctx.lineWidth = 2;
+        roundRectPath(ctx, -s, -s, s * 2, s * 2, 4);
+        ctx.fill();
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        // 内核：暗时是一颗深色小核，亮时变成十字裂纹
+        ctx.strokeStyle = lit ? 'rgba(255, 200, 210, 0.9)' : 'rgba(160, 120, 255, 0.5)';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        if (lit) {
+            ctx.moveTo(-s * 0.7, -s * 0.15); ctx.lineTo(s * 0.1, 0); ctx.lineTo(s * 0.6, s * 0.55);
+            ctx.moveTo(s * 0.1, 0); ctx.lineTo(s * 0.2, -s * 0.7);
+        } else {
+            ctx.rect(-s * 0.32, -s * 0.32, s * 0.64, s * 0.64);
+        }
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    /** 分光镜：半透明的金色玻璃片（双线 + 半透明填充），区别于实心镜面 */
+    drawSplitter(ctx, r, c, ch, hit) {
+        const { x, y } = cellCenter(r, c);
+        const half = CELL * 0.32;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(this.angleAt(r, c, ch));
+        ctx.shadowColor = hit ? 'rgba(255, 217, 138, 0.95)' : 'rgba(255, 196, 92, 0.45)';
+        ctx.shadowBlur = hit ? 14 : 7;
+        ctx.fillStyle = hit ? 'rgba(255, 226, 160, 0.4)' : 'rgba(255, 210, 120, 0.2)';
+        roundRectPath(ctx, -half, -3.6, half * 2, 7.2, 3);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = hit ? '#fff1c9' : '#ffd98a';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(-half, -3.6); ctx.lineTo(half, -3.6);
+        ctx.moveTo(-half, 3.6); ctx.lineTo(half, 3.6);
+        ctx.stroke();
+        // 中线点阵：光一半穿过、一半反射
+        ctx.fillStyle = 'rgba(255, 245, 220, 0.9)';
+        for (let k = -2; k <= 2; k++) {
+            ctx.beginPath();
+            ctx.arc(k * half * 0.4, 0, 1.2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+        this.drawLinkRing(ctx, r, c);
+    }
+
+    drawRipples(ctx) {
+        ctx.save();
+        for (const rp of this.ripples) {
+            const k = rp.age / RIPPLE_DUR;
+            ctx.globalAlpha = (1 - k) * 0.8;
+            ctx.strokeStyle = rp.color;
+            ctx.lineWidth = 2.2 * (1 - k) + 0.6;
+            ctx.beginPath();
+            ctx.arc(rp.x, rp.y, CELL * (0.22 + 0.36 * k), 0, Math.PI * 2);
+            ctx.stroke();
+        }
+        ctx.restore();
     }
 
     /** 光路经过的空格铺一层淡光底（增强「光走过了这里」的体感） */
@@ -940,9 +1181,10 @@ export class LumenGame {
             ctx.fillStyle = '#eafff6';
             ctx.strokeStyle = '#7dfad0';
         } else {
+            // 未点亮：淡青描边（「等着被照亮」），与紫黑色的暗晶区分开
             ctx.shadowBlur = 0;
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
-            ctx.strokeStyle = 'rgba(154, 166, 216, 0.55)';
+            ctx.fillStyle = 'rgba(125, 250, 208, 0.07)';
+            ctx.strokeStyle = 'rgba(125, 250, 208, 0.42)';
         }
         ctx.lineWidth = 2;
         roundRectPath(ctx, -s, -s, s * 2, s * 2, 4);
@@ -956,7 +1198,7 @@ export class LumenGame {
         const half = CELL * 0.3;
         ctx.save();
         ctx.translate(x, y);
-        ctx.rotate(ch === '/' ? -Math.PI / 4 : Math.PI / 4);
+        ctx.rotate(this.angleAt(r, c, ch));
         ctx.shadowColor = hit ? 'rgba(125, 250, 208, 0.9)' : 'rgba(90, 123, 255, 0.4)';
         ctx.shadowBlur = hit ? 14 : 7;
         ctx.strokeStyle = hit ? '#aefee0' : '#8fb7ff';
@@ -974,6 +1216,7 @@ export class LumenGame {
         ctx.lineTo(half, 0);
         ctx.stroke();
         ctx.restore();
+        this.drawLinkRing(ctx, r, c);
     }
 
     drawEmitter(ctx, r, c, ch) {

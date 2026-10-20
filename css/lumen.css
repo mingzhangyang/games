@@ -139,6 +139,22 @@ body {
 
 .lm-daily-best { color: #9fe8d0; }
 
+/* 选关：一章一行，章节色只染边框与编号（几何归 game-start-level-chip） */
+.lm-level-chip { --lm-chapter: #7dfad0; border-color: color-mix(in srgb, var(--lm-chapter) 38%, transparent); }
+.lm-level-chip .lm-chip-num { color: var(--lm-chapter); }
+.lm-level-chip[data-chapter="1"] { --lm-chapter: #b9a2ff; }
+.lm-level-chip[data-chapter="2"] { --lm-chapter: #ffb547; }
+.lm-level-chip[data-chapter="3"] { --lm-chapter: #ffd98a; }
+.lm-level-chip[data-chapter="4"] { --lm-chapter: #ff7eb6; }
+
+/* 侧栏元件图例：色块模仿画布上的实物 */
+.lm-gloss { margin-top: 8px; }
+.lm-gloss-icon { border-radius: 2px; }
+.lm-gloss-crystal { background: #eafff6; box-shadow: 0 0 8px #7dfad0; transform: rotate(45deg) scale(0.8); }
+.lm-gloss-shadow { background: rgb(16, 8, 30); border: 2px solid #a078ff; transform: rotate(45deg) scale(0.8); }
+.lm-gloss-link { border-radius: 50%; background: transparent; border: 2px solid #ffb547; }
+.lm-gloss-split { height: 5px; background: rgb(255, 210, 120, 0.45); border-top: 1px solid #ffd98a; border-bottom: 1px solid #ffd98a; transform: rotate(-45deg); }
+
 
 .lm-lang-btn {
     font-size: 13px;

@@ -1055,8 +1055,8 @@
         "zh": "折光"
       },
       "desc": {
-        "meta": "折光 Lumen — an original beam refraction puzzle. Flip mirrors, bend the beam, light up every crystal. 20 handcrafted levels plus a daily puzzle for the whole world.",
-        "og": "Flip mirrors, bend the beam, light every crystal. 20 handcrafted levels and a daily puzzle — light every gem with the fewest flips.",
+        "meta": "折光 Lumen — an original beam refraction puzzle. Flip mirrors, bend the beam, light every crystal and keep shadow crystals dark. 25 levels in 5 chapters with decoy mirrors, linked mirrors and beam splitters, plus a daily puzzle for the whole world.",
+        "og": "Flip mirrors, bend the beam, light every crystal — and keep the shadows dark. 25 levels in 5 chapters and a daily two-beam puzzle: plan the route, then flip.",
         "twitter": "Flip mirrors, bend the beam, light every crystal."
       },
       "genre": [
@@ -1093,8 +1093,8 @@
         "iconClass": "lumen",
         "category": "science",
         "desc": {
-          "en": "Flip mirrors, bend the beam, light up every crystal. 20 handcrafted levels plus a daily puzzle.",
-          "zh": "翻转镜面，偏折光束，点亮全部水晶。20 关手工关卡 + 每日谜题，用最少翻转通关！"
+          "en": "Flip mirrors, bend the beam, light every crystal and dodge shadow crystals. 5 chapters plus a daily puzzle.",
+          "zh": "翻转镜面，偏折光束，点亮水晶、避开暗晶。5 章 25 关 + 每日谜题，先想好光路再动手！"
         },
         "tag": {
           "en": "Puzzle",

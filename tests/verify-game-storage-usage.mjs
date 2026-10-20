@@ -338,7 +338,7 @@ check(!adapters['word-daily'].includes('wd_daily_'),
 for (const [id, source] of Object.entries(adapters)) {
     check(source.includes('createGameStorage'), `${id}: adapter uses createGameStorage`);
     check(source.includes(`createGameStorage('${id}'`), `${id}: adapter uses the canonical game id`);
-    check(source.includes(id === 'circuit' ? 'version: 2' : 'version: 1'), `${id}: adapter declares an explicit storage version`);
+    check(source.includes(['circuit', 'lumen'].includes(id) ? 'version: 2' : 'version: 1'), `${id}: adapter declares an explicit storage version`);
     check(source.includes('legacy:'), `${id}: adapter declares legacy key mappings`);
 }
 

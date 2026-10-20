@@ -103,12 +103,15 @@ assert.deepEqual(migrated.slice(0, 3), [3, 2, 0], 'v1 星级按关卡 id 迁到�
 assert.equal(migrated.length, 20, '迁完的星级数组跟现关卡数一样长');
 assert.equal(mem.get('game:circuit:v2:stars'), JSON.stringify(migrated), 'v1 星级写入 v2');
 
+// Lumen 2026-10 难度重做：旧 25 关全部换新，按下标存的旧星级不再对应任何关卡 → 迁成空对象；
+// v2 起按关卡 id 存对象。旧键（lm_stars / v1）原样保留。
 await verifyStarsMigration({
     name: 'Lumen',
     legacyKey: 'lm_stars',
-    canonicalKey: 'game:lumen:v1:stars',
+    canonicalKey: 'game:lumen:v2:stars',
     initial: [3, 0, 2, 1],
-    updated: [3, 3, 2, 1],
+    expected: {},
+    updated: { 'refract-1': 3, 'shadow-2': 2 },
     storage: LUMEN_STORAGE,
     slot: LUMEN_STORAGE_SLOTS.STARS,
     protocolEntries: [
@@ -117,5 +120,14 @@ await verifyStarsMigration({
     ],
     reimport: async () => (await import('../src/games/lumen/storage.js?reimport=lumen')).LUMEN_STORAGE,
 });
+
+reset();
+mem.set('game:lumen:v1:stars', JSON.stringify([3, 3, 3]));
+assert.deepEqual(LUMEN_STORAGE.get(LUMEN_STORAGE_SLOTS.STARS, {}), {},
+    'Lumen v1 index stars retire to an empty v2 object');
+assert.equal(mem.get('game:lumen:v1:stars'), JSON.stringify([3, 3, 3]), 'Lumen v1 key is retained');
+mem.set('game:lumen:v2:stars', JSON.stringify({ 'link-1': 3 }));
+assert.deepEqual(LUMEN_STORAGE.get(LUMEN_STORAGE_SLOTS.STARS, {}), { 'link-1': 3 },
+    'Lumen v2 canonical state takes precedence over v1');
 
 console.log('✓ Phase 5 Batch D stars migrations preserve data plus daily/local protocol keys');
