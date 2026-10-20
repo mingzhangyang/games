@@ -24,6 +24,7 @@ import { track } from '../../platform/analytics.js';
 import { makeText } from '../../platform/i18n.js';
 import { createI18nBinder } from '../../platform/i18n/bindings.js';
 import { onReady } from '../../platform/boot.js';
+import { bindTopbarClearance } from '../../platform/topbar-clearance.js';
 import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
 
@@ -943,6 +944,7 @@ class MinesweeperGame {
 onReady(() => {
     const i18nBinder = createI18nBinder({ getLang, tables: LANGUAGES });
     i18nBinder.apply();
+    bindTopbarClearance(); // 全屏开始层从顶栏下沿排起，顶栏声音 / Home 始终可点
     const game = new MinesweeperGame({ i18nBinder });
     window.msGame = game; // 调试/测试句柄
     // 初始静音按钮状态

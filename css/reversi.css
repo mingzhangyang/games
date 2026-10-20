@@ -315,6 +315,13 @@ body {
 
 /* ── 覆盖层 ── */
 
+/* 顶栏压在全屏覆盖层之上：声音开关只在顶栏，开局前 / 结算时都得点得到。
+   覆盖层内容从顶栏下沿（topbar-clearance.js 实测）排起，不被顶栏挡住。 */
+.rv-topbar {
+    position: relative;
+    z-index: 11;
+}
+
 .rv-overlay {
     position: fixed;
     inset: 0;
@@ -326,7 +333,7 @@ body {
     gap: 11px;
     background: var(--rv-overlay-bg);
     backdrop-filter: blur(10px);
-    padding: 24px 20px;
+    padding: calc(var(--game-topbar-bottom, 0px) + 16px) 20px 24px;
     text-align: center;
     overflow-y: auto;
     scrollbar-width: none;

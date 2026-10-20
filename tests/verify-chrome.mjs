@@ -7,7 +7,9 @@
 //   ④ 游戏页**不得**出现语言钮（2026-09-21 语言切换 UI 收敛到首页 index.html；
 //      历史上的「点一次语言钮 UI 必须换语言」断言随 UI 一起移除）
 //   ⑤ 点一次静音钮，site_muted 真的翻转（挡住"页面与 chrome 各挂一个 handler
-//      导致一次点击切换两次 = 净效果为零"这个最隐蔽的回归）
+//      导致一次点击切换两次 = 净效果为零"这个最隐蔽的回归）。首屏（开始界面）下
+//      先做 elementFromPoint 命中测试，再用 page.mouse 真实点击：element.click()
+//      会绕开遮挡 —— reversi / minesweeper 的全屏开始层曾整个盖住顶栏。
 //   ⑥ 整轮无 pageerror
 //   ⑦ 点一次**顶栏**首页钮，必须真的导航回 index.html。顶栏 home 多为无 href 的
 //      <button>，跳转完全依赖 chrome（owns 含 'home'）或页面自绑 —— §② 只查标签，
@@ -192,16 +194,27 @@ for (const vp of [{ tag: 'M390', w: 390, h: 844 }, { tag: 'D1280', w: 1280, h: 9
                 warns.push(`${name} @${vp.tag}/${lang}: <html lang="${snap.htmlLang}">`);
 
             /* ── ⑤ 静音钮：一次点击必须真的翻转（双绑会净效果为零） ── */
-            const muteRes = await page.evaluate(() => {
+            const getMuted = () => page.evaluate(() => { try { return localStorage.getItem('site_muted'); } catch (e) { return null; } });
+            const soundHit = await page.evaluate(() => {
                 const btn = document.querySelector('[data-chrome="sound"]');
                 if (!btn) return { skip: true };
-                const get = () => { try { return localStorage.getItem('site_muted'); } catch (e) { return null; } };
-                const before = get();
-                btn.click();
-                return { before, after: get() };
+                const rc = btn.getBoundingClientRect();
+                const x = rc.left + rc.width / 2, y = rc.top + rc.height / 2;
+                const hit = document.elementFromPoint(x, y);
+                const ok = !!hit && (hit === btn || btn.contains(hit));
+                return { x, y, ok, blocker: ok ? null : (hit ? (hit.id || String(hit.className) || hit.tagName) : 'null') };
             });
-            if (!muteRes.skip && muteRes.before === muteRes.after)
-                fail(name, vp.tag, lang, `静音钮点击无效（site_muted 仍为 ${muteRes.after}）—— 多半是页面与 chrome 双绑，一次点击切了两次`);
+            if (!soundHit.skip) {
+                if (!soundHit.ok) {
+                    fail(name, vp.tag, lang, `首屏顶栏静音钮被 ${soundHit.blocker} 挡住，指针点不到`);
+                } else {
+                    const before = await getMuted();
+                    await page.mouse.click(soundHit.x, soundHit.y);
+                    const after = await getMuted();
+                    if (before === after)
+                        fail(name, vp.tag, lang, `静音钮点击无效（site_muted 仍为 ${after}）—— 多半是页面与 chrome 双绑，一次点击切了两次`);
+                }
+            }
 
             /* ── ⑦ 顶栏首页钮：点击必须真的导航回 index.html ──
                编程式 click（element.click()）只验证「监听器接没接」，绕开命中测试 ——

@@ -11,6 +11,8 @@
     --ms-counter-border: 1px solid rgb(255, 255, 255, 0.09);
     --ms-counter-value-glow: 0 0 12px rgb(255, 107, 122, 0.45);
     --ms-counter-counter-value-glow: 0 0 12px rgb(64, 216, 255, 0.45);
+    --ms-counter-mines-color: var(--tok-danger);
+    --ms-counter-timer-color: var(--tok-cyan);
     --ms-face-bg: rgb(255, 255, 255, 0.07);
     --ms-face-border: 1px solid rgb(255, 255, 255, 0.14);
     --ms-face-hover-bg: rgb(255, 255, 255, 0.13);
@@ -76,6 +78,9 @@
     --ms-counter-border: 1px solid rgb(15, 23, 42, 0.099);
     --ms-counter-value-glow: none;
     --ms-counter-counter-value-glow: none;
+    /* 顶栏计数器在 16px 下须 ≥4.5:1；浅色 --tok-danger / --tok-cyan 在半透明计数框上只有 ~3–3.6:1 */
+    --ms-counter-mines-color: #a3283a;
+    --ms-counter-timer-color: #05607f;
     --ms-face-bg: rgb(255, 255, 255, 0.76);
     --ms-face-border: 1px solid rgb(15, 23, 42, 0.154);
     --ms-face-hover-bg: rgb(255, 255, 255, 0.94);
@@ -161,14 +166,14 @@ body {
     font-family: Consolas, Menlo, monospace;
     font-size: 19px;
     font-weight: 700;
-    color: var(--tok-danger);
+    color: var(--ms-counter-mines-color);
     font-variant-numeric: tabular-nums;
     min-width: 3ch;
     text-align: center;
     text-shadow: var(--ms-counter-value-glow);
 }
 
-.ms-counter:last-child .ms-counter-value { color: var(--tok-cyan); text-shadow: var(--ms-counter-counter-value-glow); }
+.ms-counter:last-child .ms-counter-value { color: var(--ms-counter-timer-color); text-shadow: var(--ms-counter-counter-value-glow); }
 
 .ms-face {
     width: 48px;
@@ -513,6 +518,13 @@ body {
 
 /* ── 开始界面 ── */
 
+/* 顶栏压在全屏开始层之上（仍低于结算浮层 z 20）：声音开关只在顶栏，开局前得点得到。
+   开始层内容从顶栏下沿（topbar-clearance.js 实测）排起，不被顶栏挡住。 */
+.ms-topbar {
+    position: relative;
+    z-index: 16;
+}
+
 .ms-start {
     position: fixed;
     inset: 0;
@@ -520,9 +532,9 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: safe center;
     gap: 12px;
-    padding: 24px 20px;
+    padding: calc(var(--game-topbar-bottom, 0px) + 16px) 20px 24px;
     overflow-y: auto;
     scrollbar-width: none;
     text-align: center;
