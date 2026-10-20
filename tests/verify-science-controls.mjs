@@ -5,6 +5,7 @@ import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
 import { VESSEL, RULES as GAS } from '../src/games/maxwell-demon/model/rules.js';
+import { LEVELS as RIPPLE_LEVELS } from '../src/games/ripple-duet/model/levels.js';
 
 const BASE = process.argv.find(value => value.startsWith('http')) || 'http://127.0.0.1:8899';
 const pages = ['flame-verse', 'ripple-duet', 'crystal-bloom', 'maxwell-demon', 'circuit'].filter(keepPage);
@@ -83,6 +84,34 @@ try {
         assert.deepEqual(await page.evaluate(() => [window.fvGame.recipe.na, window.fvGame.throws, document.getElementById('fv-add-btn').disabled]), [3, 3, true]);
         await activate(page, '#fv-clear-btn');
         assert.deepEqual(await page.evaluate(() => [window.fvGame.recipe.na, window.fvGame.cost(), window.fvGame.refills]), [0, 5, 1]);
+        // Real pointer focus must not disable the non-native 1-8 / Delete / R shortcuts.
+        await page.click('[data-salt="na"]');
+        assert(await page.$eval('[data-salt="na"]', node => document.activeElement === node), 'Pointer-selected reagent retains focus');
+        const saltBefore = await page.evaluate(() => [window.fvGame.throws, window.fvGame.cost(), window.fvGame.refills]);
+        await page.keyboard.press('1');
+        assert.deepEqual(await page.evaluate(() => [window.fvGame.throws, window.fvGame.cost()]),
+            [saltBefore[0] + 1, saltBefore[1] + 1], 'Digit shortcut adds exactly one pinch with reagent button focused');
+        await page.keyboard.press('Delete');
+        assert.deepEqual(await page.evaluate(() => [window.fvGame.refills, window.fvGame.cost(), Object.values(window.fvGame.recipe).every(count => count === 0)]),
+            [saltBefore[2] + 1, saltBefore[1] + 3, true], 'Delete from focused reagent dumps once with original penalty');
+        let restartCopy = '';
+        page.once('dialog', dialog => { restartCopy = dialog.message(); void dialog.dismiss(); });
+        await page.keyboard.press('r');
+        assert.match(restartCopy, /重开/, 'R from the focused reagent must reach guarded restart');
+        assert.equal(await page.evaluate(() => window.fvGame.refills), saltBefore[2] + 1, 'Declining restart preserves progress');
+        await page.evaluate(() => {
+            const input = document.createElement('input');
+            input.id = 'fv-shortcut-editable-test';
+            document.getElementById('fv-lab').append(input);
+        });
+        await page.focus('#fv-shortcut-editable-test');
+        await page.keyboard.press('1');
+        assert.equal(await page.evaluate(() => window.fvGame.cost()), saltBefore[1] + 3, 'Typing into an editor never spends reagent');
+        assert.equal(await page.$eval('#fv-shortcut-editable-test', node => node.value), '1');
+        await page.$eval('#fv-shortcut-editable-test', node => node.remove());
+        await activate(page, '[data-salt="na"]');
+        await activate(page, '#fv-add-btn');
+        assert.equal(await page.evaluate(() => window.fvGame.throws), saltBefore[0] + 2, 'Touch and focused-key actions can alternate');
         await page.evaluate(() => window.fvGame.pauseQuiet());
         assert(await page.$eval('#fv-add-btn', element => element.disabled), 'Paused reagent controls must be disabled');
         await page.evaluate(() => { window.fvGame.resumeQuiet(); window.fvGame.startLevel(0); });
@@ -103,18 +132,57 @@ try {
         await page.keyboard.down('Enter');
         await page.keyboard.up('Enter');
         assert.equal(await page.evaluate(() => window.rdGame.cost), 2, 'Held native Enter must not buy extra phase steps');
+        // Mouse selection leaves a source focused; arrows and R must still work.
+        await page.click('[data-source="0"]');
+        assert(await page.$eval('[data-source="0"]', node => document.activeElement === node), 'Pointer-selected source retains focus');
+        const waveBefore = await page.evaluate(() => [window.rdGame.place[0].ph, window.rdGame.cost]);
+        await page.keyboard.press('ArrowRight');
+        await page.keyboard.press('ArrowLeft');
+        assert.deepEqual(await page.evaluate(() => [window.rdGame.place[0].ph, window.rdGame.cost]),
+            [waveBefore[0], waveBefore[1] + 2], 'Focused source receives both phase arrows without changing phase net');
+        await activate(page, '#rd-plus');
+        assert.equal(await page.evaluate(() => window.rdGame.cost), waveBefore[1] + 3, 'Touch and arrow keys can alternate');
+        await page.click('#rd-plus');
+        let waveRestartCopy = '';
+        page.once('dialog', dialog => { waveRestartCopy = dialog.message(); void dialog.dismiss(); });
+        await page.keyboard.press('r');
+        assert.match(waveRestartCopy, /重开/, 'R from a focused phase button must reach guarded restart');
+        assert.equal(await page.evaluate(() => window.rdGame.cost), waveBefore[1] + 4, 'Declining restart preserves phase costs');
         const before = await page.evaluate(() => [JSON.stringify(window.rdGame.place), window.rdGame.cost]);
         await page.setViewport({ width: 844, height: 390, hasTouch: true });
         assert.deepEqual(await page.evaluate(() => [JSON.stringify(window.rdGame.place), window.rdGame.cost]), before, 'Rotation must preserve phase and costs');
         await page.evaluate(() => window.rdGame.pauseQuiet());
         await page.waitForFunction(() => document.getElementById('rd-plus').disabled);
         assert.match(await page.$eval('#rd-measure-note', element => element.textContent), /振幅/);
+        const twoSourceIndex = RIPPLE_LEVELS.findIndex(spec => spec.ctrl?.length > 1);
+        assert(twoSourceIndex >= 0, 'Fixture needs a two-source level');
+        await page.evaluate(index => { window.rdGame.resumeQuiet(); window.rdGame.startLevel(index); }, twoSourceIndex);
+        await page.click('[data-source="0"]');
+        await page.keyboard.press('q');
+        assert.deepEqual(await page.evaluate(() => [window.rdGame.sel, window.rdGame.cost]), [1, 0],
+            'Q switches the source from a focused console button without charging');
+        await page.evaluate(() => {
+            const input = document.createElement('input');
+            input.id = 'rd-shortcut-editable-test';
+            document.getElementById('rd-console').append(input);
+        });
+        await page.focus('#rd-shortcut-editable-test');
+        await page.keyboard.press('ArrowRight');
+        await page.keyboard.press('q');
+        assert.deepEqual(await page.evaluate(() => [window.rdGame.sel, window.rdGame.cost]), [1, 0],
+            'Editable fields keep arrows and Q instead of changing game state');
+        await page.$eval('#rd-shortcut-editable-test', node => node.remove());
         await page.close();
         console.log('✓ ripple: native keys charge once, held keys rejected, rotation and pause preserve the same field');
     }
     if (pages.includes('crystal-bloom')) {
         const page = await open('crystal-bloom');
         await page.evaluate(() => window.cbGame.startLevel(0));
+        const telemetry = await page.$eval('#cb-reading', node =>
+            [node.tagName, node.getAttribute('role'), node.getAttribute('aria-live')]);
+        assert.deepEqual(telemetry, ['P', null, 'off'], 'Continuously refreshed readings remain accessible but are not a live status');
+        assert.deepEqual(await page.$eval('#cb-anchor-feedback', node => [node.getAttribute('role'), node.getAttribute('aria-live')]),
+            ['status', 'polite'], 'Discrete anchor placement feedback remains announced');
         await page.type('#cb-anchor-time', '45');
         await page.type('#cb-anchor-temp', '60');
         await activate(page, '#cb-anchor-add');

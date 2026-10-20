@@ -54,7 +54,6 @@ await wait(1200);
 async function clickJar(i) {
     await page.click(`[data-salt="${R.EL_ORDER[i]}"]`);
     await page.click('#fv-add-btn');
-    await page.evaluate(() => document.activeElement?.blur());
     await wait(80);
 }
 

@@ -89,7 +89,6 @@ async function dragSource(idx, i, j) {
 
 async function clickControl(name) {
     await page.click(`#rd-${name}`);
-    await page.evaluate(() => document.activeElement?.blur());
     await wait(80);
 }
 

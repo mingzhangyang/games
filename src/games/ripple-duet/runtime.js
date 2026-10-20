@@ -22,6 +22,7 @@
  */
 
 import { bindContextualRestart } from '../../platform/contextual-restart.js';
+import { shouldHandleGameShortcut } from '../../platform/runtime/game-shortcut-target.js';
 import {
     STAGE,
     SEA,
@@ -1023,7 +1024,7 @@ export class RippleDuetGame {
         this.syncMuteIcons();
 
         window.addEventListener('keydown', (e) => {
-            if (e.target instanceof Element && e.target.closest('input, textarea, select, button, a, [contenteditable]:not([contenteditable="false"]), [role="button"]')) return;
+            if (!shouldHandleGameShortcut(e, document.getElementById('rd-console'))) return;
             if (this.state !== 'playing' || this.isPaused) return;
             if ((e.key === 'q' || e.key === 'Q') && !e.repeat) {
                 if (this.place.length) this.sel = (this.sel + 1) % this.place.length;

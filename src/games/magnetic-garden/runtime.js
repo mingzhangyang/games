@@ -79,7 +79,16 @@ export class MagneticGardenGame {
         // Reset after hiding the menu, before focus({ preventScroll: true }).
         if (window.scrollX || window.scrollY) window.scrollTo(0, 0);
         this.track('magnetic-garden', 'play'); this.save(); this.render();
-        requestAnimationFrame(() => $('mg-board').querySelector(`[data-cell="${this.focusCell}"]`)?.focus({ preventScroll: true }));
+        // Auto-focus is for entering a garden, not for overriding a faster
+        // keyboard/touch interaction (or a newer start) before the next frame.
+        const focusAtStart = document.activeElement;
+        const focusToken = this.animationToken;
+        requestAnimationFrame(() => {
+            if (this.state !== 'playing' || this.animationToken !== focusToken || this.preview) return;
+            const active = document.activeElement;
+            if (active !== focusAtStart && active !== document.body && active !== document.documentElement) return;
+            $('mg-board').querySelector(`[data-cell="${this.focusCell}"]`)?.focus({ preventScroll: true });
+        });
         return true;
     }
     restart() { return this.start(this.level.id); }

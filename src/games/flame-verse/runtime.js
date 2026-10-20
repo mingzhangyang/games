@@ -24,6 +24,7 @@
  */
 
 import { bindContextualRestart } from '../../platform/contextual-restart.js';
+import { shouldHandleGameShortcut } from '../../platform/runtime/game-shortcut-target.js';
 import { LANGUAGES } from './i18n.js';
 import { createLabConsole } from './ui/lab-console.js';
 
@@ -838,7 +839,7 @@ export class FlameVerseGame {
         c.style.touchAction = 'none';
 
         document.addEventListener('keydown', (e) => {
-            if (e.target instanceof Element && e.target.closest('input, textarea, select, button, a, [contenteditable]:not([contenteditable="false"]), [role="button"]')) return;
+            if (!shouldHandleGameShortcut(e, document.getElementById('fv-lab'))) return;
             if (this.state === 'playing' && !this.isPaused && !e.repeat) {
                 if (e.key >= '1' && e.key <= '8') {
                     this.throwSalt(EL_ORDER[Number(e.key) - 1]);
