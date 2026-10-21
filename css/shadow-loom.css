@@ -39,7 +39,9 @@ body {
 /* ── 顶栏 ── */
 
 .sl-icon-btn { color: var(--sl-text); }
-.sl-icon-btn:hover { background: rgb(255, 215, 154, 0.12); }
+@media (hover: hover) {
+    .sl-icon-btn:hover { background: rgb(255, 215, 154, 0.12); }
+}
 
 .sl-topbar-center {
     display: flex;
@@ -113,7 +115,9 @@ html[lang="zh-CN"] .sl-brand-zh {
     inset: var(--tok-hit-pad);
 }
 
-.sl-target-btn:hover { border-color: rgb(255, 215, 154, 0.45); }
+@media (hover: hover) {
+    .sl-target-btn:hover { border-color: rgb(255, 215, 154, 0.45); }
+}
 .sl-target-btn:active { transform: scale(0.94); }
 
 .sl-target-btn canvas {

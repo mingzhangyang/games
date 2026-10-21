@@ -34,9 +34,11 @@ body {
 
 /* ── 顶栏 HUD ── */
 
-.sf-icon-btn:hover {
-    background: rgb(255, 255, 255, 0.14);
-    border-color: rgb(56, 189, 248, 0.45);
+@media (hover: hover) {
+    .sf-icon-btn:hover {
+        background: rgb(255, 255, 255, 0.14);
+        border-color: rgb(56, 189, 248, 0.45);
+    }
 }
 
 .sf-stage-label {

@@ -139,11 +139,8 @@
         border-color: var(--lj-glass-line);
     }
 
-    .lj-icon-btn:hover { border-color: var(--lj-cyan); }
-
-    .lj-icon-btn:disabled {
-        opacity: 0.4;
-        cursor: default;
+    @media (hover: hover) {
+        .lj-icon-btn:hover { border-color: var(--lj-cyan); }
     }
 
     .lj-title-pill {

@@ -9,7 +9,6 @@
     --md-body-bg: radial-gradient(ellipse 62% 40% at 18% 8%, rgb(255, 138, 92, 0.10), transparent),
         radial-gradient(ellipse 62% 40% at 84% 92%, rgb(111, 216, 255, 0.10), transparent),
         linear-gradient(165deg, #05070f 0%, var(--tok-bg-2) 55%, #0d1330 100%);
-    --md-icon-btn-hover-bg: rgb(255, 255, 255, 0.12);
     --md-hud-level-text: #a8c4ff;
     --game-cut-surface: rgb(0, 0, 0, 0.4);
     --game-cut-stroke-color: rgb(168, 184, 255, 0.18);
@@ -61,7 +60,6 @@
     --md-body-bg: radial-gradient(ellipse 62% 40% at 18% 8%, rgb(255, 138, 92, 0.1), transparent),
         radial-gradient(ellipse 62% 40% at 84% 92%, rgb(111, 216, 255, 0.1), transparent),
         linear-gradient(165deg, #f8f9fb 0%, var(--tok-bg-2) 55%, #e9ebf3 100%);
-    --md-icon-btn-hover-bg: rgb(255, 255, 255, 0.91);
     --md-hud-level-text: #0f172a;
     --game-cut-surface: rgb(15, 23, 42, 0.1);
     --game-cut-stroke-color: rgb(168, 184, 255, 0.18);
@@ -123,8 +121,6 @@ body {
 
 
 /* ── 顶栏 HUD ── */
-
-.md-icon-btn:hover { background: var(--md-icon-btn-hover-bg); }
 
 .md-hud-level {
     font-size: 13.5px;

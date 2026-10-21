@@ -45,6 +45,10 @@
     --tok-accent: #667eea;
     --tok-accent-2: #764ba2;
 
+    /* 键盘焦点环：不跟主色走 —— 主色是品牌色，在浅底上可能只有 1.2:1（circuit 的金黄）。
+       这两档在全站顶栏背景上实测 ≥ 3:1（非文本对比度下限）。 */
+    --tok-focus: #a5b8ff;
+
     /* 圆角 */
     --tok-radius-btn: 12px;
     --tok-radius-panel: 16px;
@@ -88,6 +92,8 @@
     --tok-text-soft: #2b3552;
     --tok-text-faint: #4d5873;
 
+    --tok-focus: #3949ab;
+
     /* 功能语义色：加深以在浅底上保持 ≥4.5:1 */
     --tok-cyan: #0b84ad;
     --tok-gold: #a87a0c;
@@ -130,7 +136,9 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-.icon-btn:hover { background: var(--tok-panel-strong); }
+@media (hover: hover) {
+    .icon-btn:hover { background: var(--tok-panel-strong); }
+}
 .icon-btn:active { transform: scale(0.92); }
 
 /* 键盘焦点可见环（跟随主色） */

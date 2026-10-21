@@ -13,7 +13,7 @@
  html { background:var(--mg-bg); }
  .mg-body { background:radial-gradient(ellipse at 50% 0, var(--mg-panel-raised), transparent 65%),var(--mg-bg); color:var(--mg-text); font-family:'Trebuchet MS','Segoe UI',system-ui,'PingFang SC',sans-serif; -webkit-font-smoothing:antialiased; }
  .mg-icon-btn { background:var(--mg-panel); border-color:var(--mg-line); color:var(--mg-text); }
- .mg-icon-btn:disabled { opacity:.4; }
+ @media (hover: hover) { .mg-icon-btn:hover { background:var(--mg-panel-raised); border-color:var(--mg-accent); } }
  .mg-brand { color:var(--mg-green); font-family:Georgia,'Songti SC',serif; font-size:clamp(14px,3.8vw,20px); letter-spacing:.015em; font-weight:700; white-space:nowrap; }
  .mg-stage { color:var(--mg-text); background:radial-gradient(ellipse at 50% 38%,var(--mg-panel-raised),var(--mg-bg) 80%); touch-action:none; user-select:none; }
  .mg-stage::before { content:''; position:absolute; inset:0; background:url('../assets/magnetic-garden/greenhouse-workbench.webp') center center / cover no-repeat; opacity:var(--mg-backdrop-opacity); pointer-events:none; }

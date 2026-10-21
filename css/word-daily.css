@@ -258,9 +258,11 @@ body {
     color: var(--text);
 }
 
-.wd-icon-btn:hover {
-    background: var(--wd-icon-btn-hover-bg);
-    border-color: var(--wd-icon-btn-hover-border);
+@media (hover: hover) {
+    .wd-icon-btn:hover {
+        background: var(--wd-icon-btn-hover-bg);
+        border-color: var(--wd-icon-btn-hover-border);
+    }
 }
 .wd-icon-btn:active { transform: scale(0.94); }
 

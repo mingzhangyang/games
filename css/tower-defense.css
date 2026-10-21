@@ -90,10 +90,12 @@ body {
     animation: td-gold-bounce 0.28s cubic-bezier(0.18, 0.89, 0.32, 1.28);
 }
 
-.td-icon-btn:hover {
-    background: rgb(255, 255, 255, 0.13);
-    border-color: rgb(64, 216, 255, 0.35);
-    box-shadow: 0 0 10px rgb(64, 216, 255, 0.2);
+@media (hover: hover) {
+    .td-icon-btn:hover {
+        background: rgb(255, 255, 255, 0.13);
+        border-color: rgb(64, 216, 255, 0.35);
+        box-shadow: 0 0 10px rgb(64, 216, 255, 0.2);
+    }
 }
 
 #td-range-btn.active {
@@ -1256,9 +1258,14 @@ body {
     text-shadow: none;
 }
 
-.td-shell.game-shell--immersive .td-icon-btn:hover,
 .td-shell.game-shell--immersive #td-range-btn.active {
     box-shadow: none;
+}
+
+@media (hover: hover) {
+    .td-shell.game-shell--immersive .td-icon-btn:hover {
+        box-shadow: none;
+    }
 }
 
 .td-shell.game-shell--immersive .td-wave-btn {

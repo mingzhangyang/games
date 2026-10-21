@@ -46,11 +46,8 @@ body.fs-body {
     border-color: rgb(255, 255, 255, 0.09);
 }
 
-.fs-icon-btn:hover { background: rgb(255, 255, 255, 0.1); }
-
-.fs-icon-btn:disabled {
-    opacity: 0.35;
-    cursor: default;
+@media (hover: hover) {
+    .fs-icon-btn:hover { background: rgb(255, 255, 255, 0.1); }
 }
 
 .fs-level-pill {

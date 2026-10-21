@@ -6,7 +6,6 @@
 :root {
     --hs-body-bg: radial-gradient(ellipse 75% 45% at 60% -10%, rgb(255, 140, 58, 0.10), transparent),
         linear-gradient(160deg, var(--tok-bg) 0%, var(--tok-bg-2) 55%, #170f2b 100%);
-    --hs-icon-btn-hover-bg: rgb(255, 255, 255, 0.12);
     --hs-score-value-glow: 0 0 20px rgb(255, 140, 58, 0.45);
     --hs-score-value-bg: rgb(0, 0, 0, 0.35);
     --hs-score-value-border: 1px solid rgb(255, 255, 255, 0.09);
@@ -39,7 +38,6 @@
 :root[data-theme="light"] {
     --hs-body-bg: radial-gradient(ellipse 75% 45% at 60% -10%, rgb(255, 140, 58, 0.12), transparent),
         linear-gradient(160deg, var(--tok-bg) 0%, var(--tok-bg-2) 55%, #f1e9e1 100%);
-    --hs-icon-btn-hover-bg: rgb(255, 255, 255, 0.91);
     --hs-score-value-glow: none;
     --hs-score-value-bg: rgb(255, 255, 255, 0.85);
     --hs-score-value-border: 1px solid rgb(15, 23, 42, 0.12);
@@ -77,8 +75,6 @@ body {
 
 
 /* ── 顶栏 ── */
-
-.hs-icon-btn:hover { background: var(--hs-icon-btn-hover-bg); }
 
 /* 中槽对齐参考页（lumen 模式）：单行并排 —— 左侧小文本（Best），
    右侧分数胶囊；order 只是视觉调序，DOM/i18n 不动。

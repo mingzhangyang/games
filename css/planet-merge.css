@@ -18,8 +18,6 @@ body {
 
 /* ── 顶栏 HUD ── */
 
-.pm-icon-btn:hover { background: rgb(255, 255, 255, 0.12); }
-
 /* 中槽对齐参考页（lumen 模式）：单行并排 —— 左侧小文本（Best · 模式），
    右侧数值胶囊（SCORE 标签 + 分值）；order 只是视觉调序，DOM/i18n 不动。
    窄屏放不下时整体折行（wrap），不硬裁。 */

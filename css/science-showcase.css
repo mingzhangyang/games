@@ -164,8 +164,9 @@ body.science-theme-ripple {
 .science-showcase .fv-title { color: var(--showcase-title, #f2bd69) !important; }
 .science-showcase .rd-title { color: var(--showcase-title, #e9b19d) !important; }
 
-/* One control contract: 44px minimum targets, quiet fill, clear focus ring. */
-.science-showcase .game-icon-btn,
+/* One control contract: 44px minimum targets, quiet fill, clear focus ring.
+   Icon buttons are excluded from the min-height: they stay square, and their
+   44px+ target already comes from the shared .game-icon-btn::after expander. */
 .science-showcase .game-btn,
 .science-showcase .cb-mode,
 .science-showcase .ec-mode,
@@ -178,6 +179,20 @@ body.science-theme-ripple {
 .science-showcase .fv-chip,
 .science-showcase .rd-chip {
     min-height: 44px;
+}
+
+.science-showcase .game-icon-btn,
+.science-showcase .game-btn,
+.science-showcase .cb-mode,
+.science-showcase .ec-mode,
+.science-showcase .md-mode,
+.science-showcase .fv-mode,
+.science-showcase .rd-mode,
+.science-showcase .cb-chip,
+.science-showcase .ec-chip,
+.science-showcase .md-chip,
+.science-showcase .fv-chip,
+.science-showcase .rd-chip {
     border: 1px solid var(--showcase-border-strong) !important;
     border-radius: 9px !important;
     background: var(--showcase-panel-raised) !important;
@@ -186,20 +201,22 @@ body.science-theme-ripple {
     transition: background-color 140ms ease, border-color 140ms ease, transform 100ms ease;
 }
 
-.science-showcase .game-icon-btn:hover,
-.science-showcase .game-btn:not(.game-action-btn--primary):hover,
-.science-showcase .cb-mode:hover,
-.science-showcase .ec-mode:hover,
-.science-showcase .md-mode:hover,
-.science-showcase .fv-mode:hover,
-.science-showcase .rd-mode:hover,
-.science-showcase .cb-chip:hover,
-.science-showcase .ec-chip:hover,
-.science-showcase .md-chip:hover,
-.science-showcase .fv-chip:hover,
-.science-showcase .rd-chip:hover {
-    background: var(--showcase-hover) !important;
-    border-color: var(--showcase-accent) !important;
+@media (hover: hover) {
+    .science-showcase .game-icon-btn:hover,
+    .science-showcase .game-btn:not(.game-action-btn--primary):hover,
+    .science-showcase .cb-mode:hover,
+    .science-showcase .ec-mode:hover,
+    .science-showcase .md-mode:hover,
+    .science-showcase .fv-mode:hover,
+    .science-showcase .rd-mode:hover,
+    .science-showcase .cb-chip:hover,
+    .science-showcase .ec-chip:hover,
+    .science-showcase .md-chip:hover,
+    .science-showcase .fv-chip:hover,
+    .science-showcase .rd-chip:hover {
+        background: var(--showcase-hover) !important;
+        border-color: var(--showcase-accent) !important;
+    }
 }
 
 .science-showcase .game-icon-btn:focus-visible,

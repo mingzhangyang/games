@@ -377,10 +377,27 @@ html.game-reset * {
         border-radius: inherit;
     }
     
-    .game-icon-btn:hover { background: var(--tok-panel-strong); }
-    
+    /* 悬停只给真有悬停能力的指针：触屏上点一下会留下「粘住的 :hover」，
+       按钮一直亮着直到点别处。页面若要自己的悬停配色，也必须写在同样的媒体查询里
+       （tests/verify-topbar-states.mjs 在触屏仿真下强制 :hover 断言外观不变）。 */
+    @media (hover: hover) {
+        .game-icon-btn:hover { background: var(--tok-panel-strong); }
+    }
+
     .game-icon-btn:active { transform: scale(0.92); }
-    
+
+    /* 键盘焦点环：全站同一种，顶栏里的其它控件（扫雷笑脸、影织目标钮等）一并覆盖。
+       颜色取 --tok-focus（tokens.css，深浅两档），不用页面主色：主色在浅底上可能对比不足。 */
+    .game-icon-btn:focus-visible,
+    .game-topbar :is(a, button):focus-visible {
+        outline: 2px solid var(--tok-focus);
+        outline-offset: 2px;
+    }
+
+    /* 顶栏不显示禁用态：点不动的按钮直接隐藏，但保留槽位，
+       避免它恢复可用时左右按钮跳动（与扫雷 / 黑白棋开局前隐藏 HUD 的做法一致）。 */
+    .game-topbar .game-icon-btn:disabled { visibility: hidden; }
+
     /* 文字型图标钮（语言切换等）：宽度自适应，最小不低于视觉尺寸 */
     .game-icon-btn--wide {
         width: auto;

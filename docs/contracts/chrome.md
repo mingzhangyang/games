@@ -136,6 +136,27 @@ src/platform/contextual-restart.js 统一管理，既不常驻，也不新建一
 - 不更改其他 Home、Stats、Pause、Sound 顶栏职责；若新游戏不需要游戏内重置，
   不应为了图标整齐而机械添加循环箭头。
 
+### 1.6 顶栏控件的交互状态（2026-10-21）
+
+悬停、焦点、禁用三种状态由共享层统一提供（`css/layout.css` 的 `.game-icon-btn` 一节），页面只能改配色：
+
+- **悬停只给可悬停的指针。** 所有作用于顶栏控件的 `:hover` 规则（共享层和页面层）都必须写在
+  `@media (hover: hover)` 里。否则在触屏上点一下就会留下「粘住的 :hover」，按钮一直高亮，直到点别处。
+  页面悬停配色和共享默认值（`--tok-panel-strong`）相同时就不要再写；只有真正不同的配色
+  （拔萝卜、针尖对麦芒、塔防……）才保留，并且同样放进媒体查询。
+- **焦点环全站一种。** `.game-icon-btn` 和顶栏内的所有 `a` / `button` 在 `:focus-visible` 时显示
+  `2px solid var(--tok-focus)`，`outline-offset: 2px`。颜色刻意不跟 `--tok-accent`：主色是品牌色，
+  在浅底上可能只有 1.2:1（circuit 的金黄）。`--tok-focus` 的深浅两档在全站顶栏背景上 ≥ 3:1。
+- **禁用即隐藏。** `.game-topbar .game-icon-btn:disabled` 为 `visibility: hidden`，保留槽位，
+  按钮恢复可用时左右的钮不会跳动。页面不要再给顶栏按钮写 `:disabled { opacity }`。
+  只在游玩中才有意义的按钮（暂停、重开）直接在 JS 里设 `disabled`，样式不必另写。
+- **图标钮是正方形。** 44px 热区由 `::after` 外扩提供，页面（包括科学展柜）不得给
+  `.game-icon-btn` 加 `min-height` / `min-width` 来凑触控尺寸。
+
+校验：`tests/verify-topbar-states.mjs`。它对每页 × 深浅色 × 桌面 / 触屏，用 DevTools 强制伪类，
+断言上面四条和焦点环的截图取样对比度。⚠️ 无头 Chrome 不报告指针设备，`(hover: hover)` 永不匹配，
+CDP 和 `--blink-settings` 都改不了；所以桌面轮在 CSSOM 里把这类媒体规则改写成 `all` 来模拟鼠标。
+
 ## 2. 各页现状
 
 | 页面 | 左簇 | 右簇（专属 → stats → pause → sound） | 页脚 hint 来源 |
@@ -196,7 +217,7 @@ src/platform/contextual-restart.js 统一管理，既不常驻，也不新建一
 
 ## 4. 验证
 
-`npm run verify`（或 `npm run verify:quick`）已编排 `verify-chrome.mjs`；单独跑：
+`npm run verify`（或 `npm run verify:quick`）已编排 `verify-chrome.mjs`；顶栏控件的悬停 / 焦点 / 禁用状态另由 `verify-topbar-states.mjs`（§1.6，仅全量档）锁住。单独跑：
 
 ```bash
 npm run serve:static &        # 或 node tests/verify-chrome.mjs（verify-all 自动起服务）

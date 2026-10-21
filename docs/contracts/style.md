@@ -42,6 +42,7 @@
 | 令牌 | 值 | 用途 |
 | --- | --- | --- |
 | `--tok-accent` / `--tok-accent-2` | `#667eea` / `#764ba2` | 各页覆盖即可换肤 |
+| `--tok-focus` | `#a5b8ff`（浅色 `#3949ab`） | 共享键盘焦点环（`.game-icon-btn` 与顶栏全部控件）。刻意不跟 `--tok-accent`：主色是品牌色，在浅底上可能只有 1.2:1；这两档在全站顶栏背景上 ≥ 3:1 |
 | `--tok-radius-btn` / `--tok-radius-panel` | `12px` / `16px` | 圆角 |
 | `--tok-btn-size` | `40px` | 图标按钮视觉尺寸 |
 | `--tok-hit-pad` | `-6px` | 触控热区外扩（视觉不变，命中 ≥44px） |
