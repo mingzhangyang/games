@@ -180,6 +180,7 @@ html.game-reset * {
         column-gap: 12px !important;
         align-items: center !important;
     }
+
     .game-topbar .game-topbar-center {
         min-width: 0;
         flex-direction: row !important;
@@ -188,11 +189,7 @@ html.game-reset * {
         align-items: center !important;
         text-align: left !important;
     }
-    .game-topbar .game-topbar-center > .wd-title-box {
-        flex: 0 1 auto;
-        align-items: flex-start;
-        justify-content: flex-start;
-    }
+
     .game-topbar .game-topbar-name,
     .game-topbar .game-topbar-name :is(span, div) {
         font-family: var(--game-title-font, system-ui, -apple-system, "Segoe UI", sans-serif) !important;
@@ -202,10 +199,11 @@ html.game-reset * {
         color: var(--game-title-color, var(--tok-text)) !important;
         text-shadow: none !important;
         background: none !important;
-        -webkit-text-fill-color: currentColor !important;
+        -webkit-text-fill-color: currentcolor !important;
         background-clip: border-box !important;
         -webkit-background-clip: border-box !important;
     }
+
     .game-topbar .game-topbar-name {
         flex: 0 1 auto;
         min-width: 0 !important;
@@ -222,6 +220,7 @@ html.game-reset * {
         -webkit-mask-image: none !important;
         mask-image: none !important;
     }
+
     .game-topbar .game-topbar-name > :is(span, div) {
         display: block;
         min-width: 0;
@@ -232,6 +231,7 @@ html.game-reset * {
         text-align: left;
         line-height: inherit;
     }
+
     .game-topbar .game-topbar-name::before,
     .game-topbar .game-topbar-name::after { content: none !important; }
     @media (width <= 480px) {
