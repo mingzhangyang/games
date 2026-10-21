@@ -33,6 +33,7 @@
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/science-showcase.css">
     <link rel="stylesheet" href="css/echo-cave.css">
+    <link rel="stylesheet" href="css/stage-status.css">
     <link rel="stylesheet" href="css/mobile-fit.css">
     <link rel="stylesheet" href="css/more-games.css">
 </head>
@@ -44,13 +45,9 @@
                 <!-- 左簇：Home 永远第一个（文案 / aria 由 src/platform/game-chrome.js 统一写） -->
                 <button data-chrome="home" class="ec-icon-btn game-icon-btn" id="ec-btn-home" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
             </div>
-            <!-- 中槽：洞穴 / 脉冲 HUD -->
+            <!-- 中槽：只放游戏名（当前语言一种）；局内状态在舞台顶部 -->
             <div class="ec-topbar-center game-topbar-center">
-                <div class="ec-hud-level" id="ec-hud-level">Cave 1/3</div>
-                <div class="ec-cut-box game-cut-box">
-                    <span class="ec-cut-value game-cut-value" id="ec-pulses">0</span>
-                    <span class="ec-par game-start-par" id="ec-par">Par 1</span>
-                </div>
+                <div class="ec-brand game-topbar-name" data-i18n="title">Echo Cave</div>
             </div>
             <!-- 右簇固定顺序：专属 → stats → sound -->
             <div class="ec-topbar-actions game-topbar-group">
@@ -63,6 +60,14 @@
         <!-- 舞台 -->
         <main class="ec-main game-main">
         <div class="ec-stage game-stage" id="ec-stage">
+            <!-- 局内状态：关卡 / 计数挂在舞台顶部（css/stage-status.css） -->
+            <div class="ec-stage-status game-stage-status" id="ec-stage-status">
+                <div class="ec-hud-level" id="ec-hud-level">Cave 1/3</div>
+                <div class="ec-cut-box game-cut-box">
+                    <span class="ec-cut-value game-cut-value" id="ec-pulses">0</span>
+                    <span class="ec-par game-start-par" id="ec-par">Par 1</span>
+                </div>
+            </div>
             <canvas class="game-canvas" id="ec-canvas" width="480" height="640"></canvas>
 
             <!-- 提示 -->

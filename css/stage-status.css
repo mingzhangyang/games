@@ -147,4 +147,58 @@
     .sl-toast {
         top: 36px !important;
     }
+
+    /* ⑤ 关卡计数页（科学解谜九页 + 引力弹弓）：顶栏中槽只留游戏名；关卡号 + 计数器合成一行，
+       随流排在画布**上方**，不浮在画布上 —— 这些页的棋盘 / 洞窟铺满画布，悬浮胶囊会盖住第一行格子。
+       行高计入 --frame-chrome（src/platform/game-frame.js 实测 .game-stage-status），
+       桌面舞台按「可用高度 × 画幅比」缩一点，页面仍然一屏放下。
+       舞台是横向 flex：状态行占满一整行（width:100%），画布换到下一行；
+       手机上 ec 等页的舞台是纵向 flex，同一写法照样落在最上面。 */
+    .game-stage:has(> .game-stage-status) {
+        flex-wrap: wrap;
+    }
+
+    .game-stage-status {
+        display: flex;
+        flex: none;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        min-height: 36px;
+        margin-bottom: 8px;
+        white-space: nowrap;
+    }
+
+    .game-topbar-name {
+        overflow: hidden;
+        max-width: 100%;
+        color: var(--tok-text);
+        font-size: 17px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        line-height: 1.2;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* 舞台顶部的提示条原本贴着画布顶边，跟着状态行一起下移 */
+    .game-stage:has(> .game-stage-status) > .game-toast {
+        top: 58px !important;
+    }
+
+    @media (width <= 480px) {
+        .game-stage-status {
+            min-height: 32px;
+            margin-bottom: 6px;
+        }
+
+        .game-topbar-name {
+            font-size: 15px;
+        }
+
+        .game-stage:has(> .game-stage-status) > .game-toast {
+            top: 50px !important;
+        }
+    }
 }
