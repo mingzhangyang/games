@@ -48,9 +48,6 @@
                 <div class="sl-brand">
                     <span class="sl-brand-zh" id="sl-brand" data-i18n="brand">影织</span>
                 </div>
-                <button type="button" class="sl-target-btn" id="sl-target-btn" aria-label="Show the target shape" title="Show the target shape">
-                    <canvas id="sl-target-icon" width="64" height="64" aria-hidden="true"></canvas>
-                </button>
             </div>
             <div class="sl-topbar-actions game-topbar-group">
                 <button type="button" data-contextual-restart="retry" class="sl-icon-btn game-icon-btn hidden" id="sl-reset-btn" title="Reset" aria-label="Reset"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
@@ -66,6 +63,10 @@
 
                 <!-- 局内状态在舞台顶部，顶栏只留游戏名（css/stage-status.css） -->
                 <span class="sl-progress" id="sl-progress" aria-label="Progress"></span>
+
+                <button type="button" class="sl-target-btn" id="sl-target-btn" aria-label="Show the target shape" title="Show the target shape">
+                    <canvas id="sl-target-icon" width="64" height="64" aria-hidden="true"></canvas>
+                </button>
 
                 <div class="sl-toast game-toast" id="sl-toast" role="status" aria-live="polite"></div>
 

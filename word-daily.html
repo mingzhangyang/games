@@ -32,6 +32,7 @@
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/word-daily.css">
+    <link rel="stylesheet" href="css/stage-status.css">
     <link rel="stylesheet" href="css/mobile-fit.css">
     <link rel="stylesheet" href="css/more-games.css">
 </head>
@@ -47,8 +48,7 @@
             <!-- 中槽：标题 / HUD，各页自由 -->
             <div class="wd-topbar-center game-topbar-center">
                 <div class="wd-title-box">
-                    <h1 class="wd-title" id="wd-title" data-i18n="title">Word Daily</h1>
-                    <div class="wd-sub-row"><span class="wd-num" id="wd-num">#1</span><span class="wd-mode-tag" id="wd-mode-tag"></span></div>
+                    <h1 class="wd-title game-topbar-name" id="wd-title" data-i18n="title">Word Daily</h1>
                 </div>
             </div>
             <!-- 右簇固定顺序：专属 → stats → pause → sound → lang -->
@@ -101,6 +101,7 @@
         <!-- 棋盘与操作区 -->
         <main class="wd-main game-main">
             <div class="wd-board-wrap game-stage">
+                <div class="wd-sub-row"><span class="wd-num" id="wd-num">#1</span><span class="wd-mode-tag" id="wd-mode-tag"></span></div>
                 <div class="wd-board" id="wd-board" style="--cols: 5"></div>
             </div>
             <div class="wd-toast game-toast" id="wd-toast"></div>

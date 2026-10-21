@@ -523,9 +523,9 @@ body {
     z-index: 16;
 }
 
-/* 开始界面打开时顶栏只留 Home / Sound：计数器、笑脸、暂停都是局内状态，开局前无意义，
-   还会和开始界面的标题抢视线。用 visibility 而非 display，顶栏高度不变，开局时不跳。 */
-.ms-shell:has(#ms-start:not(.hidden)) :is(.ms-topbar-center, #ms-btn-pause) {
+/* 全屏开始层上方继续露出 Home / 本地化游戏名 / Sound，仅隐藏局内暂停钮。
+   状态与笑脸已移进棋盘舞台，不再遮挡游戏名；visibility 不改变顶栏高度。 */
+.ms-shell:has(#ms-start:not(.hidden)) #ms-btn-pause {
     visibility: hidden;
 }
 

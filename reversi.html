@@ -32,6 +32,7 @@
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/reversi.css">
+    <link rel="stylesheet" href="css/stage-status.css">
     <link rel="stylesheet" href="css/mobile-fit.css">
     <link rel="stylesheet" href="css/more-games.css">
 </head>
@@ -45,21 +46,7 @@
             </div>
             <!-- 中槽：标题 / HUD，各页自由 -->
             <div class="rv-topbar-center game-topbar-center">
-                <div class="rv-player-box rv-black-box" id="rv-box-black">
-                    <span class="rv-player-disc" id="rv-disc-black"></span>
-                    <div class="rv-player-info">
-                        <span class="rv-player-name" id="rv-name-black">You</span>
-                        <span class="rv-player-count" id="rv-count-black">2</span>
-                    </div>
-                </div>
-                <span class="rv-vs">·</span>
-                <div class="rv-player-box rv-white-box" id="rv-box-white">
-                    <span class="rv-player-disc rv-disc-w" id="rv-disc-white"></span>
-                    <div class="rv-player-info">
-                        <span class="rv-player-count" id="rv-count-white">2</span>
-                        <span class="rv-player-name" id="rv-name-white">AI</span>
-                    </div>
-                </div>
+                <span class="rv-brand game-topbar-name" data-i18n="title">Reversi</span>
             </div>
             <!-- 右簇固定顺序：专属 → stats → pause → sound → lang -->
             <div class="rv-topbar-actions game-topbar-group">
@@ -73,6 +60,23 @@
 
             <!-- 棋盘 -->
             <div class="rv-stage game-stage">
+                <div class="rv-score-row">
+                    <div class="rv-player-box rv-black-box" id="rv-box-black">
+                        <span class="rv-player-disc" id="rv-disc-black"></span>
+                        <div class="rv-player-info">
+                            <span class="rv-player-name" id="rv-name-black">You</span>
+                            <span class="rv-player-count" id="rv-count-black">2</span>
+                        </div>
+                    </div>
+                    <span class="rv-vs">·</span>
+                    <div class="rv-player-box rv-white-box" id="rv-box-white">
+                        <span class="rv-player-disc rv-disc-w" id="rv-disc-white"></span>
+                        <div class="rv-player-info">
+                            <span class="rv-player-count" id="rv-count-white">2</span>
+                            <span class="rv-player-name" id="rv-name-white">AI</span>
+                        </div>
+                    </div>
+                </div>
                 <div class="rv-board" id="rv-board" role="grid" data-i18n-label="boardLabel" aria-label="Reversi board"></div>
 
                 <!-- 过路提示 -->

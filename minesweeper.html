@@ -32,6 +32,7 @@
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/minesweeper.css">
+    <link rel="stylesheet" href="css/stage-status.css">
     <link rel="stylesheet" href="css/mobile-fit.css">
     <link rel="stylesheet" href="css/more-games.css">
 </head>
@@ -45,15 +46,7 @@
             </div>
             <!-- 中槽：标题 / HUD，各页自由 -->
             <div class="ms-topbar-center game-topbar-center">
-                <div class="ms-counter" id="ms-counter-mines" data-i18n-title="minesLeft" title="Mines left">
-                    <span class="ms-counter-icon">💣</span>
-                    <span class="ms-counter-value" id="ms-mines">010</span>
-                </div>
-                <button class="ms-face" id="ms-face" data-i18n-title="newGame" title="New game">🙂</button>
-                <div class="ms-counter" id="ms-counter-timer" data-i18n-title="timeElapsed" title="Time">
-                    <span class="ms-counter-icon">⏱️</span>
-                    <span class="ms-counter-value" id="ms-timer">000</span>
-                </div>
+                <span class="ms-brand game-topbar-name" data-i18n="title">Minesweeper</span>
             </div>
             <!-- 右簇固定顺序：专属 → stats → pause → sound → lang -->
             <div class="ms-topbar-actions game-topbar-group">
@@ -73,10 +66,23 @@
 
             <!-- 棋盘 -->
             <div class="ms-board-wrap game-stage">
-                <div class="ms-board" id="ms-board" role="grid" data-i18n-label="boardLabel" aria-label="Minesweeper board"></div>
-                <div class="ms-pause-overlay hidden" id="ms-pause-overlay">
-                    <div class="ms-pause-title" id="ms-pause-title" data-i18n="pausedTitle">已暂停</div>
-                    <div class="ms-pause-hint" id="ms-pause-hint" data-i18n="pausedHint">计时已停止 — 点击任意处继续</div>
+                <div class="ms-board-hud">
+                    <div class="ms-counter" id="ms-counter-mines" data-i18n-title="minesLeft" title="Mines left">
+                        <span class="ms-counter-icon">💣</span>
+                        <span class="ms-counter-value" id="ms-mines">010</span>
+                    </div>
+                    <button class="ms-face" id="ms-face" data-i18n-title="newGame" title="New game">🙂</button>
+                    <div class="ms-counter" id="ms-counter-timer" data-i18n-title="timeElapsed" title="Time">
+                        <span class="ms-counter-icon">⏱️</span>
+                        <span class="ms-counter-value" id="ms-timer">000</span>
+                    </div>
+                </div>
+                <div class="ms-board-field">
+                    <div class="ms-board" id="ms-board" role="grid" data-i18n-label="boardLabel" aria-label="Minesweeper board"></div>
+                    <div class="ms-pause-overlay hidden" id="ms-pause-overlay">
+                        <div class="ms-pause-title" id="ms-pause-title" data-i18n="pausedTitle">已暂停</div>
+                        <div class="ms-pause-hint" id="ms-pause-hint" data-i18n="pausedHint">计时已停止 — 点击任意处继续</div>
+                    </div>
                 </div>
             </div>
 

@@ -33,6 +33,7 @@
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/firefly-signal.css">
     <link rel="stylesheet" href="css/scoreboard-dialog.css">
+    <link rel="stylesheet" href="css/stage-status.css">
     <link rel="stylesheet" href="css/mobile-fit.css">
     <link rel="stylesheet" href="css/more-games.css">
 </head>
@@ -48,7 +49,7 @@
             </div>
             <div class="fs-topbar-center game-topbar-center">
                 <h1 class="sr-only" id="fs-h1" data-i18n="title">Firefly Signal</h1>
-                <div class="fs-level-pill" id="fs-level-pill">Firefly Signal</div>
+                <span class="fs-brand game-topbar-name" data-i18n="title">Firefly Signal</span>
             </div>
             <!-- 右簇固定顺序：专属（重来）→ sound -->
             <div class="fs-topbar-actions game-topbar-group">
@@ -78,6 +79,8 @@
                             <span class="fs-harmony-value" id="fs-harmony-value">0%</span>
                         </div>
                     </div>
+                    <!-- 关卡胶囊与两侧实测宽度共同排版，避免八颗信号点遮挡 -->
+                    <div class="fs-level-pill" id="fs-level-pill">Firefly Signal</div>
                     <div class="fs-signals">
                         <span class="fs-signals-label" id="fs-signals-label" data-i18n="signalsLabel">Signals</span>
                         <div class="fs-dots" id="fs-dots" role="img" aria-label="Interventions"></div>

@@ -104,9 +104,7 @@
         top: 94px !important;
     }
 
-    /* ③ 影织：英文名称比中文宽，窄屏时目标按钮与标题不能把顶栏撑成两行。
-       gap 覆盖冻结页面的 unlayered 12px，所以必须用分层 !important。
-       极窄屏保留目标预览的操作热区，文字允许省略，不改变其它游戏。 */
+    /* ③ 影织：中槽只有游戏名，目标图案按钮已在 C 批移入舞台。 */
     @media (width <= 480px) {
         .sl-topbar-center {
             flex-wrap: nowrap;
@@ -124,9 +122,6 @@
             text-overflow: ellipsis;
         }
 
-        .sl-target-btn {
-            flex: 0 0 40px;
-        }
     }
 
     /* ④ 影织：关卡进度点挂在纸窗框顶部中央，暗色底托住，避免压在木框花纹上看不清；
@@ -411,6 +406,159 @@
     @media (width <= 480px) and (orientation: portrait) {
         .td-brand {
             display: none;
+        }
+    }
+
+    /* ⑧ 第 2 步 C 批：特殊页顶栏只留游戏名，局内状态与可点的游戏控件归舞台。 */
+
+    /* 扫雷：经典雷数 / 笑脸重开 / 计时位于棋盘上方，随流占高度；
+       暂停遮罩定位在棋盘区域，不能挡住笑脸按钮。 */
+    .ms-board-wrap:has(> .ms-board-hud) {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .ms-board-field {
+        position: relative;
+        align-self: center;
+        max-width: 100%;
+    }
+
+    .ms-board-hud {
+        display: flex;
+        flex: none;
+        align-self: stretch;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        min-height: 52px;
+        padding: 5px 7px 7px;
+    }
+
+    .ms-board-hud .ms-counter {
+        gap: 5px;
+        padding: 5px 8px !important;
+    }
+
+    .ms-board-hud .ms-face {
+        flex: 0 0 44px;
+        width: 44px !important;
+        height: 44px !important;
+        font-size: 22px !important;
+    }
+
+    @media (width <= 360px) {
+        .ms-board-hud .ms-counter {
+            gap: 3px;
+            padding: 4px 5px !important;
+        }
+        .ms-board-hud .ms-counter-value { font-size: 15px !important; }
+    }
+
+    @media (width >= 1024px) {
+        .ms-board-hud .ms-face {
+            flex-basis: 48px;
+            width: 48px !important;
+            height: 48px !important;
+        }
+    }
+
+    /* 黑白棋：双方姓名与子数卡随流在棋盘正上方。保留 mobile-fit.css 的
+       288px 棋盘下限，短屏宁可滚动也不缩小格子。 */
+    .rv-stage:has(> .rv-score-row) {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .rv-score-row {
+        display: flex;
+        flex: none;
+        align-items: center;
+        align-self: center;
+        width: min(100%, 480px);
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .rv-score-row > .rv-player-box { min-width: 0; }
+
+    @media (width >= 1024px) {
+        .rv-score-row { width: min(100%, 640px); }
+    }
+
+    /* 每日猜词：模式 / 期号与棋盘关联，不留在全局顶栏；控制额外行高。 */
+    .wd-board-wrap:has(> .wd-sub-row) {
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .wd-board-wrap > .wd-sub-row {
+        align-self: stretch;
+        min-height: 28px;
+        margin: 0;
+        gap: 10px;
+        font-size: 12px;
+    }
+
+    .wd-topbar-center .wd-title { font-size: 17px !important; }
+
+    @media (width <= 480px) {
+        .wd-topbar-center .wd-title { font-size: 15px !important; }
+    }
+
+    /* 影织：#sl-target-btn 是有点击行为的舞台控件。菜单态不可点；
+       原按钮 40px 视觉面 + ::after 触控扩展仍然有效。 */
+    .sl-stage > #sl-target-btn {
+        position: absolute !important;
+        top: 8px;
+        right: 8px;
+        z-index: 6;
+        pointer-events: auto;
+    }
+
+    .sl-stage:has(> #sl-start:not(.hidden)) > #sl-target-btn {
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    /* 萤火信号：固定的游戏名在顶栏，变化的关卡标签是天空 HUD 的第三列。
+       用真实左圆环 / 右信号组的固有宽度分配中间剩余空间，避免依赖固定
+       bottom / max-width 常数：第三关八颗信号点与英文关卡名也不会相压。 */
+    .fs-topbar-center .fs-brand {
+        color: var(--fs-ink-dim);
+        font-size: 16px;
+        font-weight: 700;
+    }
+
+    .fs-stage .fs-hud:not(.hidden) {
+        display: grid !important;
+        grid-template-columns: max-content minmax(0, 1fr) max-content;
+        align-items: start;
+        column-gap: 8px;
+    }
+
+    .fs-hud > #fs-level-pill {
+        min-width: 0;
+        max-width: 100%;
+        justify-self: center;
+        align-self: start;
+        margin-top: 3px;
+        padding: 5px 9px;
+        border: 1px solid var(--fs-glass-line);
+        border-radius: 999px;
+        background: var(--fs-glass);
+        backdrop-filter: blur(8px);
+        text-align: center;
+        pointer-events: none;
+    }
+
+    @media (width <= 420px) {
+        .fs-hud > #fs-level-pill {
+            font-size: 11px !important;
+            letter-spacing: 0.02em !important;
         }
     }
 }
