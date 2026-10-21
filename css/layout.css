@@ -230,10 +230,12 @@ html.game-reset * {
         white-space: nowrap;
         text-align: left;
         line-height: inherit;
+        padding: 0 !important;
     }
 
     .game-topbar .game-topbar-name::before,
     .game-topbar .game-topbar-name::after { content: none !important; }
+
     @media (width <= 480px) {
         .game-topbar .game-topbar-name,
         .game-topbar .game-topbar-name :is(span, div) { font-size: 16px !important; }
@@ -1096,6 +1098,23 @@ html.game-reset * {
     @layer layout {
         .game-shell { padding: 6px 8px 4px; }
     }
+    /* Align absolute mobile anchors without changing outer topbar widths.
+       Standard shells have 8px outside padding, immersive bars have a 10px safe-area floor.
+       Both therefore expose Home/Sound at 10px from the viewport edge. */
+    @layer contracts {
+        .game-shell:not(.game-shell--immersive) > .game-topbar {
+            padding-inline: 2px !important;
+            padding-top: 4px !important;
+        }
+
+        .game-shell--immersive > .game-topbar { padding-top: 10px !important; }
+
+        /* TD keeps its existing zero-padding fixed HUD once the game starts. */
+        .td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) > .td-topbar {
+            padding-top: 0 !important;
+        }
+    }
+
     /* 窄屏收紧顶栏间距：保证最挤的页面（td 三个状态胶囊）仍保持单行 */
     @layer layout {
         .game-topbar { column-gap: 12px; }
@@ -1318,7 +1337,7 @@ html.game-reset * {
 
     .game-shell--immersive > .game-topbar {
         max-width: var(--frame-immersive-max);
-        padding: 6px max(8px, env(safe-area-inset-right, 0px)) 6px max(8px, env(safe-area-inset-left, 0px));
+        padding: 6px max(10px, env(safe-area-inset-right, 0px)) 6px max(10px, env(safe-area-inset-left, 0px));
     }
 
     .game-shell--immersive > .game-main {

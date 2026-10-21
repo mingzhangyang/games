@@ -94,7 +94,7 @@ for (const [w, h] of VIEWPORTS) {
                 assert(titleException || !r.nameHidden, tag + ': name unexpectedly hidden');
                 assert(r.truncatedOther.length === 0,
                     tag + ': non-title text truncated: ' + r.truncatedOther.join(','));
-                assert(near(r.sound.right, w - 8, 1.5) || w >= 1024,
+                assert(near(r.sound.right, w - 10, 1.5) || w >= 1024,
                     tag + ': Sound not flush with mobile bar edge: x=' + r.sound.right);
                 if (!r.nameHidden) {
                     assert(near(r.name.x - r.home.right, 12, 1.2),
