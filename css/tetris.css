@@ -991,8 +991,10 @@ body.rainbow-theme {
 
 
 
-/* ── Accessibility baseline: keyboard focus + reduced motion ── */
-:focus-visible {
+/* ── Accessibility baseline: keyboard focus + reduced motion ──
+   顶栏控件除外：它们用共享层的 --tok-focus 焦点环（chrome.md §1.6）。
+   :where() 让这个排除不增加优先级。 */
+:where(:not(.game-topbar *)):focus-visible {
     outline: var(--tt-focus-visible-focus-outline);
     outline-offset: 2px;
 }

@@ -6,9 +6,10 @@
 //      直到点别处才消失（2026-10-21 实测 26 页里 140 处）。
 //   ② 桌面下强制 :hover，每颗 .game-icon-btn 的背景或描边有变化（不能没有悬停反馈：
 //      magnetic-garden 曾用无层页面规则把底色写死，共享层的悬停永远赢不了）。
-//   ③ 强制 :focus-visible，每个顶栏控件都有 ≥2px 实线焦点环，且焦点环颜色与它盖住的
-//      背景像素（截图取样）对比度 ≥ 3:1。页面主色不一定达标（circuit 的金黄在浅底上
-//      只有 1.2:1），所以共享层用 --tok-focus，而不是 --tok-accent。
+//   ③ 强制 :focus-visible，每个顶栏控件都有 ≥2px 实线焦点环，颜色等于该控件处解析出的
+//      --tok-focus（全站一种：页面自己的 :focus-visible 规则不得盖过顶栏 —— tetris 的全局规则、
+//      gomoku 的 button 规则、科学展柜的 !important 曾经都盖过），且与它盖住的背景像素（截图取样）
+//      对比度 ≥ 3:1。页面主色不一定达标（circuit 的金黄在浅底上只有 1.2:1），所以用 --tok-focus。
 //   ④ 顶栏里 disabled 的按钮不可见（共享层 visibility:hidden，保留槽位）。曾经 firefly /
 //      loop-jail / magnetic-garden 显示 35–40% 透明的死按钮，sudoku-mist 的暂停钮禁用了
 //      却看起来完全正常。
@@ -98,6 +99,15 @@ for (const id of PAGES) {
                 };
             }), CONTROLS);
             const base = await read();
+            // 每个控件处解析出的 --tok-focus（页面可能在 body 上覆盖它，所以在元素自己的上下文里解析）
+            const tokFocus = await page.evaluate(sel => [...document.querySelectorAll(sel)].map(el => {
+                const probe = document.createElement('span');
+                probe.style.cssText = 'display:none; color: var(--tok-focus)';
+                el.appendChild(probe);
+                const color = getComputedStyle(probe).color;
+                probe.remove();
+                return color;
+            }), CONTROLS);
 
             // ③ 的取样底图：未聚焦时焦点环将要盖住的像素（边框外 2–4px，取中线 3px）
             const barBottom = await page.evaluate(() => document.querySelector('.game-topbar').getBoundingClientRect().bottom);
@@ -143,6 +153,8 @@ for (const id of PAGES) {
                 const { outline } = await forced(i, ['focus', 'focus-visible']);
                 const solid = outline.style === 'solid' && outline.width >= 2;
                 check(solid, `${tag}: ${b.name} 焦点环不是 ≥2px 实线（${outline.style} ${outline.width}px）`);
+                check(outline.color === tokFocus[i],
+                    `${tag}: ${b.name} 焦点环颜色 ${outline.color} 不是 --tok-focus（${tokFocus[i]}），有页面规则盖过了共享层`);
                 if (solid) {
                     const ring = rgb(outline.color);
                     const [x, y, w, h] = b.rect;

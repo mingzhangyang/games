@@ -147,6 +147,9 @@ src/platform/contextual-restart.js 统一管理，既不常驻，也不新建一
 - **焦点环全站一种。** `.game-icon-btn` 和顶栏内的所有 `a` / `button` 在 `:focus-visible` 时显示
   `2px solid var(--tok-focus)`，`outline-offset: 2px`。颜色刻意不跟 `--tok-accent`：主色是品牌色，
   在浅底上可能只有 1.2:1（circuit 的金黄）。`--tok-focus` 的深浅两档在全站顶栏背景上 ≥ 3:1。
+  共享规则在 `@layer components`，会输给页面未分层的规则和 `!important`。所以页面自己的
+  `:focus-visible` 规则必须用 `:where(:not(.game-topbar *))` 把顶栏排除在外（tetris 的全局规则、
+  gomoku 的 `button` 规则、科学展柜的 `!important` 都这样处理过），`:where()` 保证排除不改变原优先级。
 - **禁用即隐藏。** `.game-topbar .game-icon-btn:disabled` 为 `visibility: hidden`，保留槽位，
   按钮恢复可用时左右的钮不会跳动。页面不要再给顶栏按钮写 `:disabled { opacity }`。
   只在游玩中才有意义的按钮（暂停、重开）直接在 JS 里设 `disabled`，样式不必另写。
@@ -154,7 +157,7 @@ src/platform/contextual-restart.js 统一管理，既不常驻，也不新建一
   `.game-icon-btn` 加 `min-height` / `min-width` 来凑触控尺寸。
 
 校验：`tests/verify-topbar-states.mjs`。它对每页 × 深浅色 × 桌面 / 触屏，用 DevTools 强制伪类，
-断言上面四条和焦点环的截图取样对比度。⚠️ 无头 Chrome 不报告指针设备，`(hover: hover)` 永不匹配，
+断言上面四条、焦点环颜色等于该处解析出的 `--tok-focus`，以及焦点环的截图取样对比度。⚠️ 无头 Chrome 不报告指针设备，`(hover: hover)` 永不匹配，
 CDP 和 `--blink-settings` 都改不了；所以桌面轮在 CSSOM 里把这类媒体规则改写成 `all` 来模拟鼠标。
 
 ## 2. 各页现状

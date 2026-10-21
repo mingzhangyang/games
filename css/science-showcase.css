@@ -219,9 +219,10 @@ body.science-theme-ripple {
     }
 }
 
-.science-showcase .game-icon-btn:focus-visible,
-.science-showcase button:focus-visible,
-.science-showcase a:focus-visible,
+/* Topbar controls keep the site-wide --tok-focus ring (chrome.md §1.6). */
+.science-showcase .game-icon-btn:where(:not(.game-topbar *)):focus-visible,
+.science-showcase button:where(:not(.game-topbar *)):focus-visible,
+.science-showcase a:where(:not(.game-topbar *)):focus-visible,
 .science-showcase input:focus-visible {
     outline: 2px solid var(--showcase-focus) !important;
     outline-offset: 2px;
