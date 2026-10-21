@@ -8,7 +8,9 @@
 //   ② 顶栏是单行（高度不超过一排图标按钮）
 //   ③ 状态贴舞台顶边、完整落在舞台内，与舞台里原有的局内 HUD 不重叠
 //   ④ 状态文案是当前玩法的（御剑飞行的模式徽章跟随模式；针尖对麦芒进入对局后不再显示菜单态标签）
-// 对修改前的版本，①②③ 在四页上都会失败。
+// 对修改前的版本，①②③ 在各页上都会失败。
+// 2026-10-21 收尾第 2 步 A 批：关卡计数十页（bf/cc/cb/ec/fv/gd/lm/md/rd/sd）的「关卡号 + 计数」一行随流排在画布上方，
+// 另断言它整体落在画布上方（不浮在铺满画布的棋盘上）。
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
@@ -20,7 +22,20 @@ const VIEWPORTS = [
 ];
 
 // status: 移进舞台的状态元素；hud: 舞台里原有、不得与状态重叠的局内 HUD；
-// name: 顶栏中槽里应当剩下的游戏名；start: 进入对局的点击序列；playing: 对局就绪条件。
+// name: 顶栏中槽里应当剩下的游戏名；start: 进入对局的点击序列；playing: 对局就绪条件；
+// above: 状态必须整体落在它上方的元素（关卡计数页的画布：状态行随流排在画布上方，不得盖住棋盘第一行）。
+// 关卡计数十页结构相同：「关卡」按钮直接进入第一个未完成关卡，开始层收起即对局就绪。
+const levelCounter = (id, prefix, name) => ({
+    id,
+    status: [`#${prefix}-stage-status`],
+    hud: [],
+    above: `#${prefix}-canvas`,
+    name,
+    start: [`#${prefix}-btn-levels`],
+    // waitForFunction 也接受表达式字符串：在页面里求值，免得为每页各写一个闭包
+    playing: `document.getElementById('${prefix}-start').classList.contains('hidden')`,
+});
+
 const PAGES = [
     {
         id: 'magnetic-garden',
@@ -72,6 +87,16 @@ const PAGES = [
         start: ['#sl-level-grid .sl-chip'],
         playing: () => window.slGame?.state === 'playing',
     },
+    levelCounter('bond-forge', 'bf', { zh: '键合工坊', en: 'Bond Forge' }),
+    levelCounter('circuit', 'cc', { zh: '电路谜题', en: 'Circuit' }),
+    levelCounter('crystal-bloom', 'cb', { zh: '晶绽', en: 'Crystal Bloom' }),
+    levelCounter('echo-cave', 'ec', { zh: '回声洞窟', en: 'Echo Cave' }),
+    levelCounter('flame-verse', 'fv', { zh: '焰语', en: 'Flame Verse' }),
+    levelCounter('gravity-slingshot', 'gd', { zh: '引力弹弓', en: 'Gravity Slingshot' }),
+    levelCounter('lumen', 'lm', { zh: '折光', en: 'Lumen' }),
+    levelCounter('maxwell-demon', 'md', { zh: '麦克斯韦妖', en: 'Maxwell\'s Demon' }),
+    levelCounter('ripple-duet', 'rd', { zh: '涟漪双生', en: 'Ripple Duet' }),
+    levelCounter('silk-dew', 'sd', { zh: '垂丝引露', en: 'Silkfall' }),
 ].filter(p => keepPage(p.id));
 exitIfNoPages(PAGES, 'verify-stage-status');
 
@@ -117,7 +142,7 @@ for (const spec of PAGES) {
             // 进入对局后等两帧，让 HUD / 标签刷新完
             await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
 
-            const snap = await page.evaluate(({ status, hud }) => {
+            const snap = await page.evaluate(({ status, hud, above }) => {
                 const rect = el => { const r = el.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom, w: r.width, h: r.height }; };
                 const topbar = document.querySelector('.game-topbar');
                 const center = topbar.querySelector('.game-topbar-center');
@@ -146,8 +171,9 @@ for (const spec of PAGES) {
                         const el = document.querySelector(sel);
                         return el && el.getClientRects().length ? { sel, rect: rect(el) } : null;
                     }).filter(Boolean),
+                    above: above && document.querySelector(above) ? rect(document.querySelector(above)) : null,
                 };
-            }, { status: spec.status, hud: spec.hud });
+            }, { status: spec.status, hud: spec.hud, above: spec.above || null });
 
             // ① 位置与顶栏内容
             for (const s of snap.status) {
@@ -167,6 +193,10 @@ for (const spec of PAGES) {
                 const inside = r.l >= snap.stage.l - 1 && r.r <= snap.stage.r + 1 && r.t >= snap.stage.t - 1 && r.b <= snap.stage.b + 1;
                 check(inside, `${tag}: ${s.sel} 完整落在舞台内`, JSON.stringify(r));
                 check(r.t - snap.stage.t <= 24, `${tag}: ${s.sel} 贴舞台顶边`, `${Math.round(r.t - snap.stage.t)}px`);
+                if (spec.above) {
+                    check(!!snap.above, `${tag}: ${spec.above} 存在`);
+                    if (snap.above) check(r.b <= snap.above.t + 1, `${tag}: ${s.sel} 整体在 ${spec.above} 上方、不压画面`, `${Math.round(r.b)} > ${Math.round(snap.above.t)}`);
+                }
                 for (const h of snap.hud) {
                     const overlap = !(r.r <= h.rect.l || h.rect.r <= r.l || r.b <= h.rect.t || h.rect.b <= r.t);
                     check(!overlap, `${tag}: ${s.sel} 不压 ${h.sel}`, JSON.stringify({ status: r, hud: h.rect }));

@@ -32,6 +32,7 @@
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/circuit.css">
+    <link rel="stylesheet" href="css/stage-status.css">
     <link rel="stylesheet" href="css/mobile-fit.css">
     <link rel="stylesheet" href="css/more-games.css">
 </head>
@@ -42,12 +43,9 @@
             <div class="cc-topbar-lead game-topbar-group">
                 <button data-chrome="home" class="cc-icon-btn game-icon-btn" id="cc-btn-home" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
             </div>
+            <!-- 中槽：只放游戏名（当前语言一种）；局内状态在舞台顶部 -->
             <div class="cc-topbar-center game-topbar-center">
-                <div class="cc-hud-level" id="cc-hud-level">Level 1/20</div>
-                <div class="cc-move-box" id="cc-move-box">
-                    <span class="cc-move-value" id="cc-moves">0</span>
-                    <span class="cc-par game-start-par" id="cc-par">· Par 2</span>
-                </div>
+                <div class="cc-brand game-topbar-name" data-i18n="title">Circuit</div>
             </div>
             <div class="cc-topbar-actions game-topbar-group">
                 <button type="button" data-contextual-restart="retry" class="cc-icon-btn game-icon-btn hidden" id="cc-reset-btn" title="Reset" aria-label="Reset"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
@@ -59,6 +57,14 @@
         <!-- 舞台 -->
         <main class="cc-main game-main">
         <div class="cc-stage game-stage" id="cc-stage">
+            <!-- 局内状态：关卡 / 计数挂在舞台顶部（css/stage-status.css） -->
+            <div class="cc-stage-status game-stage-status" id="cc-stage-status">
+                <div class="cc-hud-level" id="cc-hud-level">Level 1/20</div>
+                <div class="cc-move-box" id="cc-move-box">
+                    <span class="cc-move-value" id="cc-moves">0</span>
+                    <span class="cc-par game-start-par" id="cc-par">· Par 2</span>
+                </div>
+            </div>
             <canvas class="game-canvas" id="cc-canvas" width="560" height="560"></canvas>
             <div class="cc-toast hidden game-toast" id="cc-toast"></div>
 

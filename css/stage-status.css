@@ -148,8 +148,8 @@
         top: 36px !important;
     }
 
-    /* ⑤ 关卡计数页（科学解谜九页 + 引力弹弓）：顶栏中槽只留游戏名；关卡号 + 计数器合成一行，
-       随流排在画布**上方**，不浮在画布上 —— 这些页的棋盘 / 洞窟铺满画布，悬浮胶囊会盖住第一行格子。
+    /* ⑤ 关卡计数十页（bf / cc / cb / ec / fv / gd / lm / md / rd / sd）：顶栏中槽只留游戏名；
+       关卡号 + 计数器合成一行，随流排在画布**上方**，不浮在画布上 —— 这些页的棋盘 / 洞窟铺满画布，悬浮胶囊会盖住第一行格子。
        行高计入 --frame-chrome（src/platform/game-frame.js 实测 .game-stage-status），
        桌面舞台按「可用高度 × 画幅比」缩一点，页面仍然一屏放下。
        舞台是横向 flex：状态行占满一整行（width:100%），画布换到下一行；
@@ -173,7 +173,7 @@
     .game-topbar-name {
         overflow: hidden;
         max-width: 100%;
-        color: var(--tok-text);
+        color: inherit;
         font-size: 17px;
         font-weight: 800;
         letter-spacing: 0.04em;
@@ -199,6 +199,28 @@
 
         .game-stage:has(> .game-stage-status) > .game-toast {
             top: 50px !important;
+        }
+    }
+
+    /* ⑥ 麦克斯韦妖是沉浸式舞台：高度 = 视口 − 顶栏，场景 .md-scene 绝对铺满舞台。
+       状态行改为绝对定位贴舞台顶边，场景从它下面开始；runtime.js 的 fitScene()
+       按 #md-field 的实测尺寸等比放容器，自动让出这一行。inset 是页面的 unlayered 声明，所以用 !important。 */
+    .md-stage > .game-stage-status {
+        position: absolute;
+        top: 8px;
+        right: 0;
+        left: 0;
+        z-index: 2;
+        margin: 0;
+    }
+
+    .md-stage > .md-scene {
+        top: 52px !important;
+    }
+
+    @media (width <= 480px) {
+        .md-stage > .md-scene {
+            top: 46px !important;
         }
     }
 }
