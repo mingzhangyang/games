@@ -162,7 +162,7 @@ for (const vp of VIEWPORTS) {
     let s = await page.evaluate(SNAP);
 
     // ── 顶栏 ──
-    check(s.hudScore !== null && s.hudBox && s.hudBox.h > 0, '顶栏有分数 HUD 且可见',
+    check(s.hudScore !== null && s.hudBox && s.hudBox.h > 0, '舞台状态行有分数 HUD 且可见',
         `hudScore=${s.hudScore} box=${JSON.stringify(s.hudBox)}`);
 
     // #99 page-layer cutover: guard the rendered cascade, not just the migration ledger.
@@ -188,12 +188,14 @@ for (const vp of VIEWPORTS) {
         check(t
             && t.display === 'flex'
             && t.flexDirection === 'row'
-            && t.flexWrap === 'wrap'
+            // 2026-10-21 局内状态归舞台：分数胶囊从顶栏中槽搬到棋盘上方的状态行，
+            // 改为不折行（css/stage-status.css ⑦：长高会把棋盘推到固定底栏下面）
+            && t.flexWrap === 'nowrap'
             && t.alignItems === 'center'
             && t.rowGap === '2px'
             && t.columnGap === '8px'
             && t.minWidth === '0px',
-        '移动端 title pill 保持迁移前 row/wrap/2×8px gap',
+        '移动端 title pill 保持 row/2×8px gap，舞台状态行里不折行',
         JSON.stringify(t));
 
         check(s.titlePillBox && s.hudBox

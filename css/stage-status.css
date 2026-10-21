@@ -187,7 +187,7 @@
        贴底的 .cc-shell .cc-toast { top: auto !important; bottom: 12px }）必须仍然胜出，
        否则 top 被改回、bottom 还在，提示条会被上下拉伸铺满棋盘。
        页面原有的 top 是 unlayered 声明，分层 !important 不靠特异性也能压过。 */
-    :where(.game-stage:has(> .game-stage-status)) > .game-toast {
+    :where(.game-stage:has(> .game-stage-status:not(.game-stage-status--float))) > .game-toast {
         top: 58px !important;
     }
 
@@ -201,7 +201,7 @@
             font-size: 15px;
         }
 
-        :where(.game-stage:has(> .game-stage-status)) > .game-toast {
+        :where(.game-stage:has(> .game-stage-status:not(.game-stage-status--float))) > .game-toast {
             top: 50px !important;
         }
     }
@@ -245,6 +245,172 @@
 
         .md-stage > .md-scene.is-side {
             top: 0 !important;
+        }
+    }
+
+    /* ⑦ 分数 HUD（B 批）。
+       俄罗斯方块：出块在棋盘最上两行，悬浮胶囊会盖住新块 —— 状态行随流排在棋盘上方（同 ⑤）。
+       粒子 / 消行两层特效画布是 top:0 的绝对定位，必须与 #tetris 逐像素重合
+       （canvas-resolution 的对齐不变量）：棋盘改成「状态行 / 画布」两行网格，三张画布放进
+       第二行同一格 —— 绝对定位子元素以所在网格区域为包含块，top:0 就是棋盘顶边，
+       不靠写死的偏移量。结算遮罩 / 连击字没有网格位置，仍以整个舞台为包含块。 */
+    .game-board:has(> .tt-stage-status) {
+        display: grid;
+        grid-template-columns: 100%;
+        align-content: start;
+    }
+
+    .game-board:has(> .tt-stage-status) > #tetris,
+    .game-board:has(> .tt-stage-status) > #particleCanvas,
+    .game-board:has(> .tt-stage-status) > #lineClearCanvas {
+        grid-row: 2;
+        grid-column: 1;
+    }
+
+    /* 状态行不折行：分数变长时宁可越过棋盘左右边（按内容宽居中，两侧对称溢出，
+       320px 下 999999 分仍在视口内），也不能长高把棋盘推到固定底栏下面 */
+    .tt-stage-status > .game-title-pill {
+        flex: none;
+        flex-wrap: nowrap;
+    }
+
+    .tt-stage-status .hud-sub {
+        margin-top: 0;
+    }
+
+    /* 手机：棋盘高度预算（mobile-fit.css ③ 的 --tt-board-reserve）加上状态行（高 + 下边距）。
+       顶栏只剩游戏名，不再因 HUD 换行长高，≤480px 不用再多留那 14px。
+       选择器要比 mobile-fit 的 .game-container:has(#tetris) 更具体（后者同层、后加载）。 */
+    @media (width <= 768px) {
+        .game-container.game-shell:has(#tt-stage-status) {
+            --tt-board-reserve: calc(140px + 36px + 8px);
+        }
+    }
+
+    @media (width <= 480px) {
+        .game-container.game-shell:has(#tt-stage-status) {
+            --tt-board-reserve: calc(140px + 32px + 6px);
+        }
+    }
+
+    /* 星球合成：投放中的星球沿画布整条顶边左右移动，悬浮胶囊放在哪都会挡住它 ——
+       状态行随流排在画布上方（同 ⑤）。舞台改成「状态行 / 画布」两行网格，右上角「下一个」
+       (.pm-next-box, 页面里 top/right:10px 的绝对定位) 放进画布那一格，以网格区域为包含块，
+       天然贴着画布顶边，不靠写死的偏移量。状态行因此可以按需折行长高（320px 宽、七位数分数时
+       一行放不下），bindFrame 的 ResizeObserver 实测它的高度计入桌面预算。 */
+    .pm-stage:has(> .pm-stage-status) {
+        display: grid;
+        grid-template-columns: 100%;
+        align-content: start;
+        justify-items: center;
+    }
+
+    .pm-stage:has(> .pm-stage-status) > #pm-canvas,
+    .pm-stage:has(> .pm-stage-status) > .pm-next-box {
+        grid-row: 2;
+        grid-column: 1;
+    }
+
+    /* 移动/平板开始菜单使用 layout.css 的单格网格：画布、Next、状态和菜单都在
+       1/1，格高取菜单与画布较大值，不能让对局态的第二行定位在菜单期间生效。
+       只有菜单可见时回到共享契约；开局/返回菜单自动切换，无需 JS 调布局。 */
+    @media (width < 1024px) {
+        .pm-stage:has(> .game-overlay--menu:not(.hidden)) > #pm-canvas,
+        .pm-stage:has(> .game-overlay--menu:not(.hidden)) > .pm-next-box {
+            grid-area: 1 / 1;
+        }
+    }
+
+    /* 投篮：动作画布顶部是夜空留白（篮筐与球在中下部），状态改为悬浮胶囊，
+       不占舞台纵向预算（bindFrame 跳过绝对定位的状态行）。 */
+    .game-stage-status--float {
+        position: absolute;
+        z-index: 4;
+        width: auto;
+        min-height: 0;
+        margin: 0;
+        pointer-events: none;
+    }
+
+    /* 投篮：居中贴顶，篮筐与球都在下半场；右上角是连进火焰徽章 */
+    .hs-stage-status {
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .hs-stage-status > .hs-score-box {
+        flex: none;
+        flex-wrap: nowrap;
+    }
+
+    /* ⑧ 塔防（沉浸式战场）：生命 / 金币 / 波次三枚胶囊并进底部战术条（.td-bottom-controls），
+       排在技能与发波钮左侧。战场铺满舞台、顶部第一排就是敌人入口路径，挪到舞台顶部会盖住它；
+       战术条本来就浮在舞台下沿，即时战略式 HUD 集中在拇指区。战术条原本限宽 360px（只装技能 +
+       发波），这里按内容放宽、仍不超过舞台宽减边距。页面规则 unlayered，所以用分层 !important。 */
+    .game-stage-status--dock {
+        flex: none;
+        flex-wrap: nowrap;
+        gap: 5px;
+        width: auto;
+        min-height: 0;
+        margin: 0;
+    }
+
+    .td-shell.game-shell--immersive .td-bottom-controls:has(> .td-stage-status) {
+        flex-wrap: wrap;
+        row-gap: 6px;
+        width: max-content !important;
+        max-width: calc(100% - 24px);
+    }
+
+    /* 建造面板属于战术条的交互层，定位在战术条自身的顶边上方。
+       战术条因窄屏/数字变长折行时，面板随实测高度自然上移，无固定 bottom
+       常数、无 ResizeObserver 同步负担。translate 与面板进场动画的 transform 独立。 */
+    .td-shell.game-shell--immersive .td-bottom-controls > .td-panel {
+        left: 50% !important;
+        right: auto !important;
+        bottom: calc(100% + 8px) !important;
+        width: min(776px, calc(100vw - 24px));
+        translate: -50% 0;
+    }
+
+    /* 窄横屏（568×320 等）：胶囊用旧版顶栏里的紧凑尺寸（页面尺寸是 unlayered 声明，故 !important），
+       发波钮放宽下限；
+       仍放不下（堆叠徽章亮出 + 大数字）时战术条折行，状态胶囊换到按钮上方一行 ——
+       舞台是 overflow:hidden，任何一颗钮都不能被裁到舞台外。 */
+    @media (width <= 700px) {
+        .td-stage-status .td-stat {
+            gap: 4px !important;
+            padding: 4px 7px !important;
+            font-size: 11px !important;
+            border-radius: 6px !important;
+        }
+
+        .td-stage-status .td-stat b {
+            min-width: 1.8ch !important;
+            font-size: 12px !important;
+        }
+
+        .td-stage-status ~ .td-wave-btn {
+            min-width: 112px;
+        }
+    }
+
+    .td-stage-status .td-stack-badge {
+        margin-left: 0 !important;
+    }
+
+    .td-stage-status ~ .td-wave-btn {
+        min-width: 150px;
+    }
+
+    /* 竖屏手机：战场不可玩，舞台是「请旋转设备」提示，游戏名已大字印在提示下方；顶栏左 Home、
+       右 5 颗功能钮之间只剩 56–126px，放不下「Neon Tower Defense」（165px），省略号截断
+       比不写更糟（verify-topbar-row 断言顶栏文字不截断）。横屏与桌面照常显示。 */
+    @media (width <= 480px) and (orientation: portrait) {
+        .td-brand {
+            display: none;
         }
     }
 }

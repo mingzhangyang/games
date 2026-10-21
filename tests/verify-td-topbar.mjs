@@ -3,7 +3,9 @@
 //
 // 背景：2026-09-19 曾按当时需求做过「两行顶栏」（全应用 icons 一行、本局信息一行），
 // 2026-09-21 起废弃 —— 与 lumen / gravity-slingshot 对齐为共享层单行三槽契约：
-//   左 Home ｜ 中 状态胶囊 ×3 + 堆叠徽章（窄屏可折行，整组居中）｜ 右 Range/Speed/Stats/Pause/Sound
+//   左 Home ｜ 中 游戏名 ｜ 右 Range/Speed/Stats/Pause/Sound
+// 2026-10-21 起状态胶囊 ×3 + 堆叠徽章并进底部战术条（docs/contracts/chrome.md §1.1 B 批），
+// 下面「状态胶囊横向不重叠、不溢出视口」的断言在新位置照样成立。
 // 页面侧不再有任何纵向拆行覆盖；.td-topbar-row--app / --game / -spacer 已随 HTML 拍平删除，
 // 本脚本守住「不再回退成多行」+ 触控热区，并原样保留「空中航线只在飞行关绘制」像素断言。
 import puppeteer from 'puppeteer-core';

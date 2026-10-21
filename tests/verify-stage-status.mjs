@@ -9,6 +9,8 @@
 //   ③ 状态贴舞台顶边、完整落在舞台内，与舞台里原有的局内 HUD 不重叠
 //   ④ 状态文案是当前玩法的（御剑飞行的模式徽章跟随模式；针尖对麦芒进入对局后不再显示菜单态标签）
 // 对修改前的版本，①②③ 在各页上都会失败。
+// 2026-10-21 收尾第 2 步 B 批：俄罗斯方块 / 星球合成的分数行随流排在画布上方，投篮的分数悬浮在夜空，
+// 塔防的生命 / 金币 / 波次并进底部战术条（贴舞台下沿）。
 // 2026-10-21 收尾第 2 步 A 批：关卡计数十页（bf/cc/cb/ec/fv/gd/lm/md/rd/sd）的「关卡号 + 计数」一行随流排在画布上方，
 // 另断言它整体落在画布上方（不浮在铺满画布的棋盘上）。
 import puppeteer from 'puppeteer-core';
@@ -22,13 +24,18 @@ const VIEWPORTS = [
 ];
 // 手机横握：麦克斯韦妖的场景切到左右分列，状态行竖排到左侧列（css/stage-status.css ⑥），
 // 只要求不压画布；同一行若仍占顶部一整行，会把容器压小、读数条带被挤没（smoke-maxwell-demon）。
+const NARROW = { label: '320', width: 320, height: 568, deviceScaleFactor: 2, isMobile: true, hasTouch: true };
+const SE_LANDSCAPE = { label: '568x320', width: 568, height: 320, deviceScaleFactor: 2, isMobile: true, hasTouch: true, isLandscape: true };
 const LANDSCAPE = { label: '844x390', width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true, isLandscape: true, beside: true };
 
 // status: 移进舞台的状态元素；hud: 舞台里原有、不得与状态重叠的局内 HUD；
 // name: 顶栏中槽里应当剩下的游戏名；start: 进入对局的点击序列；playing: 对局就绪条件；
 // above: 状态必须整体落在它上方的元素（关卡计数页的画布：状态行随流排在画布上方，不得盖住棋盘第一行）；
 // toast: 舞台提示条 —— 亮出来后必须是一行高、不压状态行（电路谜题贴底的提示条曾被上移规则改了 top、
-// 留着 bottom，拉伸成整块盖住棋盘）；viewports: 额外视口。
+// 留着 bottom，拉伸成整块盖住棋盘）；viewports: 额外视口；start 可按视口给（俄罗斯方块手机用底栏开始钮）；
+// edge: 'bottom' —— 状态并进舞台下沿的战术条（塔防），断言贴底而不是贴顶；
+// stress: 在页面里灌入大数字（及堆叠徽章）后复查 —— 状态内容与 stressAlso 的控件仍在舞台和视口内、
+// 不越过 above（定高状态行里内容折行会压进画布；塔防战术条放不下会被 overflow:hidden 的舞台裁掉）。
 // 关卡计数十页结构相同：「关卡」按钮直接进入第一个未完成关卡，开始层收起即对局就绪。
 const levelCounter = (id, prefix, name) => ({
     id,
@@ -103,6 +110,60 @@ const PAGES = [
     { ...levelCounter('maxwell-demon', 'md', { zh: '麦克斯韦妖', en: 'Maxwell\'s Demon' }), viewports: [LANDSCAPE] },
     levelCounter('ripple-duet', 'rd', { zh: '涟漪双生', en: 'Ripple Duet' }),
     levelCounter('silk-dew', 'sd', { zh: '垂丝引露', en: 'Silkfall' }),
+    // ── B 批：分数 HUD ──
+    {
+        id: 'tetris',
+        status: ['#tt-stage-status'],
+        hud: [],
+        above: '#tetris',
+        name: { zh: '俄罗斯方块', en: 'Tetris' },
+        start: vp => [vp.isMobile ? '#mobileStartBtn' : '#startBtn'],
+        playing: () => !!window.game?.animationId && !window.game.gameOver,
+    },
+    {
+        id: 'planet-merge',
+        status: ['#pm-stage-status'],
+        hud: ['.pm-next-box'],
+        above: '#pm-canvas',
+        toast: '#pm-toast',
+        name: { zh: '星球合成', en: 'Planet Merge' },
+        start: ['#pm-btn-endless'],
+        playing: () => window.planetMergeGame?.state === 'playing',
+        stress: () => {
+            document.getElementById('pm-score').textContent = '1234567';
+            document.getElementById('pm-best').textContent = '1234567';
+        },
+        viewports: [NARROW],
+    },
+    {
+        id: 'hoop-shot',
+        status: ['#hs-stage-status'],
+        hud: ['#hs-fire-badge'],
+        name: { zh: '街机投篮', en: 'Hoop Shot' },
+        start: ['#hs-btn-play'],
+        playing: () => window.hoopShotGame?.state === 'playing',
+    },
+    {
+        id: 'tower-defense',
+        status: ['#td-stage-status'],
+        hud: ['#td-skill-emp', '#td-wave-btn', '#td-skill-boost'],
+        edge: 'bottom',
+        name: { zh: '霓虹塔防', en: 'Neon Tower Defense' },
+        start: ['#td-btn-play'],
+        playing: () => window.tdGame?.state === 'playing',
+        stress: () => {
+            document.getElementById('td-lives').textContent = '100';
+            document.getElementById('td-gold').textContent = '12345';
+            document.getElementById('td-wave').textContent = '40/40';
+            const badge = document.getElementById('td-stack-badge');
+            badge.classList.remove('hidden');
+            badge.textContent = '×6 +48%';
+        },
+        stressAlso: ['#td-skill-emp', '#td-wave-btn', '#td-skill-boost'],
+        // 竖屏手机是「请旋转」提示，战场不可玩；只测横屏手机与桌面
+        viewports: [{ ...LANDSCAPE, beside: false }, SE_LANDSCAPE],
+        skip: vp => vp.label === '390',
+    },
 ].filter(p => keepPage(p.id));
 exitIfNoPages(PAGES, 'verify-stage-status');
 
@@ -114,10 +175,65 @@ const check = (ok, label, detail = '') => {
     if (!ok) console.log(`  ✗ ${label}${detail !== '' ? '  (' + detail + ')' : ''}`);
 };
 
+
+/* 星球合成：共享的移动端菜单契约是「全部舞台子项落在同一格」。
+   对局态才是状态行/画布两行；必须分别测首次菜单与真实返回菜单的路径。 */
+const checkPlanetMenuGrid = async (page, tag) => {
+    const grid = await page.evaluate(() => {
+        const stage = document.querySelector('.pm-stage');
+        const menu = document.querySelector('#pm-start');
+        const rowCol = selector => {
+            const s = getComputedStyle(document.querySelector(selector));
+            return s.gridRowStart + '/' + s.gridColumnStart;
+        };
+        return {
+            display: getComputedStyle(stage).display,
+            menuVisible: getComputedStyle(menu).display !== 'none',
+            rows: getComputedStyle(stage).gridTemplateRows,
+            positions: {
+                menu: rowCol('#pm-start'),
+                status: rowCol('#pm-stage-status'),
+                canvas: rowCol('#pm-canvas'),
+                next: rowCol('.pm-next-box'),
+            },
+        };
+    });
+    check(grid.display === 'grid' && grid.menuVisible, `${tag}: 开始菜单启用共享网格`, grid.display);
+    check(Object.values(grid.positions).every(pos => pos === '1/1'),
+        `${tag}: 菜单、状态、画布和 Next 同在第一格`, JSON.stringify(grid.positions));
+    check(grid.rows.trim().split(/\s+/).length === 1,
+        `${tag}: 菜单没有多余的第二行高度`, grid.rows);
+};
+
+const checkTowerPanelClearance = async (page, tag, kind) => {
+    // 面板有 200ms 入场动画（translateY），等稳定后量实际遮挡而非动画中间帧。
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 260)));
+    const geo = await page.evaluate(() => {
+        const rect = selector => {
+            const r = document.querySelector(selector).getBoundingClientRect();
+            return { l: r.left, t: r.top, r: r.right, b: r.bottom };
+        };
+        const el = document.querySelector('#td-panel');
+        return {
+            visible: !el.classList.contains('hidden') && getComputedStyle(el).display !== 'none',
+            panel: rect('#td-panel'),
+            dock: rect('#td-bottom-controls'),
+            stage: rect('#td-stage'),
+        };
+    });
+    check(geo.visible, `${tag}: ${kind}面板已展开`);
+    if (!geo.visible) return;
+    check(geo.panel.b <= geo.dock.t - 6, `${tag}: ${kind}面板不遮挡折行战术条`,
+        JSON.stringify({ panelBottom: geo.panel.b, dockTop: geo.dock.t }));
+    check(geo.panel.l >= geo.stage.l - 1 && geo.panel.r <= geo.stage.r + 1
+        && geo.panel.t >= geo.stage.t - 1,
+    `${tag}: ${kind}面板完整落在舞台内`, JSON.stringify(geo.panel));
+};
+
 const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 'new', args: LAUNCH_ARGS });
 
 for (const spec of PAGES) {
-    for (const vp of [...VIEWPORTS, ...(spec.viewports || [])]) {
+    for (const vp of [...VIEWPORTS, ...(spec.viewports || [])].filter(v => !spec.skip?.(v))) {
         for (const lang of ['zh', 'en']) {
             const tag = `${spec.id} @${vp.label} ${lang}`;
             const page = await browser.newPage();
@@ -133,8 +249,12 @@ for (const spec of PAGES) {
                 try { localStorage.setItem('site_lang', l); localStorage.setItem('site_muted', '1'); } catch { /* private mode */ }
             }, lang);
             await page.goto(`${BASE}/${spec.id}.html`, { waitUntil: 'load' });
+            if (spec.id === 'planet-merge' && vp.width < 1024) {
+                await page.waitForFunction(() => window.planetMergeGame?.state === 'menu', { timeout: 10000 });
+                await checkPlanetMenuGrid(page, `${tag} 首次菜单`);
+            }
             let started = true;
-            for (const sel of spec.start) {
+            for (const sel of typeof spec.start === 'function' ? spec.start(vp) : spec.start) {
                 try {
                     await page.waitForSelector(sel + ':not([disabled])', { visible: true, timeout: 10000 });
                     await page.click(sel);
@@ -208,7 +328,11 @@ for (const spec of PAGES) {
                 const r = s.rect;
                 const inside = r.l >= snap.stage.l - 1 && r.r <= snap.stage.r + 1 && r.t >= snap.stage.t - 1 && r.b <= snap.stage.b + 1;
                 check(inside, `${tag}: ${s.sel} 完整落在舞台内`, JSON.stringify(r));
-                check(r.t - snap.stage.t <= 24, `${tag}: ${s.sel} 贴舞台顶边`, `${Math.round(r.t - snap.stage.t)}px`);
+                if (spec.edge === 'bottom') {
+                    check(snap.stage.b - r.b <= 32, `${tag}: ${s.sel} 贴舞台下沿（并在战术条里）`, `${Math.round(snap.stage.b - r.b)}px`);
+                } else {
+                    check(r.t - snap.stage.t <= 24, `${tag}: ${s.sel} 贴舞台顶边`, `${Math.round(r.t - snap.stage.t)}px`);
+                }
                 if (spec.above) {
                     check(!!snap.above, `${tag}: ${spec.above} 存在`);
                     const a = snap.above;
@@ -237,6 +361,62 @@ for (const spec of PAGES) {
                 const [ok, label, detail] = await spec.label(page, lang).catch(e => [false, '状态文案可读', e.message]);
                 check(ok, `${tag}: ${label}`, detail);
             }
+            if (spec.stress) {
+                await page.evaluate(spec.stress);
+                await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
+                const stressed = await page.evaluate(({ status, also, above }) => {
+                    const rect = el => { const r = el.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom }; };
+                    const stage = rect(document.querySelector('.game-stage'));
+                    const leaves = status.flatMap(sel => [...document.querySelectorAll(`${sel} *`)]
+                        .filter(n => n.children.length === 0 && n.getClientRects().length && getComputedStyle(n).display !== 'none'));
+                    const items = [...leaves.map(n => ({ sel: n.id || n.className || n.tagName, r: rect(n) })),
+                        ...also.map(sel => ({ sel, r: rect(document.querySelector(sel)) }))];
+                    return { stage, items, vw: innerWidth, above: above ? rect(document.querySelector(above)) : null };
+                }, { status: spec.status, also: spec.stressAlso || [], above: spec.above || null });
+                const out = stressed.items.filter(({ r }) => r.l < Math.max(0, stressed.stage.l) - 1 || r.r > Math.min(stressed.vw, stressed.stage.r) + 1
+                    || r.t < stressed.stage.t - 1 || r.b > stressed.stage.b + 1);
+                check(out.length === 0, `${tag}: 大数字下状态与控件仍在舞台和视口内`, out.map(o => o.sel).join(', '));
+                if (stressed.above && !vp.beside) {
+                    const low = Math.max(...stressed.items.map(({ r }) => r.b));
+                    check(low <= stressed.above.t + 1, `${tag}: 大数字下状态内容不折行压进 ${spec.above}`, `${Math.round(low)} > ${Math.round(stressed.above.t)}`);
+                }
+            }
+            if (spec.id === 'planet-merge' && vp.width < 1024) {
+                // 走真实 Pause → Home 流程，校验菜单网格在对局结束后恢复。
+                await page.click('#pm-pause-btn');
+                await page.waitForFunction(() => window.planetMergeGame?.state === 'paused', { timeout: 10000 });
+                await page.click('#pm-btn-menu');
+                await page.waitForFunction(() => window.planetMergeGame?.state === 'menu', { timeout: 10000 });
+                await checkPlanetMenuGrid(page, `${tag} 返回菜单`);
+            }
+            if (spec.id === 'tower-defense') {
+                const ready = await page.evaluate(() => {
+                    const g = window.tdGame;
+                    const { cols, rows, pathGrid } = g.map;
+                    for (let r = 0; r < rows; r++) {
+                        for (let c = 0; c < cols; c++) {
+                            if (pathGrid[r * cols + c] || g.towerAt(c, r) >= 0) continue;
+                            g.selectedCell = { c, r };
+                            g.selectedTowerIdx = -1;
+                            g.renderPanel();
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+                check(ready, `${tag}: 有可建造格可以打开真实建造面板`);
+                if (ready) {
+                    await checkTowerPanelClearance(page, tag, '建造');
+                    const built = await page.evaluate(() => {
+                        const g = window.tdGame;
+                        const before = g.towers.length;
+                        g.tryBuild('pulse');
+                        return g.towers.length > before && g.selectedTowerIdx >= 0;
+                    });
+                    check(built, `${tag}: 可完成建造并显示真实升级面板`);
+                    if (built) await checkTowerPanelClearance(page, tag, '升级');
+                }
+            }
             check(errs.length === 0, `${tag}: 无 pageerror`, errs.join(' | '));
             await page.close();
             console.log(`  · ${tag}`);
@@ -249,4 +429,4 @@ if (fails.length) {
     console.log(`\n✗ verify-stage-status：${fails.length} 项失败 / ${passes} 项通过`);
     process.exit(1);
 }
-console.log(`\n✓ verify-stage-status 全部通过（${passes} 项断言，${PAGES.length} 页 × ${VIEWPORTS.length} 视口 × 2 语言 + 麦克斯韦妖横屏）`);
+console.log(`\n✓ verify-stage-status 全部通过（${passes} 项断言，${PAGES.length} 页 × ${VIEWPORTS.length} 视口 × 2 语言 + 横屏）`);
