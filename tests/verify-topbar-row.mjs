@@ -2,14 +2,14 @@
 //
 // 断言（topbar cap 的每页 × 320×568 / 375×553 × zh / en，首屏）：
 //   ① 顶栏所有控件（含 visibility:hidden 的 —— 它们照样占位）垂直中心落在同一行。
-//      minesweeper 的「Home · 雷数 · 笑脸 · 计时 · 暂停 · 声音」在 320px 差 4px，
+//      minesweeper 曾将「Home · 雷数 · 笑脸 · 计时 · 暂停 · 声音」挤进 320px 顶栏，
 //      计时器被挤到第二行、顶栏高 92px，把开始界面压得很挤（PR #169 截图复盘）。
 //      （2026-10-21 起塔防的状态胶囊并进底部战术条，顶栏回到单行，TWO_ROW 为空。）
 //   ② 顶栏里的文字不得被省略号截断：reversi 的「AI · Medium」曾被 max-width: 52px 截成「AI · Me…」。
 //   ④ 字体余量：本机 sans-serif 回退到 Inter，CI（Ubuntu）回退到更宽的 DejaVu Sans，真机又是
 //      Roboto / SF / Segoe —— 只按一种字体刚好塞下等于没修（PR #169 本地绿、CI 红）。
 //      320px 再用强制 DejaVu Sans 跑一遍 ①②，环境无关地要求留出余量。
-//   ③ START_HUD 表里的页：开始界面打开时，局内 HUD（计数器 / 比分卡 / 暂停）不可见；
+//   ③ START_HUD 表里的页：开始界面打开时顶栏中局内按钮（暂停）不可见；
 //      点开始后必须恢复可见 —— 防止「藏了就再也不出来」。
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
@@ -22,8 +22,8 @@ exitIfNoPages(PAGES, 'verify-topbar-row');
 
 const TWO_ROW = new Set();
 const START_HUD = {
-    reversi: { start: '#rv-start', play: '#rv-btn-play', hud: ['.rv-topbar-center'] },
-    minesweeper: { start: '#ms-start', play: '#ms-btn-play', hud: ['.ms-topbar-center', '#ms-btn-pause'] },
+    // Reversi scorecards moved to the stage; only Minesweeper Pause remains hidden in topbar.
+    minesweeper: { start: '#ms-start', play: '#ms-btn-play', hud: ['#ms-btn-pause'] },
 };
 const VIEWPORTS = [[320, 568], [375, 553]];
 const WIDE_FONT = 'DejaVu Sans';

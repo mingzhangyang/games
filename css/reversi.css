@@ -318,10 +318,8 @@ body {
     z-index: 11;
 }
 
-/* 开始界面打开时隐藏比分卡（局内状态，开局前无意义）；visibility 保持顶栏高度不变 */
-.rv-shell:has(#rv-start:not(.hidden)) .rv-topbar-center {
-    visibility: hidden;
-}
+/* 双方比分卡已移入舞台：开始层不再隐藏中槽游戏名。
+   顶栏 z-index 与开始层 --game-topbar-bottom 让位仍沿用上方规则。 */
 
 .rv-overlay {
     position: fixed;

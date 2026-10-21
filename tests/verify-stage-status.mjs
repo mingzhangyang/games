@@ -94,7 +94,7 @@ const PAGES = [
     },
     {
         id: 'shadow-loom',
-        status: ['#sl-progress'],
+        status: ['#sl-progress', '#sl-target-btn'],
         hud: [],
         name: { zh: '影织', en: 'Shadow Loom' },
         start: ['#sl-level-grid .sl-chip'],
@@ -110,6 +110,53 @@ const PAGES = [
     { ...levelCounter('maxwell-demon', 'md', { zh: '麦克斯韦妖', en: 'Maxwell\'s Demon' }), viewports: [LANDSCAPE] },
     levelCounter('ripple-duet', 'rd', { zh: '涟漪双生', en: 'Ripple Duet' }),
     levelCounter('silk-dew', 'sd', { zh: '垂丝引露', en: 'Silkfall' }),
+    // ── C 批：特殊页状态 / 游戏控件归舞台 ──
+    {
+        id: 'minesweeper',
+        status: ['#ms-counter-mines', '#ms-face', '#ms-counter-timer'],
+        hud: [],
+        above: '#ms-board',
+        name: { zh: '扫雷', en: 'Minesweeper' },
+        start: ['#ms-btn-play'],
+        playing: () => document.getElementById('ms-start').classList.contains('hidden'),
+        viewports: [NARROW],
+        label: async page => {
+            const face = await page.$eval('#ms-face', el => ({ w: el.getBoundingClientRect().width, h: el.getBoundingClientRect().height }));
+            return [face.w >= 44 && face.h >= 44, '笑脸热区 ≥44px', JSON.stringify(face)];
+        },
+    },
+    {
+        id: 'reversi',
+        status: ['#rv-box-black', '#rv-box-white'],
+        hud: [],
+        above: '#rv-board',
+        name: { zh: '黑白棋', en: 'Reversi' },
+        start: ['#rv-btn-play'],
+        playing: () => window.rvGame?.state === 'playing',
+        viewports: [NARROW],
+    },
+    {
+        id: 'word-daily',
+        status: ['.wd-sub-row'],
+        hud: [],
+        above: '#wd-board',
+        name: { zh: '每日猜词', en: 'Word Daily' },
+        start: [],
+        playing: () => !!window.wordDailyGame && document.querySelectorAll('#wd-board .wd-row').length > 0,
+    },
+    {
+        id: 'firefly-signal',
+        status: ['#fs-level-pill'],
+        hud: ['#fs-harmony', '#fs-signals'],
+        name: { zh: '萤火信号', en: 'Firefly Signal' },
+        start: ['#fs-level-list .fs-level-btn'],
+        playing: () => window.__fireflySignal?.state === 'playing',
+        label: async (page, lang) => {
+            const label = await page.$eval('#fs-level-pill', el => el.textContent.trim());
+            const want = lang === 'zh' ? /^1 · 初光$/ : /^1 · First Light$/;
+            return [want.test(label), '显示当前语言关卡编号与关卡名', label];
+        },
+    },
     // ── B 批：分数 HUD ──
     {
         id: 'tetris',
