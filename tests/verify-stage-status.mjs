@@ -9,6 +9,8 @@
 //   ③ 状态贴舞台顶边、完整落在舞台内，与舞台里原有的局内 HUD 不重叠
 //   ④ 状态文案是当前玩法的（御剑飞行的模式徽章跟随模式；针尖对麦芒进入对局后不再显示菜单态标签）
 // 对修改前的版本，①②③ 在各页上都会失败。
+// 2026-10-21 收尾第 2 步 B 批：俄罗斯方块 / 星球合成的分数行随流排在画布上方，投篮的分数悬浮在夜空，
+// 塔防的生命 / 金币 / 波次并进底部战术条（贴舞台下沿）。
 // 2026-10-21 收尾第 2 步 A 批：关卡计数十页（bf/cc/cb/ec/fv/gd/lm/md/rd/sd）的「关卡号 + 计数」一行随流排在画布上方，
 // 另断言它整体落在画布上方（不浮在铺满画布的棋盘上）。
 import puppeteer from 'puppeteer-core';
@@ -28,7 +30,8 @@ const LANDSCAPE = { label: '844x390', width: 844, height: 390, deviceScaleFactor
 // name: 顶栏中槽里应当剩下的游戏名；start: 进入对局的点击序列；playing: 对局就绪条件；
 // above: 状态必须整体落在它上方的元素（关卡计数页的画布：状态行随流排在画布上方，不得盖住棋盘第一行）；
 // toast: 舞台提示条 —— 亮出来后必须是一行高、不压状态行（电路谜题贴底的提示条曾被上移规则改了 top、
-// 留着 bottom，拉伸成整块盖住棋盘）；viewports: 额外视口。
+// 留着 bottom，拉伸成整块盖住棋盘）；viewports: 额外视口；start 可按视口给（俄罗斯方块手机用底栏开始钮）；
+// edge: 'bottom' —— 状态并进舞台下沿的战术条（塔防），断言贴底而不是贴顶。
 // 关卡计数十页结构相同：「关卡」按钮直接进入第一个未完成关卡，开始层收起即对局就绪。
 const levelCounter = (id, prefix, name) => ({
     id,
@@ -103,6 +106,46 @@ const PAGES = [
     { ...levelCounter('maxwell-demon', 'md', { zh: '麦克斯韦妖', en: 'Maxwell\'s Demon' }), viewports: [LANDSCAPE] },
     levelCounter('ripple-duet', 'rd', { zh: '涟漪双生', en: 'Ripple Duet' }),
     levelCounter('silk-dew', 'sd', { zh: '垂丝引露', en: 'Silkfall' }),
+    // ── B 批：分数 HUD ──
+    {
+        id: 'tetris',
+        status: ['#tt-stage-status'],
+        hud: [],
+        above: '#tetris',
+        name: { zh: '俄罗斯方块', en: 'Tetris' },
+        start: vp => [vp.isMobile ? '#mobileStartBtn' : '#startBtn'],
+        playing: () => !!window.game?.animationId && !window.game.gameOver,
+    },
+    {
+        id: 'planet-merge',
+        status: ['#pm-stage-status'],
+        hud: ['.pm-next-box'],
+        above: '#pm-canvas',
+        toast: '#pm-toast',
+        name: { zh: '星球合成', en: 'Planet Merge' },
+        start: ['#pm-btn-endless'],
+        playing: () => window.planetMergeGame?.state === 'playing',
+    },
+    {
+        id: 'hoop-shot',
+        status: ['#hs-stage-status'],
+        hud: ['#hs-fire-badge'],
+        name: { zh: '街机投篮', en: 'Hoop Shot' },
+        start: ['#hs-btn-play'],
+        playing: () => window.hoopShotGame?.state === 'playing',
+    },
+    {
+        id: 'tower-defense',
+        status: ['#td-stage-status'],
+        hud: ['#td-skill-emp', '#td-wave-btn', '#td-skill-boost'],
+        edge: 'bottom',
+        name: { zh: '霓虹塔防', en: 'Neon Tower Defense' },
+        start: ['#td-btn-play'],
+        playing: () => window.tdGame?.state === 'playing',
+        // 竖屏手机是「请旋转」提示，战场不可玩；只测横屏手机与桌面
+        viewports: [{ ...LANDSCAPE, beside: false }],
+        skip: vp => vp.label === '390',
+    },
 ].filter(p => keepPage(p.id));
 exitIfNoPages(PAGES, 'verify-stage-status');
 
@@ -117,7 +160,7 @@ const check = (ok, label, detail = '') => {
 const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 'new', args: LAUNCH_ARGS });
 
 for (const spec of PAGES) {
-    for (const vp of [...VIEWPORTS, ...(spec.viewports || [])]) {
+    for (const vp of [...VIEWPORTS, ...(spec.viewports || [])].filter(v => !spec.skip?.(v))) {
         for (const lang of ['zh', 'en']) {
             const tag = `${spec.id} @${vp.label} ${lang}`;
             const page = await browser.newPage();
@@ -134,7 +177,7 @@ for (const spec of PAGES) {
             }, lang);
             await page.goto(`${BASE}/${spec.id}.html`, { waitUntil: 'load' });
             let started = true;
-            for (const sel of spec.start) {
+            for (const sel of typeof spec.start === 'function' ? spec.start(vp) : spec.start) {
                 try {
                     await page.waitForSelector(sel + ':not([disabled])', { visible: true, timeout: 10000 });
                     await page.click(sel);
@@ -208,7 +251,11 @@ for (const spec of PAGES) {
                 const r = s.rect;
                 const inside = r.l >= snap.stage.l - 1 && r.r <= snap.stage.r + 1 && r.t >= snap.stage.t - 1 && r.b <= snap.stage.b + 1;
                 check(inside, `${tag}: ${s.sel} 完整落在舞台内`, JSON.stringify(r));
-                check(r.t - snap.stage.t <= 24, `${tag}: ${s.sel} 贴舞台顶边`, `${Math.round(r.t - snap.stage.t)}px`);
+                if (spec.edge === 'bottom') {
+                    check(snap.stage.b - r.b <= 32, `${tag}: ${s.sel} 贴舞台下沿（并在战术条里）`, `${Math.round(snap.stage.b - r.b)}px`);
+                } else {
+                    check(r.t - snap.stage.t <= 24, `${tag}: ${s.sel} 贴舞台顶边`, `${Math.round(r.t - snap.stage.t)}px`);
+                }
                 if (spec.above) {
                     check(!!snap.above, `${tag}: ${spec.above} 存在`);
                     const a = snap.above;
@@ -249,4 +296,4 @@ if (fails.length) {
     console.log(`\n✗ verify-stage-status：${fails.length} 项失败 / ${passes} 项通过`);
     process.exit(1);
 }
-console.log(`\n✓ verify-stage-status 全部通过（${passes} 项断言，${PAGES.length} 页 × ${VIEWPORTS.length} 视口 × 2 语言 + 麦克斯韦妖横屏）`);
+console.log(`\n✓ verify-stage-status 全部通过（${passes} 项断言，${PAGES.length} 页 × ${VIEWPORTS.length} 视口 × 2 语言 + 横屏）`);

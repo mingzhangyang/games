@@ -3,7 +3,7 @@
  * =========================================
  * css/layout.css 的桌面契约用 `100dvh - --frame-chrome` 推导舞台宽度，
  * 但 --frame-chrome 不能是魔数：顶栏高度随语言（中/英按钮宽度不同会折行）、
- * 随页面（td 顶栏是两行 ~144px，其余 54–66px）变化，tower-defense 旧 CSS 里
+ * 随页面（td 顶栏曾是两行 ~144px，其余 54–66px）变化，tower-defense 旧 CSS 里
  * `calc((100vh - 185px) * 0.72)` 就是这个魔数烂掉的实例。
  *
  * 本模块实测 chrome = shell 上下内距 + .game-topbar + .game-footer（+ 舞台顶部的 .game-stage-status）

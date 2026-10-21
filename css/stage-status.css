@@ -337,4 +337,39 @@
         flex: none;
         flex-wrap: nowrap;
     }
+
+    /* ⑧ 塔防（沉浸式战场）：生命 / 金币 / 波次三枚胶囊并进底部战术条（.td-bottom-controls），
+       排在技能与发波钮左侧。战场铺满舞台、顶部第一排就是敌人入口路径，挪到舞台顶部会盖住它；
+       战术条本来就浮在舞台下沿，即时战略式 HUD 集中在拇指区。战术条原本限宽 360px（只装技能 +
+       发波），这里按内容放宽、仍不超过舞台宽减边距。页面规则 unlayered，所以用分层 !important。 */
+    .game-stage-status--dock {
+        flex: none;
+        flex-wrap: nowrap;
+        gap: 5px;
+        width: auto;
+        min-height: 0;
+        margin: 0;
+    }
+
+    .td-shell.game-shell--immersive .td-bottom-controls:has(> .td-stage-status) {
+        width: max-content !important;
+        max-width: calc(100% - 24px);
+    }
+
+    .td-stage-status .td-stack-badge {
+        margin-left: 0 !important;
+    }
+
+    .td-stage-status ~ .td-wave-btn {
+        min-width: 150px;
+    }
+
+    /* 竖屏手机：战场不可玩，舞台是「请旋转设备」提示，游戏名已大字印在提示下方；顶栏左 Home、
+       右 5 颗功能钮之间只剩 56–126px，放不下「Neon Tower Defense」（165px），省略号截断
+       比不写更糟（verify-topbar-row 断言顶栏文字不截断）。横屏与桌面照常显示。 */
+    @media (width <= 480px) and (orientation: portrait) {
+        .td-brand {
+            display: none;
+        }
+    }
 }

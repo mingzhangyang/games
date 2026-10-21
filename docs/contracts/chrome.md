@@ -64,8 +64,19 @@ Stats / Pause，它的屏幕位置都一致。页面专属钮一律排在右簇�
 >   手机上画布下方还有操作区的三页（echo-cave / flame-verse / crystal-bloom）操作区因此下移约 38px，
 >   这是确认过的取舍（方案 A：所有页状态都在画布上方，不为个别页挪到操作区旁）。
 >   `verify-stage-status` 另断言状态行整体落在画布上方。
-> - **B 批 · 分数 HUD**（tetris / planet-merge / hoop-shot；tower-defense 沉浸式两行顶栏单独评估）、
->   **C 批 · 特殊页**（minesweeper / reversi / word-daily / shadow-loom 的目标钮）：待迁。
+> - **B 批 · 分数 HUD**（tetris / planet-merge / hoop-shot / tower-defense），按画面里哪里有留白分三种放法：
+>   - **俄罗斯方块、星球合成：随流排在画布上方**（`.game-stage-status`，同 A 批）。俄罗斯方块的新块在棋盘
+>     最上两行出现，星球合成待投放的星球沿画布整条顶边左右移动，悬浮胶囊放在哪都会挡住它们。
+>     俄罗斯方块的棋盘改成「状态行 / 画布」两行网格，三张画布（棋盘 + 粒子 + 消行）放进第二行同一格，
+>     绝对定位的特效层以网格区域为包含块、天然与棋盘对齐；手机棋盘预算（mobile-fit.css ③
+>     `--tt-board-reserve`）计入状态行。状态行不折行（长高会把棋盘推到固定底栏下面）。
+>     星球合成右上角的「下一个」跟着画布下移一行。
+>   - **投篮：悬浮在画布顶部**（`.game-stage-status--float`）。篮筐与球在中下部，顶部是夜空留白；
+>     不占舞台纵向预算（`bindFrame` 跳过绝对定位的状态行）。
+>   - **塔防：并进底部战术条**（`.game-stage-status--dock`，在 `.td-bottom-controls` 里、技能与发波钮左侧）。
+>     战场铺满舞台、顶部第一排就是敌人入口路径；战术条本来就浮在舞台下沿，即时战略式 HUD 集中在拇指区。
+>     顶栏因此只剩游戏名，不再是两行。
+> - **C 批 · 特殊页**（minesweeper / reversi / word-daily / shadow-loom 的目标钮）：待迁。
 
 ### 1.2 Footer：只保留操作提示
 
