@@ -24,6 +24,8 @@ const VIEWPORTS = [
 ];
 // 手机横握：麦克斯韦妖的场景切到左右分列，状态行竖排到左侧列（css/stage-status.css ⑥），
 // 只要求不压画布；同一行若仍占顶部一整行，会把容器压小、读数条带被挤没（smoke-maxwell-demon）。
+const NARROW = { label: '320', width: 320, height: 568, deviceScaleFactor: 2, isMobile: true, hasTouch: true };
+const SE_LANDSCAPE = { label: '568x320', width: 568, height: 320, deviceScaleFactor: 2, isMobile: true, hasTouch: true, isLandscape: true };
 const LANDSCAPE = { label: '844x390', width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true, isLandscape: true, beside: true };
 
 // status: 移进舞台的状态元素；hud: 舞台里原有、不得与状态重叠的局内 HUD；
@@ -31,7 +33,9 @@ const LANDSCAPE = { label: '844x390', width: 844, height: 390, deviceScaleFactor
 // above: 状态必须整体落在它上方的元素（关卡计数页的画布：状态行随流排在画布上方，不得盖住棋盘第一行）；
 // toast: 舞台提示条 —— 亮出来后必须是一行高、不压状态行（电路谜题贴底的提示条曾被上移规则改了 top、
 // 留着 bottom，拉伸成整块盖住棋盘）；viewports: 额外视口；start 可按视口给（俄罗斯方块手机用底栏开始钮）；
-// edge: 'bottom' —— 状态并进舞台下沿的战术条（塔防），断言贴底而不是贴顶。
+// edge: 'bottom' —— 状态并进舞台下沿的战术条（塔防），断言贴底而不是贴顶；
+// stress: 在页面里灌入大数字（及堆叠徽章）后复查 —— 状态内容与 stressAlso 的控件仍在舞台和视口内、
+// 不越过 above（定高状态行里内容折行会压进画布；塔防战术条放不下会被 overflow:hidden 的舞台裁掉）。
 // 关卡计数十页结构相同：「关卡」按钮直接进入第一个未完成关卡，开始层收起即对局就绪。
 const levelCounter = (id, prefix, name) => ({
     id,
@@ -125,6 +129,11 @@ const PAGES = [
         name: { zh: '星球合成', en: 'Planet Merge' },
         start: ['#pm-btn-endless'],
         playing: () => window.planetMergeGame?.state === 'playing',
+        stress: () => {
+            document.getElementById('pm-score').textContent = '1234567';
+            document.getElementById('pm-best').textContent = '1234567';
+        },
+        viewports: [NARROW],
     },
     {
         id: 'hoop-shot',
@@ -142,8 +151,17 @@ const PAGES = [
         name: { zh: '霓虹塔防', en: 'Neon Tower Defense' },
         start: ['#td-btn-play'],
         playing: () => window.tdGame?.state === 'playing',
+        stress: () => {
+            document.getElementById('td-lives').textContent = '100';
+            document.getElementById('td-gold').textContent = '12345';
+            document.getElementById('td-wave').textContent = '40/40';
+            const badge = document.getElementById('td-stack-badge');
+            badge.classList.remove('hidden');
+            badge.textContent = '×6 +48%';
+        },
+        stressAlso: ['#td-skill-emp', '#td-wave-btn', '#td-skill-boost'],
         // 竖屏手机是「请旋转」提示，战场不可玩；只测横屏手机与桌面
-        viewports: [{ ...LANDSCAPE, beside: false }],
+        viewports: [{ ...LANDSCAPE, beside: false }, SE_LANDSCAPE],
         skip: vp => vp.label === '390',
     },
 ].filter(p => keepPage(p.id));
@@ -283,6 +301,26 @@ for (const spec of PAGES) {
             if (spec.label) {
                 const [ok, label, detail] = await spec.label(page, lang).catch(e => [false, '状态文案可读', e.message]);
                 check(ok, `${tag}: ${label}`, detail);
+            }
+            if (spec.stress) {
+                await page.evaluate(spec.stress);
+                await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
+                const stressed = await page.evaluate(({ status, also, above }) => {
+                    const rect = el => { const r = el.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom }; };
+                    const stage = rect(document.querySelector('.game-stage'));
+                    const leaves = status.flatMap(sel => [...document.querySelectorAll(`${sel} *`)]
+                        .filter(n => n.children.length === 0 && n.getClientRects().length && getComputedStyle(n).display !== 'none'));
+                    const items = [...leaves.map(n => ({ sel: n.id || n.className || n.tagName, r: rect(n) })),
+                        ...also.map(sel => ({ sel, r: rect(document.querySelector(sel)) }))];
+                    return { stage, items, vw: innerWidth, above: above ? rect(document.querySelector(above)) : null };
+                }, { status: spec.status, also: spec.stressAlso || [], above: spec.above || null });
+                const out = stressed.items.filter(({ r }) => r.l < Math.max(0, stressed.stage.l) - 1 || r.r > Math.min(stressed.vw, stressed.stage.r) + 1
+                    || r.t < stressed.stage.t - 1 || r.b > stressed.stage.b + 1);
+                check(out.length === 0, `${tag}: 大数字下状态与控件仍在舞台和视口内`, out.map(o => o.sel).join(', '));
+                if (stressed.above && !vp.beside) {
+                    const low = Math.max(...stressed.items.map(({ r }) => r.b));
+                    check(low <= stressed.above.t + 1, `${tag}: 大数字下状态内容不折行压进 ${spec.above}`, `${Math.round(low)} > ${Math.round(stressed.above.t)}`);
+                }
             }
             check(errs.length === 0, `${tag}: 无 pageerror`, errs.join(' | '));
             await page.close();

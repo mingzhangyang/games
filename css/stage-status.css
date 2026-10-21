@@ -293,26 +293,22 @@
         }
     }
 
-    /* 星球合并：投放中的星球沿画布整条顶边左右移动，悬浮胶囊放在哪都会挡住它 ——
-       状态行随流排在画布上方（同 ⑤）。右上角「下一个」(.pm-next-box, top:10px) 原本相对舞台
-       定位，跟着画布一起下移一行。 */
-    .pm-stage-status {
-        height: var(--stage-status-h, 36px);
-        min-height: 0;
+    /* 星球合成：投放中的星球沿画布整条顶边左右移动，悬浮胶囊放在哪都会挡住它 ——
+       状态行随流排在画布上方（同 ⑤）。舞台改成「状态行 / 画布」两行网格，右上角「下一个」
+       (.pm-next-box, 页面里 top/right:10px 的绝对定位) 放进画布那一格，以网格区域为包含块，
+       天然贴着画布顶边，不靠写死的偏移量。状态行因此可以按需折行长高（320px 宽、七位数分数时
+       一行放不下），bindFrame 的 ResizeObserver 实测它的高度计入桌面预算。 */
+    .pm-stage:has(> .pm-stage-status) {
+        display: grid;
+        grid-template-columns: 100%;
+        align-content: start;
+        justify-items: center;
     }
 
+    .pm-stage:has(> .pm-stage-status) > #pm-canvas,
     .pm-stage:has(> .pm-stage-status) > .pm-next-box {
-        top: calc(var(--stage-status-h, 36px) + 8px + 10px) !important;
-    }
-
-    @media (width <= 480px) {
-        .pm-stage-status {
-            --stage-status-h: 32px;
-        }
-
-        .pm-stage:has(> .pm-stage-status) > .pm-next-box {
-            top: calc(32px + 6px + 10px) !important;
-        }
+        grid-row: 2;
+        grid-column: 1;
     }
 
     /* 投篮：动作画布顶部是夜空留白（篮筐与球在中下部），状态改为悬浮胶囊，
@@ -352,8 +348,32 @@
     }
 
     .td-shell.game-shell--immersive .td-bottom-controls:has(> .td-stage-status) {
+        flex-wrap: wrap;
+        row-gap: 6px;
         width: max-content !important;
         max-width: calc(100% - 24px);
+    }
+
+    /* 窄横屏（568×320 等）：胶囊用旧版顶栏里的紧凑尺寸（页面尺寸是 unlayered 声明，故 !important），
+       发波钮放宽下限；
+       仍放不下（堆叠徽章亮出 + 大数字）时战术条折行，状态胶囊换到按钮上方一行 ——
+       舞台是 overflow:hidden，任何一颗钮都不能被裁到舞台外。 */
+    @media (width <= 700px) {
+        .td-stage-status .td-stat {
+            gap: 4px !important;
+            padding: 4px 7px !important;
+            font-size: 11px !important;
+            border-radius: 6px !important;
+        }
+
+        .td-stage-status .td-stat b {
+            min-width: 1.8ch !important;
+            font-size: 12px !important;
+        }
+
+        .td-stage-status ~ .td-wave-btn {
+            min-width: 112px;
+        }
     }
 
     .td-stage-status .td-stack-badge {
