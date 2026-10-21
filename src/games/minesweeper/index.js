@@ -24,6 +24,7 @@ import { track } from '../../platform/analytics.js';
 import { makeText } from '../../platform/i18n.js';
 import { createI18nBinder } from '../../platform/i18n/bindings.js';
 import { onReady } from '../../platform/boot.js';
+import { bindTopbarClearance } from '../../platform/topbar-clearance.js';
 import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
 
@@ -40,7 +41,7 @@ const LANGUAGES = makeText({
         pageTitle: 'Minesweeper — Classic Logic Puzzle',
         boardLabel: 'Minesweeper board',
         title: 'Minesweeper',
-        subtitle: 'Logic · Deduction · Nerves of steel',
+        subtitle: 'Logic\u00a0· Deduction\u00a0· Nerves of steel', // NBSP：只在 · 之后折行
         howto: 'Tap to reveal a square. Numbers show adjacent mines. Right-click / long-press to flag. Clear every safe square without detonating a mine — your first click is always safe!',
         play: 'Play',
         easy: 'Easy', medium: 'Medium', hard: 'Expert',
@@ -175,7 +176,7 @@ class MinesweeperGame {
         ['ms-mines', 'ms-timer', 'ms-face', 'ms-btn-home', 'ms-mute-btn',
             'ms-counter-mines', 'ms-counter-timer',
             'ms-flagmode', 'ms-hint', 'ms-start', 'ms-title', 'ms-subtitle', 'ms-howto',
-            'ms-btn-play', 'ms-best-grid', 'ms-start-mute',
+            'ms-btn-play', 'ms-best-grid',
             'ms-result', 'ms-result-title', 'ms-result-time', 'ms-result-best',
             'ms-lb-title', 'ms-lb-list', 'ms-lb-status', 'ms-username', 'ms-username-label',
             'ms-btn-again', 'ms-btn-copy', 'ms-btn-close'
@@ -903,7 +904,6 @@ class MinesweeperGame {
         // ⚠️ 键是 'mute-btn'（id 去掉 ms- 前缀），写成 this.el.mute 会永远是 undefined，
         //    顶栏静音钮因此从未绑上过 —— tests/verify-chrome.mjs 的"点一次必须翻转"断言抓到的。
         if (this.el['mute-btn']) this.el['mute-btn'].addEventListener('click', () => this.toggleMute());
-        if (this.el['start-mute']) this.el['start-mute'].addEventListener('click', () => this.toggleMute());
 
         if (this.el.username) {
             this.el.username.addEventListener('change', () => {
@@ -935,7 +935,6 @@ class MinesweeperGame {
         const muted = Sfx.toggleMuted();
         const icon = muted ? ICONS.soundOff : ICONS.soundOn;
         if (this.el['mute-btn']) this.el['mute-btn'].innerHTML = icon;
-        if (this.el['start-mute']) this.el['start-mute'].innerHTML = icon;
         if (!muted) Sfx.click();
     }
 }
@@ -945,12 +944,12 @@ class MinesweeperGame {
 onReady(() => {
     const i18nBinder = createI18nBinder({ getLang, tables: LANGUAGES });
     i18nBinder.apply();
+    bindTopbarClearance(); // 全屏开始层从顶栏下沿排起，顶栏声音 / Home 始终可点
     const game = new MinesweeperGame({ i18nBinder });
     window.msGame = game; // 调试/测试句柄
     // 初始静音按钮状态
     const icon = Sfx.muted ? ICONS.soundOff : ICONS.soundOn;
     if (game.el['mute-btn']) game.el['mute-btn'].innerHTML = icon;
-    if (game.el['start-mute']) game.el['start-mute'].innerHTML = icon;
     // 初始难度高亮
     document.querySelectorAll('.ms-diff').forEach(b => b.classList.toggle('active', b.dataset.diff === game.diff));
 });

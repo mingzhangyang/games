@@ -170,7 +170,7 @@ export class CrystalBloomGame {
         [
             'cb-hud-level', 'cb-budget', 'cb-par', 'cb-reset-btn', 'cb-mute-btn', 'cb-toast',
             'cb-start', 'cb-title', 'cb-subtitle', 'cb-howto', 'cb-btn-levels', 'cb-btn-daily',
-            'cb-level-label', 'cb-level-grid', 'cb-daily-best', 'cb-start-mute',
+            'cb-level-label', 'cb-level-grid', 'cb-daily-best',
             'cb-side-howto-title', 'cb-side-howto', 'cb-side-records-title', 'cb-side-records',
             'cb-side-legend-title', 'cb-side-legend',
             'cb-clear', 'cb-clear-stars', 'cb-clear-line', 'cb-btn-next', 'cb-btn-replay', 'cb-btn-menu1',
@@ -315,15 +315,6 @@ export class CrystalBloomGame {
                 setMuted(next);
                 el['mute-btn'].innerHTML = next ? ICONS.soundOff : ICONS.soundOn;
                 if (!next) Sfx.click();
-            });
-        }
-        if (el['start-mute']) {
-            el['start-mute'].innerHTML = getMuted() ? ICONS.soundOff : ICONS.soundOn;
-            el['start-mute'].addEventListener('click', () => {
-                const next = !getMuted();
-                setMuted(next);
-                el['start-mute'].innerHTML = next ? ICONS.soundOff : ICONS.soundOn;
-                if (el['mute-btn']) el['mute-btn'].innerHTML = next ? ICONS.soundOff : ICONS.soundOn;
             });
         }
         if (el['run-btn']) {

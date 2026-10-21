@@ -349,7 +349,6 @@ export function bindUI(game) {
     });
 
     if (game.el['mute-btn']) game.el['mute-btn'].addEventListener('click', () => game.toggleMute());
-    if (game.el['start-mute']) game.el['start-mute'].addEventListener('click', () => game.toggleMute());
 
     if (game.el.username) {
         game.el.username.addEventListener('change', () => {
@@ -371,7 +370,6 @@ export function bindUI(game) {
 export function updateMuteButtons(game) {
     const icon = Sfx.muted ? ICONS.soundOff : ICONS.soundOn;
     if (game.el['mute-btn']) game.el['mute-btn'].innerHTML = icon;
-    if (game.el['start-mute']) game.el['start-mute'].innerHTML = icon;
 }
 
 export function toggleMute(game) {

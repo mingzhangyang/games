@@ -7,7 +7,7 @@ import { CHAPTERS, LEVELS_PER_CHAPTER, LUMEN_LEVELS } from '../model/levels.js';
 
 const IDS = [
     'lm-canvas', 'lm-btn-home', 'lm-hud-level', 'lm-flips', 'lm-par', 'lm-reset-btn', 'lm-mute-btn', 'lm-toast',
-    'lm-start', 'lm-btn-levels', 'lm-btn-daily', 'lm-level-grid', 'lm-daily-best', 'lm-start-mute',
+    'lm-start', 'lm-btn-levels', 'lm-btn-daily', 'lm-level-grid', 'lm-daily-best',
     'lm-side-howto-title', 'lm-side-records-title', 'lm-side-records',
     'lm-clear', 'lm-clear-stars', 'lm-clear-line', 'lm-btn-next', 'lm-btn-replay', 'lm-btn-menu1',
     'lm-over', 'lm-over-title', 'lm-over-score', 'lm-over-sub',
@@ -74,7 +74,6 @@ export class LumenView {
         on('btn-again', h.again);
         on('btn-copy', h.copy);
         on('mute-btn', h.mute);
-        on('start-mute', h.mute);
         this.el['level-grid']?.addEventListener('click', (e) => {
             const chip = e.target.closest('[data-level]');
             if (chip) h.pickLevel(Number(chip.dataset.level));
@@ -206,14 +205,12 @@ export class LumenView {
     }
 
     renderMute(muted) {
-        for (const key of ['mute-btn', 'start-mute']) {
-            const btn = this.el[key];
-            if (!btn) continue;
-            btn.innerHTML = muted ? ICONS.soundOff : ICONS.soundOn;
-            btn.title = this.t.sound;
-            btn.setAttribute('aria-label', this.t.sound);
-            btn.setAttribute('aria-pressed', muted ? 'true' : 'false');
-        }
+        const btn = this.el['mute-btn'];
+        if (!btn) return;
+        btn.innerHTML = muted ? ICONS.soundOff : ICONS.soundOn;
+        btn.title = this.t.sound;
+        btn.setAttribute('aria-label', this.t.sound);
+        btn.setAttribute('aria-pressed', muted ? 'true' : 'false');
     }
 
     /** 复制结果的按钮反馈：1.2 秒后恢复图标 + 文案 */

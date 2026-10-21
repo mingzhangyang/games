@@ -164,7 +164,7 @@ export class FlameVerseGame {
         [
             'fv-hud-level', 'fv-budget', 'fv-par', 'fv-reset-btn', 'fv-mute-btn', 'fv-toast',
             'fv-start', 'fv-title', 'fv-subtitle', 'fv-howto', 'fv-btn-levels', 'fv-btn-daily',
-            'fv-level-label', 'fv-level-grid', 'fv-daily-best', 'fv-start-mute',
+            'fv-level-label', 'fv-level-grid', 'fv-daily-best',
             'fv-side-howto-title', 'fv-side-howto', 'fv-side-records-title', 'fv-side-records',
             'fv-side-legend-title', 'fv-side-legend',
             'fv-clear', 'fv-clear-stars', 'fv-clear-line', 'fv-btn-next', 'fv-btn-replay', 'fv-btn-menu1',
@@ -314,15 +314,6 @@ export class FlameVerseGame {
                 setMuted(next);
                 el['mute-btn'].innerHTML = next ? ICONS.soundOff : ICONS.soundOn;
                 if (!next) Sfx.click();
-            });
-        }
-        if (el['start-mute']) {
-            el['start-mute'].innerHTML = getMuted() ? ICONS.soundOff : ICONS.soundOn;
-            el['start-mute'].addEventListener('click', () => {
-                const next = !getMuted();
-                setMuted(next);
-                el['start-mute'].innerHTML = next ? ICONS.soundOff : ICONS.soundOn;
-                if (el['mute-btn']) el['mute-btn'].innerHTML = next ? ICONS.soundOff : ICONS.soundOn;
             });
         }
         if (el['run-btn']) el['run-btn'].addEventListener('click', () => this.pressAssay());

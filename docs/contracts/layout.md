@@ -67,6 +67,9 @@
 `game-start-*` family：`par`、`subtitle`、`howto`、`mode-row`、`level-label`、
 `level-grid`、`chip-num`、`chip-stars`、`start-footer`、`card-line`。
 每一个 HTML 元素、runtime 创建的 chip 节点须同时保留原 `xx-*` 语义类和 `game-start-*` 共享类。
+`start-footer` 是可选元素：声音开关只在顶栏（`docs/contracts/chrome.md` §1），开始菜单不得再放
+`xx-start-mute` 副本（2026-10-20 全站移除，`tests/verify-chrome.mjs` ⑨ 锁住）；只有菜单里仍有自有内容的页
+（maxwell-demon 的 more-games）保留 footer，保留时仍须采用共享类与共享几何。
 包括 Ripple Duet 的模板字面量 `innerHTML`，不能只审计 `className = ...` 赋值。
 
 `@media (width <= 480px)` 统一将 `howto` 字号变为 12px、`level-grid` 的间隙变为 5px；

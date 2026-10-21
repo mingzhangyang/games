@@ -188,6 +188,10 @@ try {
         const twoSourceIndex = RIPPLE_LEVELS.findIndex(spec => spec.ctrl?.length > 1);
         assert(twoSourceIndex >= 0, 'Fixture needs a two-source level');
         await page.evaluate(index => { window.rdGame.resumeQuiet(); window.rdGame.startLevel(index); }, twoSourceIndex);
+        // The wave console rebuilds its source buttons on the next render frame, not inside
+        // startLevel(): clicking the previous level's S1 races that rebuild ("Node is detached").
+        await page.waitForFunction(() => document.querySelectorAll('#rd-sources [data-source]').length
+            === window.rdGame.place.length && !document.querySelector('#rd-sources [data-source]').disabled);
         await page.click('[data-source="0"]');
         await page.keyboard.press('q');
         assert.deepEqual(await page.evaluate(() => [window.rdGame.sel, window.rdGame.cost]), [1, 0],

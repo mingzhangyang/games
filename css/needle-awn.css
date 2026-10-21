@@ -703,16 +703,6 @@ body {
     border-color: var(--color-needle);
 }
 
-/* 底部功能条 (主页、声音、语言) */
-.na-footer-bar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    margin-top: 14px;
-    width: 100%;
-}
-
 .na-lang-btn {
     font-size: 12px;
 }

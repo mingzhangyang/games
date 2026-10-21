@@ -277,7 +277,6 @@ export class PlanetMergeGame {
             'pm-score', 'pm-best', 'pm-mode-label', 'pm-next-emoji',
             'pm-start', 'pm-title', 'pm-subtitle', 'pm-howto', 'pm-chain',
             'pm-btn-endless', 'pm-btn-daily', 'pm-daily-best-line', 'pm-best-line',
-            'pm-start-mute',
             'pm-skin-row', 'pm-daily-note',
             'pm-pause', 'pm-btn-resume', 'pm-btn-restart', 'pm-btn-menu', 'pm-pause-title',
             'pm-over', 'pm-over-title', 'pm-over-score', 'pm-over-best', 'pm-over-newbest',
@@ -850,7 +849,6 @@ export class PlanetMergeGame {
     updateMuteButtons() {
         const icon = Sfx.muted ? ICONS.soundOff : ICONS.soundOn;
         if (this.el['mute-btn']) this.el['mute-btn'].innerHTML = icon;
-        if (this.el['start-mute']) this.el['start-mute'].innerHTML = icon;
     }
 
     /** 桌面侧栏战绩（≥1024px 可见） */
@@ -1166,7 +1164,6 @@ export class PlanetMergeGame {
         on('pm-home-btn', () => {
             window.location.href = 'index.html';
         });
-        on('pm-start-mute', () => this.toggleMute());
         on('pm-btn-copy', () => this.copyResult());
         on('pm-btn-share', () => this.shareResult());
         on('pm-tab-daily', () => {

@@ -145,7 +145,7 @@ export class SilkfallGame {
         [
             'sd-hud-level', 'sd-drags', 'sd-par', 'sd-reset-btn', 'sd-mute-btn', 'sd-toast',
             'sd-start', 'sd-title', 'sd-subtitle', 'sd-howto', 'sd-btn-levels', 'sd-btn-daily',
-            'sd-level-label', 'sd-level-grid', 'sd-daily-best', 'sd-start-mute',
+            'sd-level-label', 'sd-level-grid', 'sd-daily-best',
             'sd-side-howto-title', 'sd-side-howto', 'sd-side-records-title', 'sd-side-records',
             'sd-clear', 'sd-clear-stars', 'sd-clear-line', 'sd-btn-next', 'sd-btn-replay', 'sd-btn-menu1',
             'sd-over', 'sd-over-title', 'sd-over-score', 'sd-over-sub',
@@ -313,15 +313,6 @@ export class SilkfallGame {
                 setMuted(next);
                 el['mute-btn'].innerHTML = next ? ICONS.soundOff : ICONS.soundOn;
                 if (!next) Sfx.click();
-            });
-        }
-        if (el['start-mute']) {
-            el['start-mute'].innerHTML = getMuted() ? ICONS.soundOff : ICONS.soundOn;
-            el['start-mute'].addEventListener('click', () => {
-                const next = !getMuted();
-                setMuted(next);
-                el['start-mute'].innerHTML = next ? ICONS.soundOff : ICONS.soundOn;
-                if (el['mute-btn']) el['mute-btn'].innerHTML = next ? ICONS.soundOff : ICONS.soundOn;
             });
         }
         // 每日榜用户名

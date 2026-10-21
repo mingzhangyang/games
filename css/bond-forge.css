@@ -389,14 +389,6 @@ body {
     color: var(--tok-text-dim);
 }
 
-.bf-start-footer {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 2px;
-}
-
 /* ── 结算卡片 ── */
 .bf-card {
     display: flex;

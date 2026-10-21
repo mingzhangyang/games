@@ -142,7 +142,7 @@ body {
 .rv-white-box { justify-content: flex-end; }
 .rv-white-box .rv-player-info { align-items: flex-end; }
 
-.rv-player-info { display: flex; flex-direction: column; min-width: 0; }
+.rv-player-info { display: flex; flex: 1; flex-direction: column; min-width: 0; }
 
 .rv-player-name {
     font-size: 11px;
@@ -151,7 +151,7 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 72px;
+    max-width: 100%;
 }
 
 .rv-player-count {
@@ -315,6 +315,18 @@ body {
 
 /* ── 覆盖层 ── */
 
+/* 顶栏压在全屏覆盖层之上：声音开关只在顶栏，开局前 / 结算时都得点得到。
+   覆盖层内容从顶栏下沿（topbar-clearance.js 实测）排起，不被顶栏挡住。 */
+.rv-topbar {
+    position: relative;
+    z-index: 11;
+}
+
+/* 开始界面打开时隐藏比分卡（局内状态，开局前无意义）；visibility 保持顶栏高度不变 */
+.rv-shell:has(#rv-start:not(.hidden)) .rv-topbar-center {
+    visibility: hidden;
+}
+
 .rv-overlay {
     position: fixed;
     inset: 0;
@@ -326,7 +338,8 @@ body {
     gap: 11px;
     background: var(--rv-overlay-bg);
     backdrop-filter: blur(10px);
-    padding: 24px 20px;
+    border-radius: 0; /* 视口级全屏层：共享 .game-overlay 的舞台圆角会在视口四角露出页面底色 */
+    padding: calc(var(--game-topbar-bottom, 0px) + 16px) 20px 24px;
     text-align: center;
     overflow-y: auto;
     scrollbar-width: none;
@@ -349,6 +362,7 @@ body {
     letter-spacing: 0.16em;
     text-transform: uppercase;
     margin-top: -8px;
+    text-wrap: balance;
 }
 
 .rv-hero { display: flex; gap: 10px; }
@@ -415,8 +429,6 @@ body {
 .rv-diff-row { margin-top: -4px; }
 
 .rv-stat-line { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
-
-.rv-start-footer { display: flex; gap: 10px; }
 
 .rv-lang-btn {
     font-size: 13px;
@@ -486,11 +498,18 @@ body {
 
 @media (width <= 480px) {
     .rv-player-count { font-size: 17px; }
-    .rv-player-name { max-width: 52px; }
     .rv-title { font-size: 30px; }
     .rv-over-score { font-size: 38px; }
     .rv-mode, .rv-diff { font-size: 12.5px; padding: 8px 12px; }
     .rv-howto { font-size: 12.5px; }
+}
+
+/* 320px 级窄屏：两张比分卡各只剩 ~100px，「AI · Medium」会被截断 —— 收紧卡内距、去掉中间的 · */
+@media (width <= 360px) {
+    .rv-player-box { gap: 5px; padding: 6px 7px; }
+    .rv-player-disc { width: 18px; height: 18px; }
+    .rv-player-name { font-size: 10px; }
+    .rv-vs { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -505,7 +524,6 @@ body {
 @media (width >= 1024px) {
     .rv-board { width: min(100%, 640px, calc(100vh - 200px)); }
     .rv-player-count { font-size: 24px; }
-    .rv-player-name { max-width: 110px; }
 }
 
 /* Touch hit-area expansion: keep visual size, guarantee >=44px tap target */

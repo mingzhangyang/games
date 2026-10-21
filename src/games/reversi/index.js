@@ -28,6 +28,7 @@ import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
 import { makeText } from '../../platform/i18n.js';
 import { createI18nBinder } from '../../platform/i18n/bindings.js';
 import { onReady } from '../../platform/boot.js';
+import { bindTopbarClearance } from '../../platform/topbar-clearance.js';
 import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
 
@@ -152,7 +153,7 @@ class ReversiGame {
             'rv-count-black', 'rv-count-white', 'rv-mute-btn', 'rv-status',
             'rv-toast', 'rv-start', 'rv-title', 'rv-subtitle', 'rv-howto',
             'rv-mode-ai-label', 'rv-mode-2p-label', 'rv-diff-easy', 'rv-diff-medium', 'rv-diff-hard',
-            'rv-btn-play', 'rv-streak-line', 'rv-start-mute',
+            'rv-btn-play', 'rv-streak-line',
             'rv-over', 'rv-over-title', 'rv-over-verdict', 'rv-over-score', 'rv-over-streak',
             'rv-btn-again', 'rv-btn-copy', 'rv-btn-menu', 'rv-lb-box',
             'rv-lb-title', 'rv-lb-list', 'rv-lb-status', 'rv-username', 'rv-username-label',
@@ -607,7 +608,6 @@ class ReversiGame {
     updateMuteButtons() {
         const icon = Sfx.muted ? ICONS.soundOff : ICONS.soundOn;
         if (this.el['mute-btn']) this.el['mute-btn'].innerHTML = icon;
-        if (this.el['start-mute']) this.el['start-mute'].innerHTML = icon;
     }
 
     /* ── 事件绑定 ── */
@@ -667,11 +667,6 @@ class ReversiGame {
             Sfx.toggleMuted();
             this.updateMuteButtons();
         });
-        if (this.el['start-mute']) this.el['start-mute'].addEventListener('click', () => {
-            Sfx.toggleMuted();
-            this.updateMuteButtons();
-            if (!Sfx.muted) Sfx.click();
-        });
 
         if (this.el.username) {
             this.el.username.addEventListener('change', () => {
@@ -695,6 +690,7 @@ class ReversiGame {
 onReady(() => {
     const i18nBinder = createI18nBinder({ getLang, tables: LANGUAGES });
     i18nBinder.apply();
+    bindTopbarClearance(); // 全屏开始 / 结算层从顶栏下沿排起，顶栏声音 / Home 始终可点
     const game = new ReversiGame({ i18nBinder });
     window.rvGame = game; // 调试/测试句柄
     game.streak = loadReversiStreak(); // 连胜跨会话持久化

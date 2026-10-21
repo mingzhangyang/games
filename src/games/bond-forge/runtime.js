@@ -369,7 +369,7 @@ class BondForgeGame {
             'cheat-title', 'cheat-body', 'cheat-toggle',
             'btn-levels', 'btn-daily', 'btn-sandbox',
             'btn-next', 'btn-replay', 'btn-menu1', 'btn-copy', 'btn-menu2', 'btn-again',
-            'reset-btn', 'mute-btn', 'start-mute',
+            'reset-btn', 'mute-btn',
         ];
         ids.forEach(id => {
             this.el[id] = document.getElementById('bf-' + id);
@@ -441,15 +441,6 @@ class BondForgeGame {
                 setMuted(next);
                 el['mute-btn'].innerHTML = next ? ICONS.soundOff : ICONS.soundOn;
                 if (!next) sfxTone(700, 0.1, 'triangle', 0.14);
-            });
-        }
-        if (el['start-mute']) {
-            el['start-mute'].innerHTML = getMuted() ? ICONS.soundOff : ICONS.soundOn;
-            el['start-mute'].addEventListener('click', () => {
-                const next = !getMuted();
-                setMuted(next);
-                el['start-mute'].innerHTML = next ? ICONS.soundOff : ICONS.soundOn;
-                if (el['mute-btn']) el['mute-btn'].innerHTML = next ? ICONS.soundOff : ICONS.soundOn;
             });
         }
 

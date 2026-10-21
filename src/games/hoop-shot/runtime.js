@@ -194,7 +194,7 @@ export class HoopShotGame {
         const ids = [
             'hs-score', 'hs-best', 'hs-streak',
             'hs-start', 'hs-title', 'hs-subtitle', 'hs-howto', 'hs-btn-play',
-            'hs-best-line', 'hs-start-mute',
+            'hs-best-line',
             'hs-pause', 'hs-btn-resume', 'hs-btn-menu', 'hs-pause-title',
             'hs-over', 'hs-over-title', 'hs-over-score', 'hs-over-best', 'hs-over-newbest',
             'hs-over-streak', 'hs-btn-share', 'hs-btn-copy', 'hs-btn-again', 'hs-btn-home',
@@ -785,7 +785,6 @@ export class HoopShotGame {
     updateMuteButtons() {
         const icon = Sfx.muted ? ICONS.soundOff : ICONS.soundOn;
         if (this.el['mute-btn']) this.el['mute-btn'].innerHTML = icon;
-        if (this.el['start-mute']) this.el['start-mute'].innerHTML = icon;
     }
 
     toggleMute() {
@@ -945,7 +944,6 @@ export class HoopShotGame {
         on('hs-btn-home', () => this.goHome());
         on('hs-pause-btn', () => this.togglePause());
         on('hs-mute-btn', () => this.toggleMute());
-        on('hs-start-mute', () => this.toggleMute());
         on('hs-btn-copy', () => this.copyResult());
         on('hs-btn-share', () => this.shareResult());
         on('hs-btn-home-top', () => {

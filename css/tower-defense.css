@@ -897,8 +897,6 @@ body {
     100% { transform: scale(1); }
 }
 
-.td-start-footer { display: flex; gap: 10px; }
-
 .td-overlay-title {
     font-size: 28px;
     font-weight: 900;
