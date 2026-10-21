@@ -6,7 +6,7 @@
  * 随页面（td 顶栏是两行 ~144px，其余 54–66px）变化，tower-defense 旧 CSS 里
  * `calc((100vh - 185px) * 0.72)` 就是这个魔数烂掉的实例。
  *
- * 本模块实测 chrome = shell 上下内距 + .game-topbar + .game-footer
+ * 本模块实测 chrome = shell 上下内距 + .game-topbar + .game-footer（+ 舞台顶部的 .game-stage-status）
  * （+ 页面经 extraChrome 追加的部分，如 td 的技能条），写入 .game-shell 的
  * 内联 --frame-chrome，并顺带导出 --stage-scale = 舞台宽 / 逻辑宽
  * （供页面内 DOM HUD 按舞台比例选用，本轮无消费方）。
@@ -40,6 +40,16 @@ export function measureHintOnlyFooterReserve(shell) {
     ) || 0;
     const gap = parseFloat(footerStyle.rowGap || footerStyle.gap) || 0;
     return (measuredButtonHeight || tokenButtonHeight) + gap;
+}
+
+// 关卡计数页把局内状态行随流排在画布上方（css/stage-status.css ⑤），它和顶栏一样吃掉舞台的纵向预算。
+// 只算高度 + 上下外边距：两者都与舞台宽度无关（状态行不折行），反馈环一步收敛。
+export function measureStageStatusReserve(shell) {
+    const row = shell?.querySelector('.game-stage > .game-stage-status');
+    if (!row) return 0;
+    const cs = getComputedStyle(row);
+    if (cs.display === 'none' || cs.position === 'absolute' || cs.position === 'fixed') return 0;
+    return row.getBoundingClientRect().height + (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
 }
 
 export function bindFrame(opts = {}) {
@@ -77,6 +87,7 @@ export function bindFrame(opts = {}) {
             if (el) chrome += el.getBoundingClientRect().height;
         });
         if (!immersive) chrome += measureHintOnlyFooterReserve(shell);
+        chrome += measureStageStatusReserve(shell);
         if (typeof extraChrome === 'function') {
             try {
                 chrome += extraChrome() || 0;
@@ -127,7 +138,8 @@ export function bindFrame(opts = {}) {
 
     // 触发源：顶栏/页脚尺寸变化（含折行）+ 视口 resize + 自身的 changed
     const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(schedule) : null;
-    if (ro) [topbar, footer].forEach(el => { if (el) ro.observe(el); });
+    const statusRow = shell.querySelector('.game-stage > .game-stage-status');
+    if (ro) [topbar, footer, statusRow].forEach(el => { if (el) ro.observe(el); });
     window.addEventListener('resize', schedule);
     window.addEventListener('game-frame:changed', schedule);
 

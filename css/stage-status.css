@@ -147,4 +147,104 @@
     .sl-toast {
         top: 36px !important;
     }
+
+    /* ⑤ 关卡计数十页（bf / cc / cb / ec / fv / gd / lm / md / rd / sd）：顶栏中槽只留游戏名；
+       关卡号 + 计数器合成一行，随流排在画布**上方**，不浮在画布上 —— 这些页的棋盘 / 洞窟铺满画布，悬浮胶囊会盖住第一行格子。
+       行高计入 --frame-chrome（src/platform/game-frame.js 实测 .game-stage-status），
+       桌面舞台按「可用高度 × 画幅比」缩一点，页面仍然一屏放下。
+       舞台是横向 flex：状态行占满一整行（width:100%），画布换到下一行；
+       手机上 ec 等页的舞台是纵向 flex，同一写法照样落在最上面。 */
+    .game-stage:has(> .game-stage-status) {
+        flex-wrap: wrap;
+    }
+
+    .game-stage-status {
+        display: flex;
+        flex: none;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        min-height: 36px;
+        margin-bottom: 8px;
+        white-space: nowrap;
+    }
+
+    .game-topbar-name {
+        overflow: hidden;
+        max-width: 100%;
+        color: inherit;
+        font-size: 17px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        line-height: 1.2;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* 舞台顶部的提示条原本贴着画布顶边，跟着状态行一起下移。
+       :where() 把特异性压到 (0,1,0)：页面自己的分层改写（如 mobile-fit.css 里电路谜题
+       贴底的 .cc-shell .cc-toast { top: auto !important; bottom: 12px }）必须仍然胜出，
+       否则 top 被改回、bottom 还在，提示条会被上下拉伸铺满棋盘。
+       页面原有的 top 是 unlayered 声明，分层 !important 不靠特异性也能压过。 */
+    :where(.game-stage:has(> .game-stage-status)) > .game-toast {
+        top: 58px !important;
+    }
+
+    @media (width <= 480px) {
+        .game-stage-status {
+            min-height: 32px;
+            margin-bottom: 6px;
+        }
+
+        .game-topbar-name {
+            font-size: 15px;
+        }
+
+        :where(.game-stage:has(> .game-stage-status)) > .game-toast {
+            top: 50px !important;
+        }
+    }
+
+    /* ⑥ 麦克斯韦妖是沉浸式舞台：高度 = 视口 − 顶栏，场景 .md-scene 绝对铺满舞台。
+       状态行改为绝对定位贴舞台顶边，场景从它下面开始；runtime.js 的 fitScene()
+       按 #md-field 的实测尺寸等比放容器，自动让出这一行。inset 是页面的 unlayered 声明，所以用 !important。 */
+    .md-stage > .game-stage-status {
+        position: absolute;
+        top: 8px;
+        right: 0;
+        left: 0;
+        z-index: 2;
+        margin: 0;
+    }
+
+    .md-stage > .md-scene {
+        top: 52px !important;
+    }
+
+    @media (width <= 480px) {
+        .md-stage > .md-scene {
+            top: 46px !important;
+        }
+    }
+
+    /* 矮横屏（手机横握）：fitScene() 选的是左右分列布局（.is-side：两颗动作钮分列容器两侧）。
+       这时舞台只剩约 340px 高，状态行再占一行会把容器压小 —— 读数条带的字号按「11 / 画布缩放」
+       反算，容器越小字越大，会把温度条挤没（smoke-maxwell-demon 844×390）。
+       横屏的富余在横向：状态行竖排挪到左侧列顶部（左列只有一颗贴底的观测钮），场景不再下移。
+       fitScene() 两种布局各实测一次再择优，这里的 top 随 .is-side 一起切换，比较仍然公平。 */
+    @media (height <= 500px) and (orientation: landscape) {
+        .md-stage:has(> .md-scene.is-side) > .game-stage-status {
+            right: auto;
+            left: max(10px, env(safe-area-inset-left, 0px));
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+            width: auto;
+        }
+
+        .md-stage > .md-scene.is-side {
+            top: 0 !important;
+        }
+    }
 }

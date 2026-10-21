@@ -50,8 +50,22 @@ Stats / Pause，它的屏幕位置都一致。页面专属钮一律排在右簇�
 > 针尖对麦芒、御剑飞行、影织：状态标记在各页 HTML 里移进 `.game-stage`，定位与底色由附加样式表
 > `css/stage-status.css`（`@layer contracts`，引入位置由 `tests/verify-architecture.mjs` 校验）
 > 提供；断言见 `tests/verify-stage-status.mjs`。新页面直接在舞台里写状态，不要再往中槽放。
-> 中槽只放关卡号 + 步数这类单行计数器的页面（科学解谜九页、俄罗斯方块、扫雷、黑白棋、塔防等）
-> 没有「名字下方一行状态」的问题，保持原样。
+>
+> **2026-10-21 收尾（第 2 步）：中槽最终只放游戏名。** 原先「单行计数器可以留在中槽」的例外取消，
+> 分三批迁完：
+> - **A 批 · 关卡计数十页**（bond-forge / circuit / crystal-bloom / echo-cave / flame-verse /
+>   gravity-slingshot / lumen / maxwell-demon / ripple-duet / silk-dew）：中槽换成
+>   `<div class="xx-brand game-topbar-name" data-i18n="title">`；原中槽 HUD（关卡号 + 计数框，元素 id 不变）
+>   整块包进 `.game-stage` 的第一个子元素 `<div class="xx-stage-status game-stage-status" id="xx-stage-status">`，
+>   **随流排在画布上方**，不浮在画布上 —— 这些页的棋盘 / 洞窟铺满画布，悬浮胶囊会盖住第一行格子。
+>   `bindFrame` 把这一行（高度 + 上下外边距，见 `measureStageStatusReserve`）计入 `--frame-chrome`，
+>   桌面舞台按「可用高度 × 画幅比」相应缩小，仍然一屏放下；行高与舞台宽无关，不进反馈环。
+>   沉浸式的麦克斯韦妖例外：状态行绝对定位贴舞台顶边，`.md-scene` 从它下面开始，`fitScene()` 自动让位。
+>   手机上画布下方还有操作区的三页（echo-cave / flame-verse / crystal-bloom）操作区因此下移约 38px，
+>   这是确认过的取舍（方案 A：所有页状态都在画布上方，不为个别页挪到操作区旁）。
+>   `verify-stage-status` 另断言状态行整体落在画布上方。
+> - **B 批 · 分数 HUD**（tetris / planet-merge / hoop-shot；tower-defense 沉浸式两行顶栏单独评估）、
+>   **C 批 · 特殊页**（minesweeper / reversi / word-daily / shadow-loom 的目标钮）：待迁。
 
 ### 1.2 Footer：只保留操作提示
 
