@@ -20,16 +20,22 @@ const VIEWPORTS = [
     { label: '390', width: 390, height: 664, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
     { label: '1280', width: 1280, height: 800, deviceScaleFactor: 1 },
 ];
+// 手机横握：麦克斯韦妖的场景切到左右分列，状态行竖排到左侧列（css/stage-status.css ⑥），
+// 只要求不压画布；同一行若仍占顶部一整行，会把容器压小、读数条带被挤没（smoke-maxwell-demon）。
+const LANDSCAPE = { label: '844x390', width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true, isLandscape: true, beside: true };
 
 // status: 移进舞台的状态元素；hud: 舞台里原有、不得与状态重叠的局内 HUD；
 // name: 顶栏中槽里应当剩下的游戏名；start: 进入对局的点击序列；playing: 对局就绪条件；
-// above: 状态必须整体落在它上方的元素（关卡计数页的画布：状态行随流排在画布上方，不得盖住棋盘第一行）。
+// above: 状态必须整体落在它上方的元素（关卡计数页的画布：状态行随流排在画布上方，不得盖住棋盘第一行）；
+// toast: 舞台提示条 —— 亮出来后必须是一行高、不压状态行（电路谜题贴底的提示条曾被上移规则改了 top、
+// 留着 bottom，拉伸成整块盖住棋盘）；viewports: 额外视口。
 // 关卡计数十页结构相同：「关卡」按钮直接进入第一个未完成关卡，开始层收起即对局就绪。
 const levelCounter = (id, prefix, name) => ({
     id,
     status: [`#${prefix}-stage-status`],
     hud: [],
     above: `#${prefix}-canvas`,
+    toast: `#${prefix}-toast`,
     name,
     start: [`#${prefix}-btn-levels`],
     // waitForFunction 也接受表达式字符串：在页面里求值，免得为每页各写一个闭包
@@ -94,7 +100,7 @@ const PAGES = [
     levelCounter('flame-verse', 'fv', { zh: '焰语', en: 'Flame Verse' }),
     levelCounter('gravity-slingshot', 'gd', { zh: '引力弹弓', en: 'Gravity Slingshot' }),
     levelCounter('lumen', 'lm', { zh: '折光', en: 'Lumen' }),
-    levelCounter('maxwell-demon', 'md', { zh: '麦克斯韦妖', en: 'Maxwell\'s Demon' }),
+    { ...levelCounter('maxwell-demon', 'md', { zh: '麦克斯韦妖', en: 'Maxwell\'s Demon' }), viewports: [LANDSCAPE] },
     levelCounter('ripple-duet', 'rd', { zh: '涟漪双生', en: 'Ripple Duet' }),
     levelCounter('silk-dew', 'sd', { zh: '垂丝引露', en: 'Silkfall' }),
 ].filter(p => keepPage(p.id));
@@ -111,7 +117,7 @@ const check = (ok, label, detail = '') => {
 const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 'new', args: LAUNCH_ARGS });
 
 for (const spec of PAGES) {
-    for (const vp of VIEWPORTS) {
+    for (const vp of [...VIEWPORTS, ...(spec.viewports || [])]) {
         for (const lang of ['zh', 'en']) {
             const tag = `${spec.id} @${vp.label} ${lang}`;
             const page = await browser.newPage();
@@ -142,7 +148,7 @@ for (const spec of PAGES) {
             // 进入对局后等两帧，让 HUD / 标签刷新完
             await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
 
-            const snap = await page.evaluate(({ status, hud, above }) => {
+            const snap = await page.evaluate(({ status, hud, above, toast }) => {
                 const rect = el => { const r = el.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom, w: r.width, h: r.height }; };
                 const topbar = document.querySelector('.game-topbar');
                 const center = topbar.querySelector('.game-topbar-center');
@@ -172,8 +178,18 @@ for (const spec of PAGES) {
                         return el && el.getClientRects().length ? { sel, rect: rect(el) } : null;
                     }).filter(Boolean),
                     above: above && document.querySelector(above) ? rect(document.querySelector(above)) : null,
+                    toast: (() => {
+                        const el = toast && document.querySelector(toast);
+                        if (!el) return null;
+                        // 直接亮出提示条量几何：各页 showToast 的签名不一，这里只关心定位
+                        el.classList.remove('hidden');
+                        el.classList.add('is-on', 'show');
+                        el.textContent = 'Toast 提示';
+                        const r = rect(el);
+                        return r;
+                    })(),
                 };
-            }, { status: spec.status, hud: spec.hud, above: spec.above || null });
+            }, { status: spec.status, hud: spec.hud, above: spec.above || null, toast: spec.toast || null });
 
             // ① 位置与顶栏内容
             for (const s of snap.status) {
@@ -195,7 +211,21 @@ for (const spec of PAGES) {
                 check(r.t - snap.stage.t <= 24, `${tag}: ${s.sel} 贴舞台顶边`, `${Math.round(r.t - snap.stage.t)}px`);
                 if (spec.above) {
                     check(!!snap.above, `${tag}: ${spec.above} 存在`);
-                    if (snap.above) check(r.b <= snap.above.t + 1, `${tag}: ${s.sel} 整体在 ${spec.above} 上方、不压画面`, `${Math.round(r.b)} > ${Math.round(snap.above.t)}`);
+                    const a = snap.above;
+                    if (a && vp.beside) {
+                        // 必须是左右并排：仍占顶部一整行同样「不相交」，但会把横屏容器压小
+                        const beside = r.r <= a.l + 1 || a.r <= r.l + 1;
+                        check(beside, `${tag}: ${s.sel} 排在 ${spec.above} 旁边、不占顶部一行`, JSON.stringify({ status: r, canvas: a }));
+                    } else if (a) {
+                        check(r.b <= a.t + 1, `${tag}: ${s.sel} 整体在 ${spec.above} 上方、不压画面`, `${Math.round(r.b)} > ${Math.round(a.t)}`);
+                    }
+                }
+                if (snap.toast) {
+                    const t = snap.toast;
+                    // 一行提示条含内边距约 30–40px；被 top / bottom 同时拉伸时是 350px 以上
+                    check(t.h <= 80, `${tag}: ${spec.toast} 是一行高的提示条（没被 top / bottom 同时拉伸）`, `${Math.round(t.h)}px`);
+                    const clear = t.r <= r.l || r.r <= t.l || t.b <= r.t || r.b <= t.t;
+                    check(clear, `${tag}: ${spec.toast} 不压 ${s.sel}`, JSON.stringify({ toast: t, status: r }));
                 }
                 for (const h of snap.hud) {
                     const overlap = !(r.r <= h.rect.l || h.rect.r <= r.l || r.b <= h.rect.t || h.rect.b <= r.t);
@@ -219,4 +249,4 @@ if (fails.length) {
     console.log(`\n✗ verify-stage-status：${fails.length} 项失败 / ${passes} 项通过`);
     process.exit(1);
 }
-console.log(`\n✓ verify-stage-status 全部通过（${passes} 项断言，${PAGES.length} 页 × ${VIEWPORTS.length} 视口 × 2 语言）`);
+console.log(`\n✓ verify-stage-status 全部通过（${passes} 项断言，${PAGES.length} 页 × ${VIEWPORTS.length} 视口 × 2 语言 + 麦克斯韦妖横屏）`);
