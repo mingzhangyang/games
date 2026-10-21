@@ -504,6 +504,7 @@
     }
 
     .wd-topbar-center .wd-title { font-size: 17px !important; }
+
     @media (width <= 480px) {
         .wd-topbar-center .wd-title { font-size: 15px !important; }
     }
