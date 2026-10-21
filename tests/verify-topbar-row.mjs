@@ -5,7 +5,7 @@
 //      minesweeper 曾将「Home · 雷数 · 笑脸 · 计时 · 暂停 · 声音」挤进 320px 顶栏，
 //      计时器被挤到第二行、顶栏高 92px，把开始界面压得很挤（PR #169 截图复盘）。
 //      （2026-10-21 起塔防的状态胶囊并进底部战术条，顶栏回到单行，TWO_ROW 为空。）
-//   ② 顶栏里的文字不得被省略号截断：reversi 的「AI · Medium」曾被 max-width: 52px 截成「AI · Me…」。
+//   ② 顶栏里只有标题允许省略号，其它文字不得截断：reversi 的「AI · Medium」曾被 max-width: 52px 截成「AI · Me…」。
 //   ④ 字体余量：本机 sans-serif 回退到 Inter，CI（Ubuntu）回退到更宽的 DejaVu Sans，真机又是
 //      Roboto / SF / Segoe —— 只按一种字体刚好塞下等于没修（PR #169 本地绿、CI 红）。
 //      320px 再用强制 DejaVu Sans 跑一遍 ①②，环境无关地要求留出余量。

@@ -158,10 +158,7 @@ html.game-reset * {
     }
 }
 
-/* ── 顶栏中槽：标题 / HUD 的自适应块 ──
-   flex:1 + min-width:0 让它吃掉左右两簇之外的全部宽度并允许收缩换行；
-   左右两簇 flex-shrink:0，因此无论中槽内容多宽，两侧按钮的屏幕位置都不变。
-   flex-wrap 是必需的：td 三个状态胶囊 / rv 两个玩家框在 390px 下必须能折行。 */
+/* The middle grid track owns only the (possibly truncated) game name. */
 @layer layout {
     .game-topbar-center {
         min-width: 0;
@@ -173,45 +170,73 @@ html.game-reset * {
     }
 }
 
-/* All page headers use one title type scale. Only the title may ellipsize.
-   A page may opt into a typeface via --game-title-font, not a new size/color. */
+/* Step 3: one shared title type scale. Only game names may ellipsize.
+   The legacy pages still have unlayered title declarations; these focused
+   important rules are the cascade boundary, not per-game fixes. */
 @layer contracts {
-    .game-topbar .game-topbar-center { justify-content: flex-start; flex-direction: row; flex-wrap: nowrap; text-align: left; min-width: 0; }
+    .game-topbar {
+        display: grid !important;
+        grid-template-columns: auto minmax(0, 1fr) auto !important;
+        column-gap: 12px !important;
+        align-items: center !important;
+    }
+    .game-topbar .game-topbar-center {
+        min-width: 0;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        text-align: left !important;
+    }
+    .game-topbar .game-topbar-center > .wd-title-box {
+        flex: 0 1 auto;
+        align-items: flex-start;
+        justify-content: flex-start;
+    }
     .game-topbar .game-topbar-name,
     .game-topbar .game-topbar-name :is(span, div) {
-        font-family: var(--game-title-font, inherit);
-        font-size: 17px;
-        font-weight: 700;
-        letter-spacing: 0;
-        color: var(--game-title-color, var(--tok-text));
-        text-shadow: none;
-        background: none;
-        -webkit-text-fill-color: currentColor;
-        background-clip: border-box;
-        -webkit-background-clip: border-box;
+        font-family: var(--game-title-font, system-ui, -apple-system, "Segoe UI", sans-serif) !important;
+        font-size: 17px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0 !important;
+        color: var(--game-title-color, var(--tok-text)) !important;
+        text-shadow: none !important;
+        background: none !important;
+        -webkit-text-fill-color: currentColor !important;
+        background-clip: border-box !important;
+        -webkit-background-clip: border-box !important;
     }
     .game-topbar .game-topbar-name {
-        display: block;
         flex: 0 1 auto;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        text-align: left !important;
+        line-height: 1.2 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        -webkit-mask-image: none !important;
+        mask-image: none !important;
+    }
+    .game-topbar .game-topbar-name > :is(span, div) {
+        display: block;
         min-width: 0;
         max-width: 100%;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
         text-align: left;
-        line-height: 1.2;
-        padding: 0;
-        border: 0;
-        border-radius: 0;
-        box-shadow: none;
-        -webkit-mask-image: none;
-        mask-image: none;
+        line-height: inherit;
     }
     .game-topbar .game-topbar-name::before,
-    .game-topbar .game-topbar-name::after { content: none; }
+    .game-topbar .game-topbar-name::after { content: none !important; }
     @media (width <= 480px) {
         .game-topbar .game-topbar-name,
-        .game-topbar .game-topbar-name :is(span, div) { font-size: 16px; }
+        .game-topbar .game-topbar-name :is(span, div) { font-size: 16px !important; }
     }
 }
 
