@@ -72,7 +72,7 @@ for (const id of PAGES) {
                 const mids = items.map(e => { const r = e.getBoundingClientRect(); return r.top + r.height / 2; });
                 const truncated = [...tb.querySelectorAll('*')]
                     .filter(e => laidOut(e) && e.children.length === 0 && e.textContent.trim()
-                        && getComputedStyle(e).textOverflow === 'ellipsis' && e.scrollWidth > e.clientWidth + 1)
+                        && getComputedStyle(e).textOverflow === 'ellipsis' && !e.closest('.game-topbar-name') && e.scrollWidth > e.clientWidth + 1)
                     .map(e => `${e.id || e.className}「${e.textContent.trim()}」`);
                 return {
                     height: Math.round(tb.getBoundingClientRect().height),

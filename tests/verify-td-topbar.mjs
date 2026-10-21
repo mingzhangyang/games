@@ -65,7 +65,7 @@ const probe = () => page.evaluate(() => {
     };
 
     return {
-        dir: topbar ? getComputedStyle(topbar).flexDirection : null,
+        dir: topbar ? getComputedStyle(topbar).display : null,
         topbarH: topbar ? Math.round(topbar.getBoundingClientRect().height) : 0,
         legacy: {
             appRow: document.querySelectorAll('.td-topbar-row--app').length,
@@ -88,7 +88,7 @@ await new Promise(r => setTimeout(r, 800));
 let p = await probe();
 
 check(!!p.home && !!p.topbarH, '顶栏与 Home 钮存在');
-check(p.dir === 'row', '顶栏是横向单行（flex-direction:row）', `dir=${p.dir}`);
+check(p.dir === 'grid', '顶栏是横向单行（display:grid）', `dir=${p.dir}`);
 check(p.legacy.appRow === 0 && p.legacy.gameRow === 0 && p.legacy.spacer === 0,
     '两行时代的行容器/占位已不存在（不回退）',
     `app=${p.legacy.appRow} game=${p.legacy.gameRow} spacer=${p.legacy.spacer}`);
@@ -123,7 +123,7 @@ for (const v of VIEWPORTS) {
     await page.setViewport({ width: v.w, height: v.h, deviceScaleFactor: 1 });
     await new Promise(r => setTimeout(r, 320));
     const q = await probe();
-    const ok = q.dir === 'row'
+    const ok = q.dir === 'grid'
         && q.legacy.appRow === 0 && q.legacy.gameRow === 0 && q.legacy.spacer === 0
         && Math.abs(q.appBtns.find(b => b.id === 'td-pause-btn').y - q.home.y) < 8;
     check(ok, `${v.name} ${v.w}×${v.h} 单行结构保持`);

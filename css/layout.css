@@ -141,10 +141,10 @@ html.game-reset * {
     .game-topbar {
         width: 100%;
         flex-shrink: 0;
-        display: flex;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
         align-items: center;
-        justify-content: space-between;
-        gap: 8px;
+        column-gap: 12px;
         padding: 4px 0 10px;
     }
 }
@@ -164,13 +164,54 @@ html.game-reset * {
    flex-wrap 是必需的：td 三个状态胶囊 / rv 两个玩家框在 390px 下必须能折行。 */
 @layer layout {
     .game-topbar-center {
-        flex: 1;
         min-width: 0;
         display: flex;
-        justify-content: center;
+        justify-content: flex-start;
         align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        gap: 0;
+    }
+}
+
+/* All page headers use one title type scale. Only the title may ellipsize.
+   A page may opt into a typeface via --game-title-font, not a new size/color. */
+@layer contracts {
+    .game-topbar .game-topbar-center { justify-content: flex-start; flex-direction: row; flex-wrap: nowrap; text-align: left; min-width: 0; }
+    .game-topbar .game-topbar-name,
+    .game-topbar .game-topbar-name :is(span, div) {
+        font-family: var(--game-title-font, inherit);
+        font-size: 17px;
+        font-weight: 700;
+        letter-spacing: 0;
+        color: var(--game-title-color, var(--tok-text));
+        text-shadow: none;
+        background: none;
+        -webkit-text-fill-color: currentColor;
+        background-clip: border-box;
+        -webkit-background-clip: border-box;
+    }
+    .game-topbar .game-topbar-name {
+        display: block;
+        flex: 0 1 auto;
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: left;
+        line-height: 1.2;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        -webkit-mask-image: none;
+        mask-image: none;
+    }
+    .game-topbar .game-topbar-name::before,
+    .game-topbar .game-topbar-name::after { content: none; }
+    @media (width <= 480px) {
+        .game-topbar .game-topbar-name,
+        .game-topbar .game-topbar-name :is(span, div) { font-size: 16px; }
     }
 }
 
@@ -1032,7 +1073,7 @@ html.game-reset * {
     }
     /* 窄屏收紧顶栏间距：保证最挤的页面（td 三个状态胶囊）仍保持单行 */
     @layer layout {
-        .game-topbar { gap: 6px; }
+        .game-topbar { column-gap: 12px; }
     }
 
     @layer layout {
@@ -1040,7 +1081,7 @@ html.game-reset * {
     }
 
     @layer layout {
-        .game-topbar-center { gap: 5px; }
+        .game-topbar-center { gap: 0; }
     }
 
     @layer components {
@@ -1252,7 +1293,7 @@ html.game-reset * {
 
     .game-shell--immersive > .game-topbar {
         max-width: var(--frame-immersive-max);
-        padding: 6px max(10px, env(safe-area-inset-right, 0px)) 6px max(10px, env(safe-area-inset-left, 0px));
+        padding: 6px max(8px, env(safe-area-inset-right, 0px)) 6px max(8px, env(safe-area-inset-left, 0px));
     }
 
     .game-shell--immersive > .game-main {
