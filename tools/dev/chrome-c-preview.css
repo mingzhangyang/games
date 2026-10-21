@@ -1,0 +1,137 @@
+/* Chrome step 2 C: proposed-only preview layer.
+   Applied by tools/dev/capture-chrome-c.mjs AFTER the real game has booted.
+   Never loaded by production pages; approved geometry must be implemented
+   separately in css/stage-status.css, preserving shared contracts. */
+
+html.chrome-c-proposal .game-topbar-center .chrome-c-title {
+    font-size: 17px;
+    font-weight: 800;
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--tok-text);
+}
+@media (width <= 480px) {
+    html.chrome-c-proposal .game-topbar-center .chrome-c-title {
+        font-size: 15px;
+    }
+}
+
+/* Classic minesweeper status is part of the board, not the site header. */
+html.chrome-c-proposal .ms-board-wrap {
+    display: flex;
+    flex-direction: column;
+}
+html.chrome-c-proposal .ms-board-hud {
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 48px;
+    padding: 5px 7px 8px;
+}
+html.chrome-c-proposal .ms-board-hud .ms-counter {
+    padding: 5px 7px;
+}
+html.chrome-c-proposal .ms-board-hud .ms-face {
+    width: 42px;
+    height: 42px;
+    font-size: 22px;
+    border-radius: 10px;
+}
+html.chrome-c-proposal .ms-board-hud .ms-counter-value {
+    font-size: 17px;
+}
+@media (width >= 1024px) {
+    html.chrome-c-proposal .ms-board-hud .ms-counter {
+        padding: 6px 12px;
+    }
+    html.chrome-c-proposal .ms-board-hud .ms-face {
+        width: 46px;
+        height: 46px;
+    }
+}
+
+/* Scorecards in the game stage. Board width remains subject to touch floor. */
+html.chrome-c-proposal .rv-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+html.chrome-c-proposal .rv-score-row {
+    display: flex;
+    flex: 0 0 auto;
+    width: min(100%, 480px);
+    gap: 8px;
+    align-items: center;
+    margin: 0 auto 8px;
+}
+html.chrome-c-proposal .rv-score-row .rv-player-box {
+    min-width: 0;
+}
+@media (width >= 1024px) {
+    html.chrome-c-proposal .rv-score-row { width: min(100%, 640px); }
+}
+
+/* Word Daily's edition and mode accompany its actual board. */
+html.chrome-c-proposal .wd-board-wrap {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+html.chrome-c-proposal .wd-board-wrap > .wd-sub-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    align-self: stretch;
+    margin: 0;
+    min-height: 28px;
+    font-size: 12px;
+}
+
+/* Shadow Loom preview button stays interactable above the theatre but
+   does not compete with the progress dots or the paper-stage controls. */
+html.chrome-c-proposal .sl-stage > #sl-target-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 9;
+    width: 40px;
+    height: 40px;
+    pointer-events: auto;
+}
+html.chrome-c-proposal .sl-stage:has(#sl-start:not(.hidden)) > #sl-target-btn {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Firefly's actual level number belongs to the middle of the stage sky. */
+html.chrome-c-proposal .fs-stage > #fs-level-pill {
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    z-index: 6;
+    transform: translateX(-50%);
+    text-align: center;
+    pointer-events: none;
+    width: max-content;
+    max-width: calc(100% - 190px);
+    padding: 5px 9px;
+    border: 1px solid var(--fs-glass-line);
+    border-radius: 999px;
+    background: var(--fs-glass);
+    backdrop-filter: blur(8px);
+}
+html.chrome-c-proposal .fs-stage:has(#fs-start:not(.hidden)) > #fs-level-pill {
+    visibility: hidden;
+}
+@media (width <= 420px) {
+    html.chrome-c-proposal .fs-stage > #fs-level-pill {
+        max-width: calc(100% - 168px);
+        font-size: 11px;
+        letter-spacing: 0.02em;
+    }
+}

@@ -1,0 +1,67 @@
+name: Chrome C visual preview
+
+# Isolated preview branch: creates screenshots without deploying or changing gameplay pages.
+on:
+  push:
+    branches:
+      - preview/chrome-c-screenshots
+    paths:
+      - '.github/workflows/chrome-c-screenshots.yml'
+      - 'tools/dev/capture-chrome-c.mjs'
+      - 'tools/dev/chrome-c-preview.css'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: chrome-c-preview-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout preview branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production pages
+        run: npm run build
+
+      - name: Start local production server
+        run: |
+          cd dist
+          node ../tests/lib/serve-static.mjs 8899 > "$RUNNER_TEMP/chrome-c-server.log" 2>&1 &
+          echo "$!" > "$RUNNER_TEMP/chrome-c-server.pid"
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8899/minesweeper.html -o /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/chrome-c-server.log"
+          exit 1
+
+      - name: Capture baseline and proposed layouts
+        run: node tools/dev/capture-chrome-c.mjs http://127.0.0.1:8899 chrome-c-screenshots
+
+      - name: Upload screenshots and measurements
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrome-c-layout-review
+          path: chrome-c-screenshots/
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Display gallery instructions
+        if: success()
+        run: echo 'Download the chrome-c-layout-review artifact and open index.html to compare 40 actual Chromium captures.'
