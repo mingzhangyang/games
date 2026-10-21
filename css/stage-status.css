@@ -524,21 +524,28 @@
         pointer-events: none;
     }
 
-    /* 萤火信号：顶栏名称不随状态变，变化的关卡信息独立于天空 HUD。
-       真实同步度与干预计数位于两侧，避免覆盖其圆环。 */
+    /* 萤火信号：固定的游戏名在顶栏，变化的关卡标签是天空 HUD 的第三列。
+       用真实左圆环 / 右信号组的固有宽度分配中间剩余空间，避免依赖固定
+       bottom / max-width 常数：第三关八颗信号点与英文关卡名也不会相压。 */
     .fs-topbar-center .fs-brand {
         color: var(--fs-ink-dim);
         font-size: 16px;
         font-weight: 700;
     }
 
-    .fs-stage > #fs-level-pill {
-        position: absolute;
-        top: 15px;
-        left: 50%;
-        z-index: 6;
-        transform: translateX(-50%);
-        max-width: calc(100% - 190px);
+    .fs-stage .fs-hud:not(.hidden) {
+        display: grid !important;
+        grid-template-columns: max-content minmax(0, 1fr) max-content;
+        align-items: start;
+        column-gap: 8px;
+    }
+
+    .fs-hud > #fs-level-pill {
+        min-width: 0;
+        max-width: 100%;
+        justify-self: center;
+        align-self: start;
+        margin-top: 3px;
         padding: 5px 9px;
         border: 1px solid var(--fs-glass-line);
         border-radius: 999px;
@@ -548,15 +555,10 @@
         pointer-events: none;
     }
 
-    .fs-stage:has(> #fs-start:not(.hidden)) > #fs-level-pill {
-        visibility: hidden;
-    }
-
     @media (width <= 420px) {
-        .fs-stage > #fs-level-pill {
-            max-width: calc(100% - 168px);
-            font-size: 11px;
-            letter-spacing: 0.02em;
+        .fs-hud > #fs-level-pill {
+            font-size: 11px !important;
+            letter-spacing: 0.02em !important;
         }
     }
 }

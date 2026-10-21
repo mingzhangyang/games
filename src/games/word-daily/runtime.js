@@ -620,7 +620,22 @@ export class WordDailyGame {
                 if (el !== main) chrome += outerH(el);
             });
 
-            // .wd-main 内除棋盘外的部分（含 main 自己的上下内距与 row-gap）
+            // .wd-main 内除棋盘外的部分（含 main 自己的上下内距与 row-gap）。
+            // C 批把每日期号和模式搬进 .wd-board-wrap；测量包装内非棋盘项，
+            // 不观测棋盘尺寸本身，避免 --wd-avail-h → 棋盘宽度 → RO 反馈环。
+            const board = wrap.querySelector('#wd-board');
+            const wcs = getComputedStyle(wrap);
+            const flow = Array.from(wrap.children).filter(el => {
+                const cs = getComputedStyle(el);
+                return cs.display !== 'none' && cs.position !== 'absolute' && cs.position !== 'fixed';
+            });
+            for (const el of flow) {
+                if (el !== board) chrome += outerH(el);
+            }
+            if (flow.includes(board)) {
+                chrome += Math.max(0, flow.length - 1) * (parseFloat(wcs.rowGap) || 0);
+            }
+
             const mcs = getComputedStyle(main);
             chrome += (parseFloat(mcs.paddingTop) || 0) + (parseFloat(mcs.paddingBottom) || 0);
             let shown = 0;
@@ -647,7 +662,8 @@ export class WordDailyGame {
         // 成语模式释义卡 / 练习横幅显隐）+ 视口 resize + 语言设置变更。
         if (typeof ResizeObserver !== 'undefined') {
             const ro = new ResizeObserver(schedule);
-            ['.wd-topbar', '#wd-practice-banner', '.wd-diff-row', '#wd-hint-card', '#wd-input-row', '.wd-footer']
+            ['.wd-topbar', '#wd-practice-banner', '.wd-diff-row', '#wd-hint-card',
+                '#wd-input-row', '.wd-sub-row', '.wd-footer']
                 .forEach(sel => {
                     const el = shell.querySelector(sel);
                     if (el) ro.observe(el);

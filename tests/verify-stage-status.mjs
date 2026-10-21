@@ -147,7 +147,7 @@ const PAGES = [
     {
         id: 'firefly-signal',
         status: ['#fs-level-pill'],
-        hud: ['#fs-harmony', '#fs-signals'],
+        hud: ['#fs-harmony', '.fs-signals'],
         name: { zh: '萤火信号', en: 'Firefly Signal' },
         start: ['#fs-level-list .fs-level-btn'],
         playing: () => window.__fireflySignal?.state === 'playing',

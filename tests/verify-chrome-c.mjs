@@ -7,6 +7,7 @@
  */
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
+import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
 
 const BASE = process.argv.find(value => value.startsWith('http')) || 'http://127.0.0.1:8899';
 const ORIGIN = new URL(BASE).origin;
@@ -25,11 +26,14 @@ const GAMES = [
     { id: 'firefly-signal', name: { zh: '萤火信号', en: 'Firefly Signal' },
         items: ['#fs-level-pill'],
         menu: '#fs-start', play: '#fs-level-list .fs-level-btn' },
-];
+].filter(game => keepPage(game.id));
+exitIfNoPages(GAMES, 'verify-chrome-c');
 const VIEWPORTS = [
     { width: 390, height: 664, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
     { width: 1280, height: 900, deviceScaleFactor: 1 },
 ];
+const SHORT_DESKTOP = { width: 1088, height: 605, deviceScaleFactor: 1 };
+const NARROW_PHONE = { width: 320, height: 568, deviceScaleFactor: 2, isMobile: true, hasTouch: true };
 let checks = 0;
 const failures = [];
 function check(condition, label, extra = '') {
@@ -72,7 +76,9 @@ function ownedByStage(snapshot) {
 const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 'new', args: LAUNCH_ARGS });
 try {
     for (const game of GAMES) {
-        for (const vp of VIEWPORTS) {
+        const viewports = game.id === 'word-daily' ? [...VIEWPORTS, SHORT_DESKTOP]
+            : game.id === 'firefly-signal' ? [...VIEWPORTS, NARROW_PHONE] : VIEWPORTS;
+        for (const vp of viewports) {
             for (const lang of ['zh', 'en']) {
                 const tag = game.id + '@' + vp.width + '×' + vp.height + '/' + lang;
                 const page = await browser.newPage();
@@ -194,6 +200,28 @@ try {
                     if (game.id === 'word-daily') {
                         const issue = await page.$eval('#wd-num', el => el.textContent.trim());
                         check(/^#\d+/.test(issue), tag + ': daily issue label', issue);
+                        if (vp.width === SHORT_DESKTOP.width) {
+                            // Desktop's observed --wd-avail-h must reserve metadata + gap
+                            // without shrinking square tiles into rectangles or causing scrolling.
+                            await page.evaluate(() => new Promise(resolve =>
+                                requestAnimationFrame(() => requestAnimationFrame(resolve))));
+                            const fit = await page.evaluate(() => {
+                                const box = sel => document.querySelector(sel).getBoundingClientRect();
+                                const shell = document.querySelector('.wd-shell');
+                                return {
+                                    scrollH: document.documentElement.scrollHeight, innerH: innerHeight,
+                                    footerB: box('.wd-footer').bottom,
+                                    boardT: box('#wd-board').top, metaB: box('.wd-sub-row').bottom,
+                                    availableH: parseFloat(shell.style.getPropertyValue('--wd-avail-h')),
+                                };
+                            });
+                            check(fit.metaB <= fit.boardT + 1,
+                                tag + ': metadata stays above the board', JSON.stringify(fit));
+                            check(fit.scrollH <= fit.innerH + 3 && fit.footerB <= fit.innerH + 3,
+                                tag + ': short desktop viewport fits without vertical overflow', JSON.stringify(fit));
+                            check(fit.availableH > 160,
+                                tag + ': measured desktop board budget is initialized', JSON.stringify(fit));
+                        }
                     }
                     if (game.id === 'shadow-loom') {
                         const hit = await page.$eval('#sl-target-btn', el => {
@@ -212,6 +240,37 @@ try {
                         const level = await page.$eval('#fs-level-pill', el => el.textContent.trim());
                         check(lang === 'en' ? level === '1 · First Light' : level === '1 · 初光',
                             tag + ': stage HUD reflects current level', level);
+                        // All three levels have different label lengths and signals counts.
+                        // In particular L3 has eight signal dots: center must never overlap
+                        // either measured side HUD, including at 320px / in both languages.
+                        for (const levelIndex of [0, 1, 2]) {
+                            if (levelIndex) {
+                                await page.evaluate(i =>
+                                    window.__fireflySignal.startLevel(i, { manual: true }), levelIndex);
+                            }
+                            await page.evaluate(() => new Promise(resolve =>
+                                requestAnimationFrame(() => requestAnimationFrame(resolve))));
+                            const hud = await page.evaluate(() => {
+                                const rect = sel => {
+                                    const r = document.querySelector(sel).getBoundingClientRect();
+                                    return { l: r.left, r: r.right, t: r.top, b: r.bottom };
+                                };
+                                return {
+                                    left: rect('#fs-harmony'), center: rect('#fs-level-pill'),
+                                    right: rect('.fs-signals'),
+                                    dots: document.querySelectorAll('#fs-dots .fs-dot').length,
+                                    display: getComputedStyle(document.querySelector('#fs-hud')).display,
+                                };
+                            });
+                            check(hud.display === 'grid'
+                                && hud.left.r <= hud.center.l + 1 && hud.center.r <= hud.right.l + 1,
+                            tag + ': level ' + (levelIndex + 1) + ' HUD has measured side clearance',
+                            JSON.stringify(hud));
+                            if (levelIndex === 2) {
+                                check(hud.dots >= 8,
+                                    tag + ': level 3 uses full eight-dot HUD', String(hud.dots));
+                            }
+                        }
                     }
                     // Reverse verification: restore the old (incorrect) topbar arrangement in the DOM.
                     await page.evaluate(selectors => {
