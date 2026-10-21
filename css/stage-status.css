@@ -311,6 +311,16 @@
         grid-column: 1;
     }
 
+    /* 移动/平板开始菜单使用 layout.css 的单格网格：画布、Next、状态和菜单都在
+       1/1，格高取菜单与画布较大值，不能让对局态的第二行定位在菜单期间生效。
+       只有菜单可见时回到共享契约；开局/返回菜单自动切换，无需 JS 调布局。 */
+    @media (width < 1024px) {
+        .pm-stage:has(> .game-overlay--menu:not(.hidden)) > #pm-canvas,
+        .pm-stage:has(> .game-overlay--menu:not(.hidden)) > .pm-next-box {
+            grid-area: 1 / 1;
+        }
+    }
+
     /* 投篮：动作画布顶部是夜空留白（篮筐与球在中下部），状态改为悬浮胶囊，
        不占舞台纵向预算（bindFrame 跳过绝对定位的状态行）。 */
     .game-stage-status--float {
@@ -352,6 +362,17 @@
         row-gap: 6px;
         width: max-content !important;
         max-width: calc(100% - 24px);
+    }
+
+    /* 建造面板属于战术条的交互层，定位在战术条自身的顶边上方。
+       战术条因窄屏/数字变长折行时，面板随实测高度自然上移，无固定 bottom
+       常数、无 ResizeObserver 同步负担。translate 与面板进场动画的 transform 独立。 */
+    .td-shell.game-shell--immersive .td-bottom-controls > .td-panel {
+        left: 50% !important;
+        right: auto !important;
+        bottom: calc(100% + 8px) !important;
+        width: min(776px, calc(100vw - 24px));
+        translate: -50% 0;
     }
 
     /* 窄横屏（568×320 等）：胶囊用旧版顶栏里的紧凑尺寸（页面尺寸是 unlayered 声明，故 !important），
