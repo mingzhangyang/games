@@ -39,6 +39,7 @@ body {
 /* ── 顶栏 ── */
 
 .sl-icon-btn { color: var(--sl-text); }
+
 @media (hover: hover) {
     .sl-icon-btn:hover { background: rgb(255, 215, 154, 0.12); }
 }

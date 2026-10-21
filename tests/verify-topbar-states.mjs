@@ -76,7 +76,7 @@ for (const id of PAGES) {
             if (mode === 'desk') await page.evaluate(() => {
                 const walk = rules => {
                     for (const r of rules) {
-                        if (r instanceof CSSMediaRule && /hover:\s*hover/.test(r.conditionText)) r.media.mediaText = 'all';
+                        if (r.media && /hover:\s*hover/.test(r.conditionText || '')) r.media.mediaText = 'all';
                         if (r.cssRules) walk(r.cssRules);
                     }
                 };
