@@ -206,9 +206,11 @@ body {
     padding-top: 6px;
 }
 
-.cp-icon-btn:hover {
-    background: var(--cp-icon-btn-hover-bg);
-    border-color: var(--cp-icon-btn-hover-border);
+@media (hover: hover) {
+    .cp-icon-btn:hover {
+        background: var(--cp-icon-btn-hover-bg);
+        border-color: var(--cp-icon-btn-hover-border);
+    }
 }
 
 

@@ -25,7 +25,6 @@
     --tt-game-over-content-glow: 0 0 20px rgb(245, 101, 101, 0.8);
     --tt-combo-display-glow: 0 0 30px rgb(237, 137, 54, 0.8);
     --tt-level-up-effect-glow: 0 0 50px rgb(72, 187, 120, 0.8);
-    --tt-home-toggle-hover-bg: var(--tok-panel-strong, rgb(255, 255, 255, 0.12));
     --tt-game-hud-box-bg: var(--tok-panel, rgb(255, 255, 255, 0.06));
     --tt-game-hud-box-border: 1px solid var(--tok-border, rgb(255, 255, 255, 0.1));
     --tt-global-scores-panel-bg: rgb(26, 32, 44, 0.95);
@@ -73,7 +72,6 @@
     --tt-game-over-content-glow: none;
     --tt-combo-display-glow: 0 0 30px rgb(237, 137, 54, 0.8);
     --tt-level-up-effect-glow: 0 2px 14px rgb(255, 255, 255, 0.9);
-    --tt-home-toggle-hover-bg: var(--tok-panel-strong);
     --tt-game-hud-box-bg: var(--tok-panel);
     --tt-game-hud-box-border: 1px solid var(--tok-border);
     --tt-global-scores-panel-bg: rgb(255, 255, 255, 0.96);
@@ -598,10 +596,6 @@ input, textarea {
     color: var(--light-color);
 }
 
-.home-toggle:hover {
-    background: var(--tt-home-toggle-hover-bg);
-}
-
 /* ── 顶栏中部 HUD：移动端首屏必须能看到分数，不能等点开抽屉 ──
    宽度用 max-content 而不是让 flex 自由收缩：分数是动作钮（tabular-nums）
    会随位数变宽，若不锁住测量宽度，两位变五位时整条顶栏会抖动。 */
@@ -997,8 +991,10 @@ body.rainbow-theme {
 
 
 
-/* ── Accessibility baseline: keyboard focus + reduced motion ── */
-:focus-visible {
+/* ── Accessibility baseline: keyboard focus + reduced motion ──
+   顶栏控件除外：它们用共享层的 --tok-focus 焦点环（chrome.md §1.6）。
+   :where() 让这个排除不增加优先级。 */
+:where(:not(.game-topbar *)):focus-visible {
     outline: var(--tt-focus-visible-focus-outline);
     outline-offset: 2px;
 }

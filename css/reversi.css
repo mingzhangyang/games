@@ -6,7 +6,6 @@
 :root {
     --rv-body-bg: radial-gradient(ellipse 75% 45% at 50% -10%, rgb(52, 211, 153, 0.09), transparent),
         linear-gradient(160deg, var(--tok-bg) 0%, var(--tok-bg-2) 55%, #0e1f22 100%);
-    --rv-icon-btn-hover-bg: rgb(255, 255, 255, 0.12);
     --rv-player-box-bg: rgb(255, 255, 255, 0.04);
     --rv-player-box-border: 1px solid rgb(255, 255, 255, 0.09);
     --rv-player-box-active-border: rgb(52, 211, 153, 0.6);
@@ -59,7 +58,6 @@
 :root[data-theme="light"] {
     --rv-body-bg: radial-gradient(ellipse 75% 45% at 50% -10%, rgb(52, 211, 153, 0.09), transparent),
         linear-gradient(160deg, var(--tok-bg) 0%, var(--tok-bg-2) 55%, #eff4f5 100%);
-    --rv-icon-btn-hover-bg: rgb(255, 255, 255, 0.91);
     --rv-player-box-bg: rgb(255, 255, 255, 0.67);
     --rv-player-box-border: 1px solid rgb(15, 23, 42, 0.099);
     --rv-player-box-active-border: rgb(52, 211, 153, 0.6);
@@ -117,8 +115,6 @@ body {
 
 
 /* ── 顶栏 ── */
-
-.rv-icon-btn:hover { background: var(--rv-icon-btn-hover-bg); }
 
 .rv-player-box {
     flex: 1;

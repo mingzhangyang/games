@@ -23,8 +23,6 @@ body {
 
 /* ── 顶栏 HUD ── */
 
-.ec-icon-btn:hover { background: rgb(255, 255, 255, 0.12); }
-
 .ec-hud-level {
     font-size: 13.5px;
     font-weight: 800;

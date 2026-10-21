@@ -8,7 +8,6 @@
     --cc-body-bg: radial-gradient(ellipse 70% 42% at 50% -8%, rgb(77, 195, 255, 0.10), transparent),
         radial-gradient(ellipse 50% 30% at 85% 110%, rgb(255, 201, 77, 0.06), transparent),
         linear-gradient(165deg, #080d24 0%, var(--tok-bg-2) 55%, #0e1a40 100%);
-    --cc-icon-btn-hover-bg: rgb(255, 255, 255, 0.12);
     --cc-hud-level-text: #ffd98a;
     --cc-move-box-bg: rgb(0, 0, 0, 0.35);
     --cc-move-box-border: 1px solid rgb(255, 255, 255, 0.09);
@@ -45,7 +44,6 @@
     --cc-body-bg: radial-gradient(ellipse 70% 42% at 50% -8%, rgb(77, 195, 255, 0.1), transparent),
         radial-gradient(ellipse 50% 30% at 85% 110%, rgb(255, 201, 77, 0.06), transparent),
         linear-gradient(165deg, #eff0f7 0%, var(--tok-bg-2) 55%, #e3e6f0 100%);
-    --cc-icon-btn-hover-bg: rgb(255, 255, 255, 0.91);
     --cc-hud-level-text: #8a5a00;
     --cc-move-box-bg: rgb(15, 23, 42, 0.087);
     --cc-move-box-border: 1px solid rgb(15, 23, 42, 0.099);
@@ -90,8 +88,6 @@ body {
 
 
 /* ── 顶栏 HUD ── */
-
-.cc-icon-btn:hover { background: var(--cc-icon-btn-hover-bg); }
 
 .cc-hud-level {
     font-size: 13.5px;

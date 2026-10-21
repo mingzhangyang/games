@@ -180,6 +180,14 @@ Also pass the instance in where you already have it (`updateHud(g = currentGame(
 
 - ⚠️ **verify-all 的单步上限是通用的 180s（在线项）/ 120s（离线项），耗时随注册表线性增长的校验器会悄悄逼近它。** `verify-stats-drawer` 每个抽屉页约 11s 固定动画等待，它实际跑的 16 页（drawer cap 17 页减去单独测的 Tetris）在 PR #134 的 CI 上已是 179.6s；PR #135 每页多一个样式表请求就被判 124 超时，而本地 `main` 与分支同样是 ~177s —— 不是回归，是预算没人管。这类校验器在文件里声明 `// verify-all: timeout=<ms>`（`discover()` 读成 `step.timeoutMs`），不要靠全局 `VERIFY_STEP_TIMEOUT` 或删等待来凑。
 
+- ⚠️ **无头 Chrome 里 `(hover: hover)` 永远不匹配，任何指针媒体查询都测不到「鼠标设备」。** 本机与 CI 的无头 Chrome
+  都报告没有指针：`hover: none`、`pointer: none`。`Emulation.setEmulatedMedia({ features: [{ name: 'hover', … }] })` 和
+  `--blink-settings=primaryHoverType=…` 都不生效。所以一旦悬停规则按约定包进 `@media (hover: hover)`（`chrome.md` §1.6），
+  `page.hover()` 或 `CSS.forcePseudoState(['hover'])` 读到的就是「没有悬停样式」，断言「悬停有反馈」会假红。
+  反方向的断言（触屏下强制 `:hover` 外观不变）在无头里照样有效：没包媒体查询的规则依然生效，会被抓出来。
+  `verify-topbar-states` 的桌面轮在 CSSOM 里把 `CSSMediaRule` 的 `media.mediaText` 改写成 `all` 来模拟鼠标设备，
+  触屏轮（`hasTouch` + `isMobile`）保持原样。新校验器要断言悬停效果时照此办理。
+
 ## codegen 脚本
 
 - ⚠️ **Never mutate a string while iterating its own match offsets.** The dedupe pass in `add-drawer-i18n.py` sliced `block` inside a loop over `finditer(block)` — the offsets are relative to the *original* string, so once the first removal shifts them, every later cut lands on arbitrary characters (it split `'开始新的每日挑战？…'` mid-string), and reassembling with `tail[len(block):]` reused an already-shortened length. All six JS files became syntax errors and had to be hand-repaired, because the damage spanned entire i18n tables and `git checkout` would have discarded the session's real work. Safe form: collect every hit's **absolute** `(start, end)`, delete **backwards on the whole `src`**, return once. Pair it with: `--dry` support, a `cp`'d scratch copy + `node --check` before touching real files, and **`md5sum` twice** to prove idempotence — never trust the script's own printed "skipped" report, since `tail -N` truncates lines and misleads. Related: a dedupe window that starts at `pos` can never see the key it is looking for, because `pos` points at that key's own indentation and the slice has no leading `\n` for `r'\n[ \t]*key:'` to match — start the preview at `pos - 1`

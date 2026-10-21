@@ -6,7 +6,6 @@
 :root {
     --ms-body-bg: radial-gradient(ellipse 75% 45% at 50% -10%, rgb(64, 184, 255, 0.10), transparent),
         linear-gradient(160deg, var(--tok-bg) 0%, var(--tok-bg-2) 55%, #101a2b 100%);
-    --ms-icon-btn-hover-bg: rgb(255, 255, 255, 0.12);
     --ms-counter-bg: rgb(0, 0, 0, 0.35);
     --ms-counter-border: 1px solid rgb(255, 255, 255, 0.09);
     --ms-counter-value-glow: 0 0 12px rgb(255, 107, 122, 0.45);
@@ -73,7 +72,6 @@
 :root[data-theme="light"] {
     --ms-body-bg: radial-gradient(ellipse 75% 45% at 50% -10%, rgb(64, 184, 255, 0.1), transparent),
         linear-gradient(160deg, var(--tok-bg) 0%, var(--tok-bg-2) 55%, #ebeef2 100%);
-    --ms-icon-btn-hover-bg: rgb(255, 255, 255, 0.91);
     --ms-counter-bg: rgb(15, 23, 42, 0.087);
     --ms-counter-border: 1px solid rgb(15, 23, 42, 0.099);
     --ms-counter-value-glow: none;
@@ -148,8 +146,6 @@ body {
 
 /* ── 顶栏 ── */
 
-.ms-icon-btn:hover { background: var(--ms-icon-btn-hover-bg); }
-
 .ms-counter {
     display: flex;
     align-items: center;
@@ -191,7 +187,9 @@ body {
     font-family: inherit;
 }
 
-.ms-face:hover { background: var(--ms-face-hover-bg); }
+@media (hover: hover) {
+    .ms-face:hover { background: var(--ms-face-hover-bg); }
+}
 .ms-face:active { transform: scale(0.9); }
 
 /* ── 难度行 ── */

@@ -24,8 +24,6 @@ body {
 
 /* ── 顶栏 HUD ── */
 
-.fv-icon-btn:hover { background: rgb(255, 255, 255, 0.12); }
-
 .fv-hud-level {
     font-size: 13.5px;
     font-weight: 800;

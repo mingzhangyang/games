@@ -153,11 +153,11 @@ canvas {
     outline: none;
 }
 
-/* 键盘焦点可见性（替代被移除的 outline） */
-.btn:focus-visible,
+/* 键盘焦点可见性（替代被移除的 outline）。顶栏控件除外：用共享层的 --tok-focus（chrome.md §1.6） */
+.btn:where(:not(.game-topbar *)):focus-visible,
 select:focus-visible,
-button:focus-visible {
-    outline: 2px solid #4299e1;
+button:where(:not(.game-topbar *)):focus-visible {
+    outline: 2px solid var(--tok-accent); /* 深色 #4299e1；浅色 #2b6cb0（字面 #4299e1 在浅底只有 2.7:1） */
     outline-offset: 2px;
 }
 

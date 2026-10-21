@@ -8,7 +8,6 @@
     --sd-body-bg: radial-gradient(ellipse 70% 42% at 50% -8%, rgb(88, 201, 160, 0.12), transparent),
         radial-gradient(ellipse 50% 30% at 85% 110%, rgb(159, 232, 255, 0.07), transparent),
         linear-gradient(165deg, #0a1712 0%, var(--tok-bg-2) 55%, #0d1338 100%);
-    --sd-icon-btn-hover-bg: rgb(255, 255, 255, 0.12);
     --sd-hud-level-text: #9fe8c8;
     --game-cut-surface: rgb(0, 0, 0, 0.4);
     --game-cut-stroke-color: rgb(255, 255, 255, 0.09);
@@ -46,7 +45,6 @@
     --sd-body-bg: radial-gradient(ellipse 70% 42% at 50% -8%, rgb(88, 201, 160, 0.12), transparent),
         radial-gradient(ellipse 50% 30% at 85% 110%, rgb(159, 232, 255, 0.07), transparent),
         linear-gradient(165deg, #f4f8f6 0%, var(--tok-bg-2) 55%, #e6e8f2 100%);
-    --sd-icon-btn-hover-bg: rgb(255, 255, 255, 0.91);
     --sd-hud-level-text: #047857;
     --game-cut-surface: rgb(15, 23, 42, 0.1);
     --game-cut-stroke-color: rgb(15, 23, 42, 0.099);
@@ -91,8 +89,6 @@ body {
 
 
 /* ── 顶栏 HUD ── */
-
-.sd-icon-btn:hover { background: var(--sd-icon-btn-hover-bg); }
 
 .sd-hud-level {
     font-size: 13.5px;
