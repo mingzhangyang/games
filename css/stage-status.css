@@ -187,7 +187,7 @@
        贴底的 .cc-shell .cc-toast { top: auto !important; bottom: 12px }）必须仍然胜出，
        否则 top 被改回、bottom 还在，提示条会被上下拉伸铺满棋盘。
        页面原有的 top 是 unlayered 声明，分层 !important 不靠特异性也能压过。 */
-    :where(.game-stage:has(> .game-stage-status)) > .game-toast {
+    :where(.game-stage:has(> .game-stage-status:not(.game-stage-status--float))) > .game-toast {
         top: 58px !important;
     }
 
@@ -201,7 +201,7 @@
             font-size: 15px;
         }
 
-        :where(.game-stage:has(> .game-stage-status)) > .game-toast {
+        :where(.game-stage:has(> .game-stage-status:not(.game-stage-status--float))) > .game-toast {
             top: 50px !important;
         }
     }
@@ -246,5 +246,95 @@
         .md-stage > .md-scene.is-side {
             top: 0 !important;
         }
+    }
+
+    /* ⑦ 分数 HUD（B 批）。
+       俄罗斯方块：出块在棋盘最上两行，悬浮胶囊会盖住新块 —— 状态行随流排在棋盘上方（同 ⑤）。
+       粒子 / 消行两层特效画布是 top:0 的绝对定位，必须与 #tetris 逐像素重合
+       （canvas-resolution 的对齐不变量）：棋盘改成「状态行 / 画布」两行网格，三张画布放进
+       第二行同一格 —— 绝对定位子元素以所在网格区域为包含块，top:0 就是棋盘顶边，
+       不靠写死的偏移量。结算遮罩 / 连击字没有网格位置，仍以整个舞台为包含块。 */
+    .game-board:has(> .tt-stage-status) {
+        display: grid;
+        grid-template-columns: 100%;
+        align-content: start;
+    }
+
+    .game-board:has(> .tt-stage-status) > #tetris,
+    .game-board:has(> .tt-stage-status) > #particleCanvas,
+    .game-board:has(> .tt-stage-status) > #lineClearCanvas {
+        grid-row: 2;
+        grid-column: 1;
+    }
+
+    /* 状态行不折行：分数变长时宁可越过棋盘左右边（按内容宽居中，两侧对称溢出，
+       320px 下 999999 分仍在视口内），也不能长高把棋盘推到固定底栏下面 */
+    .tt-stage-status > .game-title-pill {
+        flex: none;
+        flex-wrap: nowrap;
+    }
+
+    .tt-stage-status .hud-sub {
+        margin-top: 0;
+    }
+
+    /* 手机：棋盘高度预算（mobile-fit.css ③ 的 --tt-board-reserve）加上状态行（高 + 下边距）。
+       顶栏只剩游戏名，不再因 HUD 换行长高，≤480px 不用再多留那 14px。
+       选择器要比 mobile-fit 的 .game-container:has(#tetris) 更具体（后者同层、后加载）。 */
+    @media (width <= 768px) {
+        .game-container.game-shell:has(#tt-stage-status) {
+            --tt-board-reserve: calc(140px + 36px + 8px);
+        }
+    }
+
+    @media (width <= 480px) {
+        .game-container.game-shell:has(#tt-stage-status) {
+            --tt-board-reserve: calc(140px + 32px + 6px);
+        }
+    }
+
+    /* 星球合并：投放中的星球沿画布整条顶边左右移动，悬浮胶囊放在哪都会挡住它 ——
+       状态行随流排在画布上方（同 ⑤）。右上角「下一个」(.pm-next-box, top:10px) 原本相对舞台
+       定位，跟着画布一起下移一行。 */
+    .pm-stage-status {
+        height: var(--stage-status-h, 36px);
+        min-height: 0;
+    }
+
+    .pm-stage:has(> .pm-stage-status) > .pm-next-box {
+        top: calc(var(--stage-status-h, 36px) + 8px + 10px) !important;
+    }
+
+    @media (width <= 480px) {
+        .pm-stage-status {
+            --stage-status-h: 32px;
+        }
+
+        .pm-stage:has(> .pm-stage-status) > .pm-next-box {
+            top: calc(32px + 6px + 10px) !important;
+        }
+    }
+
+    /* 投篮：动作画布顶部是夜空留白（篮筐与球在中下部），状态改为悬浮胶囊，
+       不占舞台纵向预算（bindFrame 跳过绝对定位的状态行）。 */
+    .game-stage-status--float {
+        position: absolute;
+        z-index: 4;
+        width: auto;
+        min-height: 0;
+        margin: 0;
+        pointer-events: none;
+    }
+
+    /* 投篮：居中贴顶，篮筐与球都在下半场；右上角是连进火焰徽章 */
+    .hs-stage-status {
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .hs-stage-status > .hs-score-box {
+        flex: none;
+        flex-wrap: nowrap;
     }
 }
