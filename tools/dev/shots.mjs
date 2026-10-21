@@ -12,10 +12,14 @@ const BASE = process.argv[3] || 'http://127.0.0.1:8899';
 
 const PAGES = (process.env.PAGES || registry.all().map(g => g.id).join(',')).split(',');
 
-const VIEWPORTS = [
-    { tag: 'm', width: 390, height: 844 },
-    { tag: 'd', width: 1280, height: 900 },
-];
+const VIEWPORTS = process.env.SHOTS_VIEWPORTS
+    ? process.env.SHOTS_VIEWPORTS.split(',').map(spec => {
+        const [width, height] = spec.split('x').map(Number);
+        if (!width || !height) throw new Error('Invalid SHOTS_VIEWPORTS: ' + spec);
+        return { tag: width <= 480 ? 'm' + width : 'd' + width, width, height };
+    })
+    : [{ tag: 'm', width: 390, height: 844 }, { tag: 'd', width: 1280, height: 900 }];
+const LANGS = (process.env.LANGS || 'default').split(',');
 
 await mkdir(OUT, { recursive: true });
 const browser = await puppeteer.launch({
@@ -26,9 +30,12 @@ const browser = await puppeteer.launch({
 
 for (const name of PAGES) {
     const problems = [];
-    for (const vp of VIEWPORTS) {
+    for (const lang of LANGS) for (const vp of VIEWPORTS) {
         const page = await browser.newPage();
         await page.setViewport({ width: vp.width, height: vp.height, deviceScaleFactor: 1 });
+        if (lang !== 'default') await page.evaluateOnNewDocument(l => {
+            try { localStorage.setItem('site_lang', l); } catch { /* private mode */ }
+        }, lang);
         page.on('console', m => {
             if (m.type() === 'error') problems.push(`[console] ${m.text()}`);
         });
@@ -40,7 +47,7 @@ for (const name of PAGES) {
             problems.push(`[goto] ${e.message}`);
         }
         await new Promise(r => setTimeout(r, 900));
-        await page.screenshot({ path: `${OUT}/${name}-${vp.tag}.png` });
+        await page.screenshot({ path: `${OUT}/${name}-${vp.tag}${lang === 'default' ? '' : '-' + lang}.png` });
         await page.close();
     }
     const uniq = [...new Set(problems)];
