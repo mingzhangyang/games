@@ -227,7 +227,7 @@ const checkTowerPanelClearance = async (page, tag, kind) => {
         JSON.stringify({ panelBottom: geo.panel.b, dockTop: geo.dock.t }));
     check(geo.panel.l >= geo.stage.l - 1 && geo.panel.r <= geo.stage.r + 1
         && geo.panel.t >= geo.stage.t - 1,
-        `${tag}: ${kind}面板完整落在舞台内`, JSON.stringify(geo.panel));
+    `${tag}: ${kind}面板完整落在舞台内`, JSON.stringify(geo.panel));
 };
 
 const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 'new', args: LAUNCH_ARGS });
