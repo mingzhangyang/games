@@ -39,6 +39,8 @@
 Stats / Pause，它的屏幕位置都一致。页面专属钮一律排在右簇最左。
 
 **唯一性：** 全页只有顶栏这一个声音开关。开始菜单 / 结算层 / 暂停层不得再放第二颗（如历史上的
+**新游戏脚手架：** `chrome.actions` 仅声明角色时，默认 Home 为 `button`，`tools/generators/new-game.mjs` 生成的 `mountGameRuntime` 必须通过 `chrome.owns: ['home', 'sound']` 接管导航和静音点击。默认标题为 `div`；`renderGameShell()` 仅在顶栏及自定义内容都不含 H1 时，于 `<main>` 添加可本地化的 `.sr-only` H1；检测到多个 H1 则直接报错。现有 26 页的顶栏及生成区域不受影响。
+
 `xx-start-mute` / `na-start-sound`，2026-10-20 已从 15 页移除）；`tests/verify-chrome.mjs` ⑨ 按运行时 DOM 计数。
 唯一的这颗必须**指针可达**：视口级全屏开始层（reversi / minesweeper）不得盖住顶栏，顶栏抬到其上、
 开始层内容按 `--game-topbar-bottom`（`src/platform/topbar-clearance.js`）让位，开局前的局内 HUD 用 `visibility` 隐藏；
