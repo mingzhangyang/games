@@ -113,26 +113,26 @@ jobs:
       - name: Browser verification (shard ${{ matrix.shard }})
         run: node tests/verify-all.mjs --browser --with-dist --shard=${{ matrix.shard }}/${SHARDS} --jobs=2
 
-      # Capture every page in both languages, using the repository's existing screenshot tool.
+      # Capture every desktop viewport in both languages for the step-4 chrome review.
       # One shard only, on chrome PRs, to avoid unnecessary browser work and CI storage.
-      - name: Full-site topbar screenshots
+      - name: Full-site desktop topbar screenshots
         if: always() && matrix.shard == 1 && contains(github.event.pull_request.title, 'chrome')
         env:
           LANGS: 'zh,en'
-          SHOTS_VIEWPORTS: '390x664,1280x900'
+          SHOTS_VIEWPORTS: '1280x900,1440x900,1920x1080'
         run: |
           node tests/lib/serve-static.mjs 8899 > /tmp/topbar-shots-server.log 2>&1 &
           SERVER_PID=$!
           trap 'kill "$SERVER_PID" || true' EXIT
           sleep 2
-          node tools/dev/shots.mjs /tmp/chrome-step3-shots http://127.0.0.1:8899
+          node tools/dev/shots.mjs /tmp/chrome-step4-desktop-shots http://127.0.0.1:8899
 
       - name: Upload full-site screenshots
         if: always() && matrix.shard == 1 && contains(github.event.pull_request.title, 'chrome')
         uses: actions/upload-artifact@v4
         with:
-          name: chrome-step3-all-pages
-          path: /tmp/chrome-step3-shots/*.png
+          name: chrome-step4-desktop-all-pages
+          path: /tmp/chrome-step4-desktop-shots/*.png
           if-no-files-found: warn
           retention-days: 14
 

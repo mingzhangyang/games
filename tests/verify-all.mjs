@@ -58,6 +58,7 @@ const WEIGHTS = {
     'verify-tetris-drawer': 35, 'verify-stage-status': 30, 'smoke-magnetic-garden': 30, 'verify-science-howto': 55,
     'verify-tetris-topbar-mobile': 30, 'smoke-silk-dew': 25, 'smoke-crystal-bloom': 25,
     'verify-mobile-viewport-fit': 25, 'verify-service-worker': 35, 'smoke-shadow-loom': 20, 'smoke-ripple-duet': 20,
+    'verify-topbar-desktop': 145, 'verify-topbar-grid': 145,
     'verify-sidebar-family': 20, 'smoke-index': 15, 'smoke-carrot-pull': 15, 'smoke-maxwell-demon': 15,
 };
 const DEFAULT_WEIGHT = 10;

@@ -359,7 +359,7 @@ node tests/verify-all.mjs --quick
 期望值（统一后）：
 
 - `shell` 移动端宽度 = 视口宽、内距 `6px 8px`；桌面内距 `10px 12px`
-- `topbar` 宽度 = shell 宽 − 左右内距，移动端高 50~60px
+- `topbar`：<1024px 宽度仍随 shell（移动端高 50~60px）；桌面统一视口居中，宽度 `min(1200px, 100vw - 80px)`，左右内距 12px；滚动条两侧稳定留槽，Home / 标题 / Sound 全站 x 一致（26 页 × 3 个桌面视口 × 中英文）
 - `btn` 36×36（移动）/ 40×40（桌面），`hit` 48×48 / 52×52（≥44px 达标）
 - gd/hs/pm/sf/na/td/tetris 的画布圆角均为 18px
 - 控制台无 `pageerror`；仅剩 dev 环境特有的 `analytics.js`/`sw-register.js` 404 与
