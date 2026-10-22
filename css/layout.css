@@ -141,10 +141,10 @@ html.game-reset * {
     .game-topbar {
         width: 100%;
         flex-shrink: 0;
-        display: flex;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
         align-items: center;
-        justify-content: space-between;
-        gap: 8px;
+        column-gap: 12px;
         padding: 4px 0 10px;
     }
 }
@@ -158,19 +158,89 @@ html.game-reset * {
     }
 }
 
-/* ── 顶栏中槽：标题 / HUD 的自适应块 ──
-   flex:1 + min-width:0 让它吃掉左右两簇之外的全部宽度并允许收缩换行；
-   左右两簇 flex-shrink:0，因此无论中槽内容多宽，两侧按钮的屏幕位置都不变。
-   flex-wrap 是必需的：td 三个状态胶囊 / rv 两个玩家框在 390px 下必须能折行。 */
+/* The middle grid track owns only the (possibly truncated) game name. */
 @layer layout {
     .game-topbar-center {
-        flex: 1;
         min-width: 0;
         display: flex;
-        justify-content: center;
+        justify-content: flex-start;
         align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        gap: 0;
+    }
+}
+
+/* Step 3: one shared title type scale. Only game names may ellipsize.
+   The legacy pages still have unlayered title declarations; these focused
+   important rules are the cascade boundary, not per-game fixes. */
+@layer contracts {
+    .game-topbar {
+        display: grid !important;
+        grid-template-columns: auto minmax(0, 1fr) auto !important;
+        column-gap: 12px !important;
+        align-items: center !important;
+    }
+
+    .game-topbar .game-topbar-center {
+        min-width: 0;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        text-align: left !important;
+    }
+
+    .game-topbar .game-topbar-name,
+    .game-topbar .game-topbar-name :is(span, div) {
+        font-family: var(--game-title-font, system-ui, -apple-system, "Segoe UI", sans-serif) !important;
+        font-size: 17px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0 !important;
+        color: var(--game-title-color, var(--tok-text)) !important;
+        text-shadow: none !important;
+        background: none !important;
+        -webkit-text-fill-color: currentcolor !important;
+        background-clip: border-box !important;
+        -webkit-background-clip: border-box !important;
+    }
+
+    .game-topbar .game-topbar-name {
+        /* Text-overflow needs a text block, not an anonymous centered flex item. */
+        display: block !important;
+        flex: 0 1 auto;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        text-align: left !important;
+        line-height: 1.2 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        -webkit-mask-image: none !important;
+        mask-image: none !important;
+    }
+
+    .game-topbar .game-topbar-name > :is(span, div) {
+        display: block;
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: left;
+        line-height: inherit;
+        padding: 0 !important;
+    }
+
+    .game-topbar .game-topbar-name::before,
+    .game-topbar .game-topbar-name::after { content: none !important; }
+
+    @media (width <= 480px) {
+        .game-topbar .game-topbar-name,
+        .game-topbar .game-topbar-name :is(span, div) { font-size: 16px !important; }
     }
 }
 
@@ -1030,9 +1100,22 @@ html.game-reset * {
     @layer layout {
         .game-shell { padding: 6px 8px 4px; }
     }
+    /* Align absolute mobile anchors without changing outer topbar widths.
+       Standard shells have 8px outside padding, immersive bars have a 10px safe-area floor.
+       Both therefore expose Home/Sound at 10px from the viewport edge. */
+    @layer contracts {
+        .game-shell:not(.game-shell--immersive) > .game-topbar {
+            padding-inline: 2px !important;
+            padding-top: 4px !important;
+        }
+
+        .game-shell--immersive > .game-topbar { padding-top: 10px !important; }
+
+    }
+
     /* 窄屏收紧顶栏间距：保证最挤的页面（td 三个状态胶囊）仍保持单行 */
     @layer layout {
-        .game-topbar { gap: 6px; }
+        .game-topbar { column-gap: 12px; }
     }
 
     @layer layout {
@@ -1040,7 +1123,7 @@ html.game-reset * {
     }
 
     @layer layout {
-        .game-topbar-center { gap: 5px; }
+        .game-topbar-center { gap: 0; }
     }
 
     @layer components {

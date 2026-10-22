@@ -165,17 +165,7 @@
         white-space: nowrap;
     }
 
-    .game-topbar-name {
-        overflow: hidden;
-        max-width: 100%;
-        color: inherit;
-        font-size: 17px;
-        font-weight: 800;
-        letter-spacing: 0.04em;
-        line-height: 1.2;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
+    /* Title typography belongs to layout.css (§ chrome step 3). */
 
     /* 舞台顶部的提示条原本贴着画布顶边，跟着状态行一起下移。
        :where() 把特异性压到 (0,1,0)：页面自己的分层改写（如 mobile-fit.css 里电路谜题
@@ -190,10 +180,6 @@
         .game-stage-status {
             min-height: 32px;
             margin-bottom: 6px;
-        }
-
-        .game-topbar-name {
-            font-size: 15px;
         }
 
         :where(.game-stage:has(> .game-stage-status:not(.game-stage-status--float))) > .game-toast {
@@ -404,8 +390,10 @@
        右 5 颗功能钮之间只剩 56–126px，放不下「Neon Tower Defense」（165px），省略号截断
        比不写更糟（verify-topbar-row 断言顶栏文字不截断）。横屏与桌面照常显示。 */
     @media (width <= 480px) and (orientation: portrait) {
-        .td-brand {
-            display: none;
+        /* Same layer and specificity as the shared game-title block rule;
+           keep the intentional portrait exception after title normalization. */
+        .game-topbar .td-brand {
+            display: none !important;
         }
     }
 
@@ -503,11 +491,7 @@
         font-size: 12px;
     }
 
-    .wd-topbar-center .wd-title { font-size: 17px !important; }
 
-    @media (width <= 480px) {
-        .wd-topbar-center .wd-title { font-size: 15px !important; }
-    }
 
     /* 影织：#sl-target-btn 是有点击行为的舞台控件。菜单态不可点；
        原按钮 40px 视觉面 + ::after 触控扩展仍然有效。 */
@@ -527,12 +511,6 @@
     /* 萤火信号：固定的游戏名在顶栏，变化的关卡标签是天空 HUD 的第三列。
        用真实左圆环 / 右信号组的固有宽度分配中间剩余空间，避免依赖固定
        bottom / max-width 常数：第三关八颗信号点与英文关卡名也不会相压。 */
-    .fs-topbar-center .fs-brand {
-        color: var(--fs-ink-dim);
-        font-size: 16px;
-        font-weight: 700;
-    }
-
     .fs-stage .fs-hud:not(.hidden) {
         display: grid !important;
         grid-template-columns: max-content minmax(0, 1fr) max-content;

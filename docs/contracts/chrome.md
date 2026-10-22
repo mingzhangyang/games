@@ -29,6 +29,8 @@
 </header>
 ```
 
+**第 3 步：** 三槽 `grid-template-columns: auto minmax(0,1fr) auto`，中槽游戏名 `.game-topbar-name` 从 Home 右侧 12px 起、左对齐，手机 16px / 桌面 17px、700 字重，颜色 `--game-title-color`，可选字体 `--game-title-font`。标题是唯一允许单行省略号的顶栏文字；390px 下中文标题必须完整（塔防竖屏沿用明确的隐藏例外）。保留现有顶栏宽度到第 4 步。每日猜词的 Help 已从左簇移到右簇。
+
 **核心性质：Sound 永远是最右一颗。** 它是 11 页全有的全站开关，无论一页有没有
 Stats / Pause，它的屏幕位置都一致。页面专属钮一律排在右簇最左。
 

@@ -100,12 +100,41 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Simplified Chinese browser font
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-wqy-microhei
+          fc-match 'WenQuanYi Micro Hei'
+
       # dist:* steps re-run the shared layout/theme/chrome gates and art smokes on the real build.
       - name: Production build
         run: npm run build
 
       - name: Browser verification (shard ${{ matrix.shard }})
         run: node tests/verify-all.mjs --browser --with-dist --shard=${{ matrix.shard }}/${SHARDS} --jobs=2
+
+      # Capture every page in both languages, using the repository's existing screenshot tool.
+      # One shard only, on chrome PRs, to avoid unnecessary browser work and CI storage.
+      - name: Full-site topbar screenshots
+        if: always() && matrix.shard == 1 && contains(github.event.pull_request.title, 'chrome')
+        env:
+          LANGS: 'zh,en'
+          SHOTS_VIEWPORTS: '390x664,1280x900'
+        run: |
+          node tests/lib/serve-static.mjs 8899 > /tmp/topbar-shots-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" || true' EXIT
+          sleep 2
+          node tools/dev/shots.mjs /tmp/chrome-step3-shots http://127.0.0.1:8899
+
+      - name: Upload full-site screenshots
+        if: always() && matrix.shard == 1 && contains(github.event.pull_request.title, 'chrome')
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrome-step3-all-pages
+          path: /tmp/chrome-step3-shots/*.png
+          if-no-files-found: warn
+          retention-days: 14
 
   # Keeps the historical single `verify` check name (e.g. for branch protection): green only
   # when every parallel job above passed.
