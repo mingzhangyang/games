@@ -42,8 +42,9 @@
         <div class="game-title-pill mg-brand game-topbar-name" aria-hidden="true" data-i18n="brand">Magnetic Garden</div>
     </div>
     <div class="game-topbar-group">
-        <button id="mg-pause-btn" data-chrome="pause" class="mg-icon-btn game-icon-btn" type="button" aria-label="Pause" disabled></button>
-        <button id="mg-sound" data-chrome="sound" class="mg-icon-btn game-icon-btn" type="button" aria-label="Sound"></button>
+        <button type="button" id="mg-leaderboard-btn" class="scoreboard-trigger scoreboard-trigger--icon game-icon-btn" data-scoreboard-trigger="" data-scoreboard-icon="true" title="View rankings" aria-label="View rankings" aria-haspopup="dialog" data-topbar-action="leaderboard"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5.5a4 4 0 0 1-8 0V4z"/><path d="M8 5.5H5.2v1.4a3 3 0 0 0 3 3"/><path d="M16 5.5h2.8v1.4a3 3 0 0 1-3 3"/><path d="M12 13.5v4"/><path d="M8.5 20.5h7"/></svg></button>
+        <button id="mg-pause-btn" data-chrome="pause" class="mg-icon-btn game-icon-btn" type="button" aria-label="Pause" disabled data-topbar-action="pause"></button>
+        <button id="mg-sound" data-chrome="sound" class="mg-icon-btn game-icon-btn" type="button" aria-label="Sound" data-topbar-action="sound"></button>
     </div>
 </header>
 <!-- registry:end topbar -->

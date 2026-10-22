@@ -304,3 +304,45 @@ node tests/verify-registry.mjs
 
 > 它已经抓到一个**与迁移无关的历史 bug**：`src/games/minesweeper/index.js` 里写的是 `this.el.mute`，
 > 而元素缓存的键是 `mute-btn`（id 去掉 `ms-` 前缀），所以扫雷顶栏的静音钮**自 HEAD 起就没绑上过**。
+
+## 5. Mobile action budget and native overflow (Step 5b)
+
+At widths <=480px, Home and Sound are pinned and at most **two other actions**
+occupy the row. Stats and Pause count toward this budget. The More invoker is
+outside the budget and precedes Sound. Priorities select membership only:
+canonical system order remains Stats -> Pause -> Sound. No two-row/title-hidden
+Tower Defense exception remains. Above 480px all original actions are restored.
+
+`chrome.actions` stays a compact role list. Optional `chrome.mobile.priority`
+overrides the shared role priorities; `maxVisibleActions` defaults to 2 and cannot
+exceed 2. Equal priorities retain registry order. Slot membership is decided at
+build time, not reassigned as a game starts/pauses, so buttons never shuffle under
+a finger. An empty/unavailable overflow hides More entirely.
+
+`render-topbar.js` generates canonical buttons and command proxies, including the
+seven topbar trophies formerly inserted by `scoreboard-dialog.js`. The scoreboard
+controller binds explicit `selector` entries and retains its existing non-topbar
+result entries, board selection, network, and pause ownership. Statistics and
+leaderboard surfaces remain separate; no duplicated panels or data state.
+
+`game-topbar-overflow.js`, mounted once by `bindChrome`, enhances the generated
+`popover="auto"` with named menu/menuitem semantics, arrow/Home/End navigation,
+Enter/Space activation, Tab exit, Escape, and native light dismissal. A proxy
+closes the menu and focuses its visible invoker **before** clicking the canonical
+button once. A resulting drawer/dialog therefore remembers a visible return
+anchor; a delayed popover toggle must never steal that new surface's focus.
+Clicking a separate focusable control dismisses the menu without stealing its
+focus. Closing an empty menu or crossing 480px resolves a visible fallback.
+
+The original button remains the only game-handler and lifecycle owner. Proxies
+observe its label, disabled/hidden state and `aria-pressed`, using menuitemcheckbox
+for toggles. Restart guards and native confirmation are not reimplemented.
+Observers and listeners are idempotent and disconnectable. Unsupported native
+popovers leave original controls in place rather than hiding access.
+
+Gates: `verify-topbar-overflow-model`, `verify-topbar-overflow` (source and dist),
+`verify-contextual-restart` (source and dist), and existing chrome, topbar-grid,
+topbar-row, TD topbar, stats-drawer, and scoreboard dialog tests. Pointer tests use
+`tests/lib/topbar-actions.mjs` to operate the real visible command, not click an
+invisible original programmatically. Atomic model/progress invariants retain
+intentional direct clicks separately.

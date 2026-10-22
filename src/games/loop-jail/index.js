@@ -57,7 +57,7 @@ onReady(() => {
                 zh: '每局结束且得分大于 0 即可参赛，分数越高越好。',
             },
         }],
-        triggers: [{ before: '#lj-pause-btn', icon: true }, { before: '#lj-btn-menu' }],
+        triggers: [{ selector: '#lj-leaderboard-btn', icon: true }, { before: '#lj-btn-menu' }],
         onOpen: () => game.pauseOwnership.acquire('ranking'),
         onClose: () => game.pauseOwnership.release('ranking'),
     });

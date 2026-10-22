@@ -105,6 +105,7 @@ export function toggleShowAllRanges(game) {
     game.showAllRanges = !game.showAllRanges;
     if (game.el['range-btn']) {
         game.el['range-btn'].classList.toggle('active', game.showAllRanges);
+        game.el['range-btn'].setAttribute('aria-pressed', String(game.showAllRanges));
     }
     Sfx.click();
 }

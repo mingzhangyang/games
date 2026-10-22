@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { clickTopbarAction, revealTopbarAction } from './lib/topbar-actions.mjs';
 // Contextual topbar retry: live only during gameplay, never a dead menu action.
 // The fourteen consumers share one controller and preserve their own game rules.
 import puppeteer from 'puppeteer-core';
@@ -198,14 +199,15 @@ try {
             }
             await page.waitForFunction(sel => {
                 const b = document.querySelector(sel);
-                return b && !b.disabled && getComputedStyle(b).display !== 'none';
+                return b && !b.disabled && !b.classList.contains('hidden');
             }, { timeout: 4000 }, selector);
             checkpoint('playing');
+            const presented = await revealTopbarAction(page, selector);
             const geometry = await page.evaluate(sel => {
                 const b = document.querySelector(sel);
                 const rect = b.getBoundingClientRect();
                 return { label: b.getAttribute('aria-label'), title: b.title, width: rect.width, height: rect.height };
-            }, selector);
+            }, presented);
             check(geometry.label?.length > 4 && geometry.label === geometry.title && !/^Reset$/.test(geometry.label)
                 && geometry.width >= 32 && geometry.height >= 32,
             id + ': accessible playing-state action ' + JSON.stringify(geometry));
@@ -231,7 +233,7 @@ try {
                     document.querySelector(sel).click();
                 }, selector);
             } else {
-                await page.click(selector);
+                await clickTopbarAction(page, selector);
             }
             check(dialogs.length === beforeFreshDialog,
                 id + ': non-destructive restart must not ask to discard progress: '
@@ -331,7 +333,7 @@ try {
 
                 dialogAction = 'dismiss';
                 let beforeMovementDialog = dialogs.length;
-                await page.click(selector);
+                await clickTopbarAction(page, selector);
                 const movementDialogs = dialogs.slice(beforeMovementDialog);
                 const retained = await page.evaluate(() => ({
                     moved: window.ecGame.world.hasMoved,
@@ -353,7 +355,7 @@ try {
 
                 dialogAction = 'accept';
                 beforeMovementDialog = dialogs.length;
-                await page.click(selector);
+                await clickTopbarAction(page, selector);
                 dialogAction = 'dismiss';
                 const acceptedMovementDialogs = dialogs.slice(beforeMovementDialog);
                 const clean = await page.evaluate(() => ({
@@ -436,7 +438,7 @@ try {
                 checkpoint('decline destructive restart');
                 dialogAction = 'dismiss';
                 const beforeDecline = dialogs.length;
-                await page.click(selector);
+                await clickTopbarAction(page, selector);
                 const declinedEvents = dialogs.slice(beforeDecline);
                 const declinedMessage = declinedEvents[0]?.message || '';
                 check(declinedEvents.length === 1,
@@ -461,7 +463,7 @@ try {
                 checkpoint('accept destructive restart');
                 dialogAction = 'accept';
                 const beforeAccept = dialogs.length;
-                await page.click(selector);
+                await clickTopbarAction(page, selector);
                 dialogAction = 'dismiss';
                 const acceptedEvents = dialogs.slice(beforeAccept);
                 const acceptedMessage = acceptedEvents[0]?.message || '';

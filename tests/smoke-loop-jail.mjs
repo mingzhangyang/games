@@ -142,7 +142,10 @@ const snap = page => page.evaluate(() => {
         captured: s.stats.captured, bites: s.stats.bites, penX: s.pen.x, penY: s.pen.y, penDown: s.pen.down,
         hudScore: document.getElementById('lj-score').textContent,
         start: vis('lj-start'), pause: vis('lj-pause'), over: vis('lj-over'), hud: vis('lj-hud'),
-        resetShown: getComputedStyle(document.getElementById('lj-reset-btn')).display !== 'none',
+        resetShown: !document.getElementById('lj-reset-btn').disabled
+                    && !document.getElementById('lj-reset-btn').classList.contains('hidden')
+                    && (document.getElementById('lj-reset-btn').getBoundingClientRect().width > 0
+                        || document.querySelector('[data-topbar-proxy="lj-reset-btn"]')?.hidden === false),
         pauseLabel: document.getElementById('lj-pause-btn').getAttribute('aria-label'),
         pauseDisabled: document.getElementById('lj-pause-btn').disabled,
     };

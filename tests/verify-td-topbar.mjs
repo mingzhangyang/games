@@ -30,6 +30,9 @@ const pageErrors = [];
 page.on('pageerror', e => pageErrors.push((e.stack || e.message).split('\n').slice(0, 4).join('\n    ')));
 
 const VIEWPORTS = [
+    { w: 320, h: 568, name: 'Narrow phone' },
+    { w: 480, h: 700, name: 'Mobile boundary' },
+    { w: 481, h: 700, name: 'Expanded boundary' },
     { w: 375, h: 667, name: 'iPhone SE' },
     { w: 390, h: 844, name: 'iPhone 14' },
     { w: 768, h: 1024, name: 'iPad' },
@@ -40,7 +43,8 @@ const probe = () => page.evaluate(() => {
     const r = (el) => { const b = el.getBoundingClientRect(); return { x: b.x, y: b.y, w: b.width, h: b.height, bottom: b.bottom, right: b.right }; };
     const topbar = document.querySelector('.game-topbar');
     const home = document.getElementById('td-btn-home');
-    const ids = ['tdStatsToggle', 'td-range-btn', 'td-speed-btn', 'td-pause-btn', 'td-mute-btn'];
+    const allIds = ['tdStatsToggle', 'td-range-btn', 'td-speed-btn', 'td-pause-btn', 'tdTopbarMore', 'td-mute-btn'];
+    const ids = allIds.filter(id => document.getElementById(id)?.getBoundingClientRect().width > 0);
     const appBtns = ids.map(id => ({ id, ...r(document.getElementById(id)) }));
     const stats = ['td-stat-lives', 'td-stat-gold', 'td-stat-wave']
         .map(id => ({ id, ...r(document.getElementById(id)) }));
@@ -74,6 +78,7 @@ const probe = () => page.evaluate(() => {
         },
         home: r(home),
         appBtns,
+        overflow: [...topbar.querySelectorAll('[data-topbar-proxy]')].map(item => item.dataset.topbarProxy),
         stats,
         stack,
         homeHit: hit(home),
@@ -99,8 +104,8 @@ check(rightMost <= 390 + 0.5, '功能钮未溢出视口', `最右 ${Math.round(r
 const act = p.appBtns.find(b => b.id === 'td-pause-btn');
 check(act && Math.abs(act.y - p.home.y) < 8, '功能钮与 Home 同一视觉行',
     `dy=${act ? Math.abs(act.y - p.home.y).toFixed(1) : 'NaN'}px`);
-// 顶栏纵向占用：窄屏允许胶囊折一行（≤110px），绝不允许回到三行（>120px）
-check(p.topbarH <= 110, '顶栏高度回到单行量级（≤110px，含胶囊折行）', `${p.topbarH}px`);
+// State capsules are in the stage; the topbar itself must remain one row.
+check(p.topbarH <= 64, 'Topbar is one row (at most 64px)', `${p.topbarH}px`);
 // 状态胶囊：横向不重叠、不溢出视口
 for (let i = 1; i < p.stats.length; i++) {
     const prev = p.stats[i - 1], cur = p.stats[i];
@@ -131,7 +136,14 @@ for (const v of VIEWPORTS) {
     check(right1 <= v.w + 0.5, `  ${v.name} 第一行控件未溢出视口`, `最右 ${Math.round(right1)} ≤ ${v.w}`);
     check(Math.max(...q.stats.map(s => s.right)) <= v.w + 0.5, `  ${v.name} 状态胶囊未溢出视口`,
         `最右 ${Math.round(Math.max(...q.stats.map(s => s.right)))} ≤ ${v.w}`);
-    const cap = v.w >= 1024 ? 64 : 110;
+    const expected = v.w <= 480
+        ? ['td-speed-btn', 'td-pause-btn', 'tdTopbarMore', 'td-mute-btn']
+        : ['tdStatsToggle', 'td-range-btn', 'td-speed-btn', 'td-pause-btn', 'td-mute-btn'];
+    check(JSON.stringify(q.appBtns.map(b => b.id)) === JSON.stringify(expected),
+        `${v.name}: exact visible action set`, JSON.stringify(q.appBtns.map(b => b.id)));
+    check(JSON.stringify(q.overflow) === JSON.stringify(['td-range-btn', 'tdStatsToggle']),
+        `${v.name}: range and stats have generated menu entries`);
+    const cap = 64;
     check(q.topbarH <= cap, `  ${v.name} 顶栏高度 ≤${cap}px`, `${q.topbarH}px`);
 }
 

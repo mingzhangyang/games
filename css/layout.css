@@ -1399,3 +1399,91 @@ html.game-reset * {
         .game-stage.game-stage--immersive { max-width: var(--frame-immersive-max); }
     }
 }
+
+/* Step 5b: generated overflow commands. Hidden canonical buttons retain their
+   original handler/state owner; CSS alone switches the two presentations. */
+@layer contracts {
+    .game-topbar-more {
+        display: none !important;
+    }
+
+    .game-topbar-menu {
+        display: none;
+        position: fixed;
+        inset: auto;
+        top: var(--topbar-menu-y, 56px);
+        left: var(--topbar-menu-x, 10px);
+        width: min(260px, calc(100vw - 20px));
+        max-height: min(60dvh, 420px);
+        margin: 0;
+        padding: 6px;
+        overflow: auto;
+        overscroll-behavior: contain;
+        color: var(--tok-text);
+        background: var(--tok-bg);
+        border: 1px solid var(--tok-border);
+        border-radius: var(--tok-radius-btn);
+        box-shadow: 0 12px 36px rgb(0, 0, 0, 0.3);
+        pointer-events: auto;
+    }
+
+    .game-topbar-menu:popover-open {
+        display: grid;
+        gap: 2px;
+    }
+
+    .game-topbar-menu-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-height: 44px;
+        width: 100%;
+        padding: 10px 12px;
+        font: inherit;
+        font-size: 15px;
+        line-height: 1.4;
+        text-align: start;
+        color: inherit;
+        background: transparent;
+        border: 0;
+        border-radius: 6px;
+        cursor: pointer;
+        touch-action: manipulation;
+    }
+
+    .game-topbar-menu-item[hidden] {
+        display: none !important;
+    }
+
+    .game-topbar-menu-item[aria-checked="true"]::after {
+        content: '\2713';
+        color: var(--tok-text);
+    }
+
+    .game-topbar-menu-item:focus-visible {
+        outline: 2px solid var(--tok-focus);
+        outline-offset: -2px;
+        background: var(--tok-panel-strong);
+    }
+
+    @media (hover: hover) {
+        .game-topbar-menu-item:hover {
+            background: var(--tok-panel-strong);
+        }
+    }
+
+    @media (width <= 480px) {
+        .game-topbar .game-topbar-group {
+            flex-wrap: nowrap;
+        }
+
+        .game-topbar[data-topbar-overflow-ready] [data-topbar-overflow-source] {
+            display: none !important;
+        }
+
+        .game-topbar[data-topbar-overflow-ready] .game-topbar-more:not([hidden]) {
+            display: inline-flex !important;
+        }
+    }
+}

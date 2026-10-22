@@ -440,7 +440,9 @@
             "restart",
             "help",
             "stats",
-            "range"
+            "range",
+            "trophy",
+            "more"
           ]
         },
         "multiline": {
@@ -499,6 +501,7 @@
           "uniqueItems": true,
           "items": {
             "enum": [
+              "leaderboard",
               "restart",
               "theme",
               "help",
@@ -585,6 +588,41 @@
             },
             "sound": {
               "$ref": "#/$defs/chromePatch"
+            },
+            "leaderboard": {
+              "$ref": "#/$defs/chromePatch"
+            }
+          },
+          "additionalProperties": false
+        },
+        "mobile": {
+          "type": "object",
+          "properties": {
+            "maxVisibleActions": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2,
+              "default": 2
+            },
+            "priority": {
+              "type": "object",
+              "propertyNames": {
+                "enum": [
+                  "leaderboard",
+                  "restart",
+                  "theme",
+                  "help",
+                  "range",
+                  "speed",
+                  "stats",
+                  "pause"
+                ]
+              },
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000
+              }
             }
           },
           "additionalProperties": false
@@ -620,7 +658,9 @@
                 "restart",
                 "help",
                 "stats",
-                "range"
+                "range",
+                "trophy",
+                "more"
               ]
             },
             {

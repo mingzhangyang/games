@@ -251,7 +251,7 @@ onReady(() => {
             format: formatFireflyScore,
         })),
         triggers: [
-            { before: '#fs-btn-mute', icon: true, boardId: () => LEVELS[game.levelIndex].id },
+            { selector: '#fs-leaderboard-btn', icon: true, boardId: () => LEVELS[game.levelIndex].id },
             { before: '#fs-btn-menu', boardId: () => LEVELS[game.levelIndex].id },
         ],
         onOpen: () => game.pauseOwnership.acquire('ranking'),

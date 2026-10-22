@@ -167,7 +167,7 @@ export class ShadowLoomGame {
                 format: formatShadowLoomScore,
             })),
             triggers: [
-                { before: '#slStatsToggle', icon: true, boardId: () => this.level.id },
+                { selector: '#sl-leaderboard-btn', icon: true, boardId: () => this.level.id },
                 { before: '#sl-btn-menu', boardId: () => this.level.id },
             ],
             onOpen: () => this.pauseOwnership.acquire('ranking'),
