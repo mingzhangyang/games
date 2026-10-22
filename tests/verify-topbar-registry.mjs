@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { registry } from '../tools/lib/registry.mjs';
+import { keepPage } from './lib/page-filter.mjs';
 import { renderTopbar } from '../src/platform/shell/render-topbar.js';
 import { renderGameShell } from '../src/platform/shell/render-game-shell.js';
 
@@ -16,6 +17,7 @@ const count = (src, token) => src.split(token).length - 1;
 
 const games = registry.withCap('topbar');
 assert(games.length, 'no registered topbar pages');
+const selected = games.filter(game => keepPage(game.id));
 registry.assertCovered({
     cap: 'topbar', covered: games.map(g => g.id), label: 'topbar-registry',
 });
@@ -31,6 +33,7 @@ for (const game of registry.all()) {
     }
 
     assert(game.chrome, game.id + ': topbar pages must define chrome');
+    if (!keepPage(game.id)) continue;
     assert.equal(count(html, BEGIN), 1, game.id + ': one begin sentinel');
     assert.equal(count(html, END), 1, game.id + ': one end sentinel');
     const first = html.indexOf(BEGIN);
@@ -67,6 +70,40 @@ for (const game of games) {
     assert(game.chrome.actions.every(role => typeof role === 'string'),
         game.id + ': actions must be compact role names');
 }
+// Escaping only applies to plain-text labels. Preserve literal character data
+// (including HTML-like names and entity-looking text) while leaving icons intact.
+const specialGame = {
+    id: 'title-escape-fixture',
+    prefix: 'tf',
+    name: { en: 'Maze <Escape> &copy;', zh: '迷宫 <测试> &copy;' },
+    chrome: { actions: ['sound'] },
+};
+const specialTitle = renderTopbar(specialGame);
+assert(specialTitle.includes('Maze &lt;Escape&gt; &amp;copy;'),
+    'registry name must be escaped as text, not interpreted as HTML or an entity');
+assert(!specialTitle.includes('<Escape>'), 'HTML-like game name must not create an element');
+assert(specialTitle.includes('<svg '), 'escaping must not affect shared SVG icons');
+const specialChinese = renderTopbar({
+    ...specialGame,
+    chrome: { actions: ['sound'], overrides: { name: { textFrom: 'name.zh' } } },
+});
+assert(specialChinese.includes('迷宫 &lt;测试&gt; &amp;copy;'),
+    'localized name must be escaped too');
+const specialLiteral = renderTopbar({
+    ...specialGame,
+    chrome: { actions: ['sound'], overrides: { name: { text: 'Level <3 &copy; > 2' } } },
+});
+assert(specialLiteral.includes('Level &lt;3 &amp;copy; &gt; 2'),
+    'literal node.text must be escaped');
+const specialChild = renderTopbar({
+    ...specialGame,
+    chrome: { actions: ['sound'], overrides: { name: {
+        children: [{ tag: 'span', attrs: { class: 'title-part' }, text: '<img> &copy;' }],
+    } } },
+});
+assert(specialChild.includes('<span class="title-part">&lt;img&gt; &amp;copy;</span>'),
+    'nested child markup is serialized, but its text must still be escaped');
+
 const mutated = JSON.parse(JSON.stringify(games[0]));
 mutated.chrome.overrides ||= {};
 mutated.chrome.overrides.home ||= {};
@@ -80,5 +117,7 @@ assert.throws(() => renderTopbar(unknownRole), /invalid or duplicate topbar acti
 const unusedOverride = JSON.parse(JSON.stringify(games[0]));
 unusedOverride.chrome.overrides.unused = { attrs: { id: 'not-a-real-action' } };
 assert.throws(() => renderTopbar(unusedOverride), /unused topbar override/);
-console.log('verify-topbar-registry: ' + passed + '/' + games.length
-    + ' generated headers exact; 3 exempt pages; default/override mutation gates passed');
+assert.equal(passed, selected.length, 'all selected topbar pages must be checked');
+console.log('verify-topbar-registry: ' + passed + '/' + selected.length
+    + ' selected generated headers exact (' + games.length
+    + ' registered); 3 exempt pages; global and escaping gates passed');
