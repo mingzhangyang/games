@@ -27,6 +27,12 @@ function attrs(map) {
     }).join('');
 }
 
+// Only labels are escaped: SVG icons and child markup are serialized separately.
+function escapeText(value) {
+    return String(value ?? '').replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 function nodeHtml(node, indent, game) {
     if (!node || !['a', 'button', 'div', 'h1', 'span'].includes(node.tag)) {
         throw new Error('invalid topbar node');
@@ -53,7 +59,7 @@ function nodeHtml(node, indent, game) {
         }
         value = game.name[node.textFrom.slice(5)];
     }
-    return open + value + close;
+    return open + escapeText(value) + close;
 }
 
 // Canonical defaults for the shared topbar. Page-level configuration stores
