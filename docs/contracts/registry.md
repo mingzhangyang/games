@@ -118,11 +118,11 @@ caps 是校验器与迁移脚本的唯一判据：
 
 `caps: ["topbar"]` 的游戏必须有 `chrome`，其余游戏不得添加这个字段（`games.schema.json` 通过条件约束）。`chrome` 是**声明式结构**，不是 HTML 模板：
 
-- `home`：左簇第一个节点；`leftExtra` 只在有真正的额外左侧动作时使用。
-- `name`：中间游戏名；常规是一个 `div/span/h1`，个别已有 sr-only h1、双语或嵌套标题的游戏可以给一个节点数组或 `children`。
-- `actions`：右簇数组，**声明顺序就是 DOM 顺序**；页面专属按钮置前，其后按 Stats → Pause → Sound，Sound 必须唯一并在最右。
-- 节点用 `tag` + 按原顺序声明的 `attrs`，内联图标使用共享 `icon` 枚举；`textFrom: "name.en"` 可复用游戏的注册名。少数差异用 `headerAttrs/leftAttrs/centerAttrs/rightAttrs/classPrefix` 精确覆盖，禁止再手抄另一份 HTML。
-
+- `actions`：只列角色，如 `["restart", "stats", "sound"]`；公共按钮的 DOM、内联 SVG、属性顺序和 id/class/ARIA 都由共享模板按 `game.prefix` 派生，Sound 唯一且最右。
+- `overrides`：可选的稀疏对象，键为 `home`、`name` 或已声明 action 角色，**只写真正不同于默认值的字段**，例如 `{"home":{"attrs":{"id":"pm-home-btn"}}}`。
+- `overrides.*.attrs` 默认合并，保持模板属性的插入顺序；`omitAttrs` 删除默认属性；`icon: null` 移除图标。只有历史属性顺序不同、精确 DOM 对比需要时才用 `replaceAttrs: true` 和完整 `attrs`。
+- 复杂标题（sr-only H1、双语嵌套）使用 `overrides.name` 节点数组；少数无共享模板的页面专属动作（Theme、Help、Range、Speed）需在 `overrides` 明确 `tag` + `attrs`。
+- 分组类名有真实差异时仍可用 `headerAttrs/leftAttrs/centerAttrs/rightAttrs/classPrefix`；禁止在配置中重新手抄一套正常按钮或改动派生 HTML。
 `npm run gen` 自安装或更新 `<!-- registry:begin topbar -->` / `<!-- registry:end topbar -->`，不触碰区域外字节；`npm run gen -- --check` 漂移报错。新游戏脚手架 `render-game-shell.js` 同样使用 `renderTopbar()`，并写出哨兵。
 
 `tests/verify-topbar-registry.mjs` 对 **全部带 topbar cap 的游戏** 检查登记字段、唯一哨兵、区域内容逐字匹配及 renderer 与脚手架同源。迁移时的一次性 `tools/checks/compare-topbar-html.mjs <baseline-sha>` 通过解析 HTML、移除纯格式空白与注释，逐元素比较原/新 header outerHTML（包含 SVG、初始 disabled/hidden），仅用于这次零变化证明；其结果记录在 PR。另须执行全站双语截图像素比对与 `npm run verify`。
