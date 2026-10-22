@@ -33,6 +33,7 @@ export function bindTopbarOverflow(header) {
     let openingFocus = 'first';
     let lastSource = null;
     let swallowEscapeUp = false;
+    const menuActivationKeys = new Set();
 
     function restoreFocus() {
         const target = rendered(more) ? more
@@ -141,15 +142,19 @@ export function bindTopbarOverflow(header) {
     }
 
     function onKey(event) {
-        if (event.type === 'keyup' && event.key === 'Escape' && swallowEscapeUp) {
-            swallowEscapeUp = false;
+        if (event.type === 'keyup') {
+            if (event.key === 'Escape' && swallowEscapeUp) {
+                swallowEscapeUp = false;
+                event.stopImmediatePropagation();
+                return;
+            }
+            // A key held before pointer-opening More is never a menu command:
+            // forward its release to the input owner (including WASD/Space).
+            // Only swallow the completion of a native menu activation we own.
+            if (!menuActivationKeys.delete(event.code || event.key)) return;
             event.stopImmediatePropagation();
             return;
         }
-        // Release-only keyups must reach the input owner even if More captured
-        // a later keydown. Otherwise WASD/arrow movement may stay latched.
-        // Keep Enter/Space for native menu activation and Escape for dismissal.
-        if (event.type === 'keyup' && event.key !== 'Enter' && event.key !== ' ') return;
         const fromMore = more.contains(event.target);
         const fromMenu = menu.contains(event.target);
         if (!isOpen() && (!fromMore || !['Enter', ' ', 'ArrowDown', 'ArrowUp'].includes(event.key))) return;
@@ -157,6 +162,9 @@ export function bindTopbarOverflow(header) {
         // Enter/Space activation, but do not let it also play/pause the game.
         event.stopImmediatePropagation();
         if (event.type !== 'keydown') return;
+        if ((fromMore || fromMenu) && (event.key === 'Enter' || event.key === ' ')) {
+            menuActivationKeys.add(event.code || event.key);
+        }
         if (event.key === 'Escape' && isOpen()) {
             swallowEscapeUp = true;
             event.preventDefault();
@@ -213,6 +221,7 @@ export function bindTopbarOverflow(header) {
     sync();
     const api = { sync, close, disconnect() {
         disposed = true;
+        menuActivationKeys.clear();
         close();
         observer.disconnect();
         menu.removeEventListener('beforetoggle', beforeToggle);
