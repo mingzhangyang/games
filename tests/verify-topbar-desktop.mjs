@@ -8,7 +8,12 @@ import { registry } from './lib/registry.mjs';
 
 const BASE = process.argv.slice(2).find(arg => arg.startsWith('http')) || 'http://127.0.0.1:8899';
 const GAMES = registry.withCap('topbar').filter(game => keepPage(game.id));
-exitIfNoPages(GAMES, 'verify-topbar-desktop');
+// The negative gutter-scope controls are independent of the 26 topbar pages.
+// With VERIFY_PAGES=math-rain or tank-battle (including --changed), do not
+// early-exit before their tests run just because GAMES is empty.
+const NON_TOPBAR_GAMES = registry.all()
+    .filter(game => !(game.caps || []).includes('topbar') && keepPage(game.id));
+exitIfNoPages([...GAMES, ...NON_TOPBAR_GAMES], 'verify-topbar-desktop');
 const VIEWPORTS = [[1280, 900], [1440, 900], [1920, 1080]];
 const cases = VIEWPORTS.flatMap(([w, h]) => ['zh', 'en'].map(lang => ({ w, h, lang })));
 cases.push({ w: 1024, h: 768, lang: 'en' }); // desktop threshold + scrollbar edge safety
@@ -204,7 +209,7 @@ for (const game of [GAMES[0], GAMES.find(g => g.layout === 'immersive')].filter(
 // Negative scope gate: Math Rain / Tank Battle consume layout.css without
 // a shared topbar. They must not acquire the root's symmetric scrollbar gutter,
 // which would otherwise shrink their edge-to-edge viewport geometries.
-for (const game of registry.all().filter(g => !(g.caps || []).includes('topbar') && keepPage(g.id))) {
+for (const game of NON_TOPBAR_GAMES) {
     const page = await classic.newPage();
     const tag = game.id + '@1280x900/no-shared-topbar';
     try {
@@ -243,5 +248,6 @@ if (failures.length) {
     process.exitCode = 1;
 } else {
     console.log('verify-topbar-desktop: ' + passed + ' assertions passed across '
-        + GAMES.length + ' pages; shared anchors: ' + JSON.stringify(Object.fromEntries(references)));
+        + GAMES.length + ' topbar pages and ' + NON_TOPBAR_GAMES.length
+        + ' negative-scope pages; shared anchors: ' + JSON.stringify(Object.fromEntries(references)));
 }
