@@ -2,7 +2,7 @@
 // CI runs the browser suite as `--browser --with-dist --shard=k/n`. A shard split that drops
 // or duplicates a step silently loses (or doubles) coverage, so pin the invariants here.
 import assert from 'node:assert/strict';
-import { discover, shardSuite } from './verify-all.mjs';
+import { discover, selectChangedSuite, shardSuite } from './verify-all.mjs';
 
 const browser = discover().filter(step => step.needsServer);
 const DIST = ['verify-chrome', 'verify-theme', 'verify-stats-drawer', 'smoke-index'];
@@ -25,5 +25,19 @@ for (let count = 1; count <= 6; count++) {
 const four = Array.from({ length: 4 }, (_, i) => shardSuite(steps, i + 1, 4).map(step => step.name));
 const shardOf = name => four.findIndex(names => names.includes(name));
 assert.notEqual(shardOf('verify-stats-drawer'), shardOf('dist:verify-stats-drawer'), 'heaviest pair lands in different shards');
+
+// The registry-owned topbar checker is global in a full run, but must also
+// participate when --changed selects a single game page (without scanning all
+// unrelated generated headers). The global registry gates remain unfiltered.
+const topbarStep = discover().find(step => step.name === 'verify-topbar-registry');
+assert(topbarStep?.pages, 'topbar-registry declares support for page filtering');
+const changedCircuit = selectChangedSuite(['circuit.html'])
+    .find(step => step.name === 'verify-topbar-registry');
+assert.equal(changedCircuit?.env?.VERIFY_PAGES, 'circuit',
+    'single-page incremental verification must run the topbar ownership guard');
+const sharedRegistry = selectChangedSuite(['games.config.json'])
+    .find(step => step.name === 'verify-topbar-registry');
+assert(sharedRegistry && !sharedRegistry.env?.VERIFY_PAGES,
+    'shared registry changes must keep the full topbar coverage check');
 
 console.log('verify-suite-sharding 全部通过 ✅');
