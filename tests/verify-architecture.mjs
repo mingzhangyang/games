@@ -202,7 +202,7 @@ ok(scaffold.includes('registry:begin seo-script') && scaffold.includes('registry
     'generated shell seeds the SEO generation region');
 ok(scaffold.includes('registry:begin topbar') && scaffold.includes('registry:end topbar')
     && scaffold.includes('<header class="fg-topbar game-topbar">'),
-    'generated shell uses the registry-driven shared topbar');
+'generated shell uses the registry-driven shared topbar');
 
 console.log(failed ? `\n${failed} architecture failure(s) ❌` : '\narchitecture contract passed ✅');
 process.exit(failed ? 1 : 0);

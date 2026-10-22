@@ -87,7 +87,14 @@ async function capture(url, game, viewport) {
             waitUntil: 'networkidle0', timeout: 20000,
         });
         assert.equal(response?.status(), 200, game.id + ': missing page at ' + url);
-        return pixelsFromPng(await page.screenshot({ fullPage: true }));
+        // JS-disabled pages can still animate in pure CSS. Freeze these on both
+        // sides to compare a single deterministic rendered layout frame.
+        await page.addStyleTag({
+            content: '*,*::before,*::after{animation:none!important;transition:none!important;'
+                + 'scroll-behavior:auto!important;caret-color:transparent!important}',
+        });
+        // Puppeteer 25 returns Uint8Array; PNG decoding requires Node Buffer methods.
+        return pixelsFromPng(Buffer.from(await page.screenshot({ fullPage: true })));
     } finally {
         await page.close();
     }
