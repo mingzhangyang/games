@@ -34,6 +34,24 @@ export function bindTopbarOverflow(header) {
     let lastSource = null;
     let swallowEscapeUp = false;
     const menuActivationKeys = new Set();
+    const ownsFocus = node => node === more || menu.contains(node)
+        || entries.some(({ source }) => source === node);
+    let wasMobile = mobile.matches;
+    let focusedControl = ownsFocus(document.activeElement) ? document.activeElement : null;
+
+    function onFocusIn(event) {
+        focusedControl = ownsFocus(event.target) ? event.target : null;
+    }
+
+    function onFocusOut(event) {
+        if (event.target !== focusedControl) return;
+        // CSS can blur a hidden button before either resize/change callback.
+        // Retain only that breakpoint loss, not an intentional blur or a move
+        // to another control (including a newly opened dialog).
+        if (event.relatedTarget || mobile.matches === wasMobile || rendered(event.target)) {
+            focusedControl = null;
+        }
+    }
 
     function restoreFocus() {
         const target = rendered(more) ? more
@@ -195,11 +213,23 @@ export function bindTopbarOverflow(header) {
     }
 
     const onResize = () => {
-        const ownedFocus = more === document.activeElement || menu.contains(document.activeElement);
+        const enteringMobile = mobile.matches && !wasMobile;
+        const active = document.activeElement;
+        const focused = ownsFocus(active) ? active : focusedControl;
+        const canRestore = active === focused || active === document.body || active === document.documentElement;
+        const ownedMenuFocus = focused === more || menu.contains(focused);
+        wasMobile = mobile.matches;
         if (!mobile.matches) {
             close(false);
-            if (ownedFocus) restoreFocus();
-        } else position();
+            if (ownedMenuFocus && canRestore) restoreFocus();
+        } else {
+            if (enteringMobile && canRestore && entries.some(({ source }) => source === focused)
+                && available(focused) && !rendered(focused)) {
+                lastSource = focused;
+                restoreFocus();
+            }
+            position();
+        }
     };
     const observer = new MutationObserver(() => { if (!disposed) sync(); });
     for (const { source } of entries) observer.observe(source, {
@@ -211,6 +241,8 @@ export function bindTopbarOverflow(header) {
     menu.addEventListener('toggle', onToggle);
     menu.addEventListener('click', onClick);
     for (const type of ['keydown', 'keyup', 'keypress']) window.addEventListener(type, onKey, true);
+    document.addEventListener('focusin', onFocusIn, true);
+    document.addEventListener('focusout', onFocusOut, true);
     mobile.addEventListener('change', onResize);
     window.addEventListener('resize', onResize);
     window.addEventListener('scroll', position, true);
@@ -228,6 +260,9 @@ export function bindTopbarOverflow(header) {
         menu.removeEventListener('toggle', onToggle);
         menu.removeEventListener('click', onClick);
         for (const type of ['keydown', 'keyup', 'keypress']) window.removeEventListener(type, onKey, true);
+        document.removeEventListener('focusin', onFocusIn, true);
+        document.removeEventListener('focusout', onFocusOut, true);
+        focusedControl = null;
         mobile.removeEventListener('change', onResize);
         window.removeEventListener('resize', onResize);
         window.removeEventListener('scroll', position, true);

@@ -132,6 +132,20 @@ try {
                     await page.setViewport({ width: 481, height: 844 });
                     await page.waitForFunction(() => !document.querySelector('[popover]').matches(':popover-open'));
                     check(await page.evaluate(() => document.activeElement.getBoundingClientRect().width > 0), game.id + ': resize preserves visible focus');
+                    // Cover both directions with each real canonical action,
+                    // including CSS-driven blur before resize listeners run.
+                    for (const role of plan.overflow) {
+                        const selector = `[data-topbar-action="${role}"]`;
+                        await page.focus(selector);
+                        check(await page.$eval(selector, node => node === document.activeElement), game.id + ': wide action can receive focus');
+                        await page.setViewport({ width: 480, height: 844 });
+                        await settle(page);
+                        check(await page.$eval('[data-topbar-more]', node => node === document.activeElement), game.id + ': entering mobile transfers action focus to More');
+                        check(await page.$eval('[popover]', node => !node.matches(':popover-open')), game.id + ': breakpoint does not open menu');
+                        await page.setViewport({ width: 481, height: 844 });
+                        await settle(page);
+                        check(await page.$eval(selector, node => node === document.activeElement), game.id + ': leaving mobile returns to the same action');
+                    }
                     await page.setViewport({ width: 390, height: 844 });
                 }
                 if (game.id === 'tower-defense') {
@@ -197,6 +211,30 @@ try {
         document.getElementById('close').addEventListener('click', () => document.getElementById('fixture').close());
     ` });
     check(await page.evaluate(() => window.sameBinding), 'repeated binder calls are idempotent');
+    for (const selector of ['#td-speed-btn', '[data-chrome="sound"]', '#outside']) {
+        await page.setViewport({ width: 481, height: 844 });
+        await settle(page);
+        await page.focus('#td-range-btn');
+        await page.focus(selector);
+        await page.setViewport({ width: 480, height: 844 });
+        await settle(page);
+        check(await page.$eval(selector, node => node === document.activeElement), 'entering mobile never steals focus from ' + selector);
+    }
+    await page.setViewport({ width: 481, height: 844 });
+    await settle(page);
+    await page.focus('#td-range-btn');
+    await page.evaluate(() => document.activeElement.blur());
+    await page.setViewport({ width: 480, height: 844 });
+    await settle(page);
+    check(await page.evaluate(() => document.activeElement === document.body), 'intentional blur does not revive stale action focus');
+    await page.setViewport({ width: 481, height: 844 });
+    await settle(page);
+    await page.focus('#td-range-btn');
+    await page.evaluate(() => document.getElementById('fixture').showModal());
+    await page.setViewport({ width: 480, height: 844 });
+    await settle(page);
+    check(await page.$eval('#close', node => node === document.activeElement), 'breakpoint never steals modal focus');
+    await page.click('#close');
     await openMenu(page);
     await page.keyboard.press('Enter');
     check(await page.evaluate(() => window.commandCount === 1), 'Enter fires once');
