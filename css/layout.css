@@ -1109,10 +1109,6 @@ html.game-reset * {
 
         .game-shell--immersive > .game-topbar { padding-top: 10px !important; }
 
-        /* TD keeps its existing zero-padding fixed HUD once the game starts. */
-        .td-shell.game-shell--immersive:has(> .td-main > .td-stage > .game-overlay--menu.hidden) > .td-topbar {
-            padding-top: 0 !important;
-        }
     }
 
     /* 窄屏收紧顶栏间距：保证最挤的页面（td 三个状态胶囊）仍保持单行 */
