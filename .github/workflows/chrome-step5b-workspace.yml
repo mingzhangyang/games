@@ -1,0 +1,23 @@
+name: Chrome step 5b development snapshot
+on:
+  push:
+    branches: [dev/chrome-step5b-workspace]
+    paths: [.github/workflows/chrome-step5b-workspace.yml]
+permissions:
+  contents: read
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 036244af3341d7145b43af62376ed1e433103864
+          persist-credentials: false
+      - name: Archive tracked source only
+        run: git archive --format=tar.gz -o /tmp/games-source.tar.gz HEAD
+      - uses: actions/upload-artifact@v4
+        with:
+          name: games-source-036244af
+          path: /tmp/games-source.tar.gz
+          retention-days: 1
