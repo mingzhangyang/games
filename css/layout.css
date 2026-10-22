@@ -205,6 +205,8 @@ html.game-reset * {
     }
 
     .game-topbar .game-topbar-name {
+        /* Text-overflow needs a text block, not an anonymous centered flex item. */
+        display: block !important;
         flex: 0 1 auto;
         min-width: 0 !important;
         max-width: 100% !important;

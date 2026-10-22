@@ -5,6 +5,7 @@ import { registry } from '../lib/registry.mjs';
 import { mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { parseShotViewports, shotFilename } from './shots-config.mjs';
 
 const CHROME = CHROME_PATH;
 const OUT = process.argv[2] || join(tmpdir(), 'shots');
@@ -13,11 +14,7 @@ const BASE = process.argv[3] || 'http://127.0.0.1:8899';
 const PAGES = (process.env.PAGES || registry.all().map(g => g.id).join(',')).split(',');
 
 const VIEWPORTS = process.env.SHOTS_VIEWPORTS
-    ? process.env.SHOTS_VIEWPORTS.split(',').map(spec => {
-        const [width, height] = spec.split('x').map(Number);
-        if (!width || !height) throw new Error('Invalid SHOTS_VIEWPORTS: ' + spec);
-        return { tag: width <= 480 ? 'm' + width : 'd' + width, width, height };
-    })
+    ? parseShotViewports(process.env.SHOTS_VIEWPORTS)
     : [{ tag: 'm', width: 390, height: 844 }, { tag: 'd', width: 1280, height: 900 }];
 const LANGS = (process.env.LANGS || 'default').split(',');
 
@@ -47,7 +44,7 @@ for (const name of PAGES) {
             problems.push(`[goto] ${e.message}`);
         }
         await new Promise(r => setTimeout(r, 900));
-        await page.screenshot({ path: `${OUT}/${name}-${vp.tag}${lang === 'default' ? '' : '-' + lang}.png` });
+        await page.screenshot({ path: join(OUT, shotFilename(name, vp, lang)) });
         await page.close();
     }
     const uniq = [...new Set(problems)];

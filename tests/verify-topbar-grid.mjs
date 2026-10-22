@@ -8,10 +8,14 @@ import { registry } from './lib/registry.mjs';
 
 const BASE = process.argv.slice(2).find(a => a.startsWith('http')) || 'http://127.0.0.1:8899';
 const GAMES = registry.withCap('topbar').map(g => g.id).filter(keepPage);
+// Exercise the hidden-title-first case in every full and filtered regression.
+const towerIndex = GAMES.indexOf('tower-defense');
+if (towerIndex > 0) GAMES.unshift(GAMES.splice(towerIndex, 1)[0]);
 exitIfNoPages(GAMES, 'verify-topbar-grid');
 
 const VIEWPORTS = [[320, 568], [375, 553], [390, 664], [1280, 900]];
 const MOBILE = new Map();
+const VISIBLE_TITLE_ANCHORS = new Map();
 const fails = [];
 const widths = [];
 let count = 0;
@@ -36,6 +40,18 @@ async function measure(page) {
                 width: rect.width, height: rect.height };
         };
         const style = name && getComputedStyle(name);
+        // A centered anonymous flex item can clip the *start* of the title
+        // despite text-overflow:ellipsis on its parent. Measure its first glyph.
+        const bareText = name && [...name.childNodes]
+            .find(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
+        let firstGlyphOffset = null;
+        if (bareText) {
+            const index = bareText.textContent.search(/\S/);
+            const range = document.createRange();
+            range.setStart(bareText, index);
+            range.setEnd(bareText, index + 1);
+            firstGlyphOffset = range.getBoundingClientRect().left - name.getBoundingClientRect().left;
+        }
         const inner = name?.innerText?.trim() || '';
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -58,7 +74,8 @@ async function measure(page) {
             columns: header && getComputedStyle(header).gridTemplateColumns,
             home: box(home), sound: box(sound), name: box(name), center: box(center),
             nameHidden: name && (getComputedStyle(name).display === 'none' || box(name).width === 0),
-            text: inner, size: style?.fontSize, weight: style?.fontWeight,
+            text: inner, display: style?.display, firstGlyphOffset,
+            size: style?.fontSize, weight: style?.fontWeight,
             font: style?.fontFamily, shadow: style?.textShadow,
             background: style?.backgroundImage, fill: style?.webkitTextFillColor,
             color: style?.color, whiteSpace: style?.whiteSpace,
@@ -97,6 +114,15 @@ for (const [w, h] of VIEWPORTS) {
                 assert(near(r.sound.right, w - 10, 1.5) || w >= 1024,
                     tag + ': Sound not flush with mobile bar edge: x=' + r.sound.right);
                 if (!r.nameHidden) {
+                    assert(r.display === 'block',
+                        tag + ': title must be a block for correct text ellipsis, got ' + r.display);
+                    if (id === 'magnetic-garden' && lang === 'en' && w === 320) {
+                        assert(r.required > r.available + 1,
+                            tag + ': expected the narrow English title to overflow');
+                        assert(near(r.firstGlyphOffset, 0, 1.5),
+                            tag + ': first glyph is clipped/centered instead of leading-aligned: '
+                            + r.firstGlyphOffset);
+                    }
                     assert(near(r.name.x - r.home.right, 12, 1.2),
                         tag + ': name must start 12px after Home: dx=' + (r.name.x - r.home.right).toFixed(1));
                     assert(r.whiteSpace === 'nowrap', tag + ': title is not single-line nowrap');
@@ -117,14 +143,26 @@ for (const [w, h] of VIEWPORTS) {
                 }
                 if (w <= 480) {
                     const key = w + 'x' + h;
-                    const anchor = { homeX: r.home.x, homeY: r.home.y,
-                        soundX: r.sound.x, soundY: r.sound.y, nameX: r.name?.x, nameY: r.name?.y };
+                    const chromeAnchor = { homeX: r.home.x, homeY: r.home.y,
+                        soundX: r.sound.x, soundY: r.sound.y };
                     const original = MOBILE.get(key);
-                    if (!original) MOBILE.set(key, anchor);
-                    else for (const field of ['homeX', 'homeY', 'soundX', 'soundY', ...(!r.nameHidden ? ['nameX', 'nameY'] : [])]) {
-                        assert(near(anchor[field], original[field], 1.2),
+                    if (!original) MOBILE.set(key, chromeAnchor);
+                    else for (const field of ['homeX', 'homeY', 'soundX', 'soundY']) {
+                        assert(near(chromeAnchor[field], original[field], 1.2),
                             tag + ': mobile anchor ' + field + ' differs: '
-                            + anchor[field]?.toFixed(1) + ' vs ' + original[field]?.toFixed(1));
+                            + chromeAnchor[field]?.toFixed(1) + ' vs ' + original[field]?.toFixed(1));
+                    }
+                    // Tower Defense hides its portrait title. A hidden name must
+                    // never seed the baseline used by later visible titles.
+                    if (!r.nameHidden) {
+                        const titleAnchor = { nameX: r.name.x, nameY: r.name.y };
+                        const firstVisible = VISIBLE_TITLE_ANCHORS.get(key);
+                        if (!firstVisible) VISIBLE_TITLE_ANCHORS.set(key, titleAnchor);
+                        else for (const field of ['nameX', 'nameY']) {
+                            assert(near(titleAnchor[field], firstVisible[field], 1.2),
+                                tag + ': visible title anchor ' + field + ' differs: '
+                                + titleAnchor[field]?.toFixed(1) + ' vs ' + firstVisible[field]?.toFixed(1));
+                        }
                     }
                 }
                 // Reverse mutations: real layout and text-style regression gates must turn red.
@@ -146,7 +184,7 @@ for (const [w, h] of VIEWPORTS) {
 await browser.close();
 console.log('TOPBAR_WIDTH_SUMMARY ' + JSON.stringify({ samples: widths.length, expected: GAMES.length * VIEWPORTS.length * 2,
     longEnglish: widths.filter(r => r.lang === 'en' && r.w <= 390 && r.overflow > 1),
-    anchors: Object.fromEntries(MOBILE) }));
+    anchors: Object.fromEntries(MOBILE), titleAnchors: Object.fromEntries(VISIBLE_TITLE_ANCHORS) }));
 if (fails.length) {
     console.log('✗ verify-topbar-grid: ' + fails.length + '/' + count + ' checks failed');
     for (const f of fails) console.log('  ✗ ' + f);
