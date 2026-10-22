@@ -16,7 +16,7 @@ onReady(() => {
     window.mgRuntime = mountGameRuntime({ self: 'magnetic-garden.html', game, frame: { layout: 'immersive' }, more: '#mgMore', chrome: { getText, owns: ['home', 'sound'], labels: { pause: () => game.isPaused ? getText().resumeLabel : getText().pause } } });
     const scoreboard = mountScoreboardDialog({
         boards: CHAPTERS.map(chapter => ({ id: chapter.id, key: `magnetic-garden-${chapter.id}`, label: chapter.title, description: { en: LANGUAGES.en.chapterScore, zh: LANGUAGES.zh.chapterScore } })),
-        triggers: [{ before: '#mg-pause-btn', icon: true }, { before: '#mg-help-btn' }],
+        triggers: [{ selector: '#mg-leaderboard-btn', icon: true }, { before: '#mg-help-btn' }],
         onOpen: () => game.pauseOwnership.acquire('ranking'), onClose: () => game.pauseOwnership.release('ranking'),
     });
     window.mgScoreboard = scoreboard;

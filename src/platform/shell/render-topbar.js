@@ -1,7 +1,11 @@
+import { ICONS as SHARED_ICONS } from '../icons.js';
+
 // Source of truth: games.config.json `chrome` field, not per-page HTML.
 // Shared three-slot structure, built-in icons and action ordering. Pure HTML serialization:
 // no runtime DOM injection and no changes to game event handlers.
 const ICONS = Object.freeze({
+    trophy: SHARED_ICONS.trophy,
+    more: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>',
     home: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg>',
     sound: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg>',
     'sound-no-stroke': '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4.5v-15L8 9H4z"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M19 6.2a8.2 8.2 0 0 1 0 11.6"/></svg>',
@@ -95,6 +99,13 @@ function defaultNode(game, role) {
                 'data-chrome': 'pause', class: cls, id: p + '-pause-btn',
                 title: 'Pause', 'aria-label': 'Pause',
             }, icon: 'pause' };
+        case 'leaderboard':
+            return { tag: 'button', attrs: {
+                type: 'button', id: p + '-leaderboard-btn',
+                class: 'scoreboard-trigger scoreboard-trigger--icon game-icon-btn',
+                'data-scoreboard-trigger': '', 'data-scoreboard-icon': 'true',
+                title: 'View rankings', 'aria-label': 'View rankings', 'aria-haspopup': 'dialog',
+            }, icon: 'trophy' };
         case 'sound':
             return { tag: 'button', attrs: {
                 type: 'button', class: cls, id: p + '-mute-btn',
@@ -107,8 +118,38 @@ function defaultNode(game, role) {
 
 const CONTENT_KEYS = ['icon', 'text', 'textFrom', 'children'];
 const ACTION_ROLES = new Set([
-    'restart', 'theme', 'help', 'range', 'speed', 'stats', 'pause', 'sound',
+    'restart', 'theme', 'help', 'range', 'speed', 'leaderboard', 'stats', 'pause', 'sound',
 ]);
+
+// Stable slots: gameplay state can hide a slot, but never promotes another action
+// underneath a finger. Home/Sound are fixed; every other role shares this budget.
+const MOBILE_PRIORITY = Object.freeze({
+    speed: 100, pause: 90, stats: 80, leaderboard: 70,
+    help: 60, theme: 50, range: 30, restart: 10,
+});
+
+export function planMobileTopbar(game) {
+    const actions = game.chrome.actions;
+    const mobile = game.chrome.mobile || {};
+    const limit = mobile.maxVisibleActions ?? 2;
+    if (!Number.isInteger(limit) || limit < 0 || limit > 2) {
+        throw new Error('mobile topbar budget must be an integer from 0 to 2: ' + game.id);
+    }
+    const priorities = mobile.priority || {};
+    for (const [role, priority] of Object.entries(priorities)) {
+        if (role === 'sound' || !actions.includes(role)
+            || !Number.isInteger(priority) || priority < 0 || priority > 1000) {
+            throw new Error('invalid mobile action priority: ' + game.id + '.' + role);
+        }
+    }
+    const candidates = actions.filter(role => role !== 'sound');
+    const ranked = candidates.map((role, index) => ({ role, index,
+        priority: priorities[role] ?? MOBILE_PRIORITY[role] ?? 0,
+    })).sort((a, b) => b.priority - a.priority || a.index - b.index);
+    const visible = new Set(ranked.slice(0, limit).map(action => action.role));
+    return { visible: candidates.filter(role => visible.has(role)),
+        overflow: candidates.filter(role => !visible.has(role)) };
+}
 
 function applyNodeOverride(base, patch, role) {
     if (Array.isArray(patch)) {
@@ -190,6 +231,7 @@ export function renderTopbar(game, indent = '        ') {
         throw new Error('topbar Home missing for ' + game.id);
     }
     const actions = chrome.actions;
+    const mobile = planMobileTopbar(game);
     if (actions.at(-1)?.role !== 'sound'
         || actions.filter(a => a.role === 'sound').length !== 1) {
         throw new Error('topbar Sound must occur exactly once, last: ' + game.id);
@@ -207,6 +249,32 @@ export function renderTopbar(game, indent = '        ') {
     const right = groupAttrs(chrome, 'right', p + '-topbar-actions game-topbar-group');
     const mid = indent + '    ';
     const inner = mid + '    ';
+    const menuId = p + 'TopbarMenu';
+    const moreId = p + 'TopbarMore';
+    const overflow = actions.filter(action => mobile.overflow.includes(action.role));
+    const more = { tag: 'button', attrs: {
+        type: 'button', id: moreId, class: 'game-icon-btn game-topbar-more',
+        'data-topbar-more': '', hidden: null, popovertarget: menuId,
+        'aria-controls': menuId, 'aria-expanded': 'false', 'aria-haspopup': 'menu',
+        'aria-label': 'More actions', title: 'More actions',
+    }, icon: 'more' };
+    const menu = { tag: 'div', attrs: {
+        id: menuId, class: 'game-topbar-menu', popover: 'auto',
+        role: 'menu', 'aria-labelledby': moreId,
+    }, children: overflow.map(action => ({ tag: 'button', attrs: {
+        type: 'button', class: 'game-topbar-menu-item', role: 'menuitem', tabindex: '-1',
+        'data-topbar-proxy': action.attrs.id,
+    }, children: [{ tag: 'span', attrs: { 'data-topbar-menu-label': '' },
+        text: action.attrs['aria-label'] || action.attrs.title || action.role }] })) };
+    const renderedActions = actions.flatMap(action => {
+        if (!action.attrs.id) throw new Error('topbar action requires an id: ' + game.id + '.' + action.role);
+        const node = { ...action, attrs: { ...action.attrs, 'data-topbar-action': action.role } };
+        if (mobile.overflow.includes(action.role)) node.attrs['data-topbar-overflow-source'] = '';
+        // The popover is out of flow. Sound remains the last button in the row.
+        return action.role === 'sound' && overflow.length
+            ? [nodeHtml(menu, inner, game), nodeHtml(more, inner, game), nodeHtml(node, inner, game)]
+            : [nodeHtml(node, inner, game)];
+    });
     return [
         indent + '<header' + attrs(header) + '>',
         mid + '<div' + attrs(left) + '>',
@@ -217,7 +285,7 @@ export function renderTopbar(game, indent = '        ') {
         ...[chrome.name].flat().map(n => nodeHtml(n, inner, game)),
         mid + '</div>',
         mid + '<div' + attrs(right) + '>',
-        ...actions.map(a => nodeHtml(a, inner, game)),
+        ...renderedActions,
         mid + '</div>',
         indent + '</header>',
     ].join('\n');

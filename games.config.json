@@ -1094,7 +1094,8 @@
               "title": "Toggle Ranges (R)",
               "aria-label": "Toggle Ranges",
               "data-i18n-title": "rangeBtnTitle",
-              "data-i18n-label": "rangeBtnTitle"
+              "data-i18n-label": "rangeBtnTitle",
+              "aria-pressed": "false"
             },
             "icon": "range"
           },
@@ -1124,6 +1125,14 @@
               "data-i18n-title": "muteBtnTitle",
               "data-i18n-label": "muteBtnTitle"
             }
+          }
+        },
+        "mobile": {
+          "priority": {
+            "speed": 100,
+            "pause": 90,
+            "stats": 60,
+            "range": 30
           }
         }
       }
@@ -1291,6 +1300,7 @@
       },
       "chrome": {
         "actions": [
+          "leaderboard",
           "stats",
           "pause",
           "sound"
@@ -1329,6 +1339,12 @@
             "attrs": {
               "id": "na-btn-sound"
             }
+          }
+        },
+        "mobile": {
+          "priority": {
+            "pause": 100,
+            "stats": 90
           }
         }
       }
@@ -2151,6 +2167,7 @@
       "chrome": {
         "actions": [
           "restart",
+          "leaderboard",
           "stats",
           "sound"
         ],
@@ -2198,6 +2215,12 @@
               "aria-label": "Sound"
             },
             "icon": null
+          }
+        },
+        "mobile": {
+          "priority": {
+            "leaderboard": 90,
+            "stats": 80
           }
         }
       }
@@ -2263,6 +2286,7 @@
       "chrome": {
         "actions": [
           "restart",
+          "leaderboard",
           "sound"
         ],
         "overrides": {
@@ -2390,6 +2414,7 @@
       "chrome": {
         "actions": [
           "restart",
+          "leaderboard",
           "stats",
           "sound"
         ],
@@ -2422,6 +2447,12 @@
               "aria-label": "Sound"
             },
             "icon": null
+          }
+        },
+        "mobile": {
+          "priority": {
+            "leaderboard": 90,
+            "stats": 80
           }
         }
       }
@@ -2487,6 +2518,7 @@
       "chrome": {
         "actions": [
           "restart",
+          "leaderboard",
           "pause",
           "sound"
         ],
@@ -2559,6 +2591,12 @@
               "aria-label": "Sound"
             },
             "icon": null
+          }
+        },
+        "mobile": {
+          "priority": {
+            "pause": 100,
+            "leaderboard": 90
           }
         }
       }
@@ -2636,6 +2674,7 @@
           "class": "game-topbar-group"
         },
         "actions": [
+          "leaderboard",
           "pause",
           "sound"
         ],
@@ -2757,6 +2796,7 @@
       "chrome": {
         "actions": [
           "restart",
+          "leaderboard",
           "pause",
           "sound"
         ],
@@ -2829,6 +2869,12 @@
               "aria-label": "Sound"
             },
             "icon": null
+          }
+        },
+        "mobile": {
+          "priority": {
+            "pause": 100,
+            "leaderboard": 90
           }
         }
       }

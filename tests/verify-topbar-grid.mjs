@@ -8,7 +8,7 @@ import { registry } from './lib/registry.mjs';
 
 const BASE = process.argv.slice(2).find(a => a.startsWith('http')) || 'http://127.0.0.1:8899';
 const GAMES = registry.withCap('topbar').map(g => g.id).filter(keepPage);
-// Exercise the hidden-title-first case in every full and filtered regression.
+// Exercise the densest topbar first in full and filtered regressions.
 const towerIndex = GAMES.indexOf('tower-defense');
 if (towerIndex > 0) GAMES.unshift(GAMES.splice(towerIndex, 1)[0]);
 exitIfNoPages(GAMES, 'verify-topbar-grid');
@@ -107,13 +107,7 @@ for (const [w, h] of VIEWPORTS) {
                 assert(r.grid, tag + ': header not grid');
                 assert(r.home && r.sound && r.center && r.name, tag + ': missing required anchor/title');
                 if (!r.home || !r.sound || !r.center || !r.name) continue;
-                const titleException = id === 'tower-defense' && w <= 480 && h > w;
-                if (titleException) {
-                    assert(r.nameHidden && r.display === 'none',
-                        tag + ': Tower Defense portrait title must remain display:none, got ' + r.display);
-                } else {
-                    assert(!r.nameHidden, tag + ': visible game title unexpectedly hidden');
-                }
+                assert(!r.nameHidden, tag + ': game title unexpectedly hidden');
                 assert(r.truncatedOther.length === 0,
                     tag + ': non-title text truncated: ' + r.truncatedOther.join(','));
                 assert(near(r.sound.right, w - 10, 1.5) || w >= 1024,
@@ -157,8 +151,7 @@ for (const [w, h] of VIEWPORTS) {
                             tag + ': mobile anchor ' + field + ' differs: '
                             + chromeAnchor[field]?.toFixed(1) + ' vs ' + original[field]?.toFixed(1));
                     }
-                    // Tower Defense hides its portrait title. A hidden name must
-                    // never seed the baseline used by later visible titles.
+                    // Keep the title baseline separate from the Home/Sound anchors.
                     if (!r.nameHidden) {
                         const titleAnchor = { nameX: r.name.x, nameY: r.name.y };
                         const firstVisible = VISIBLE_TITLE_ANCHORS.get(key);
@@ -186,8 +179,7 @@ for (const [w, h] of VIEWPORTS) {
         }
     }
 }
-// Tower Defense has an intentional exception: portrait hides the header name,
-// but turning the device to landscape must restore it without reloading.
+// Tower Defense keeps its title in both orientations, without reloading.
 // Also exercise the 480px portrait CSS breakpoint (the main matrix ends at 390px).
 if (GAMES.includes('tower-defense')) {
     const page = await browser.newPage();
@@ -196,9 +188,9 @@ if (GAMES.includes('tower-defense')) {
         await page.goto(BASE + '/tower-defense.html', { waitUntil: 'domcontentloaded', timeout: 25000 });
         await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
         for (const [width, height, hidden] of [
-            [480, 640, true],
+            [480, 640, false],
             [568, 320, false],
-            [390, 664, true],
+            [390, 664, false],
         ]) {
             await page.setViewport({ width, height, deviceScaleFactor: 1 });
             await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));

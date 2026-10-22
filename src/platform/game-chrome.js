@@ -14,6 +14,7 @@
 
 import { getMuted, setMuted } from './site-settings.js';
 import { ICONS } from './icons.js';
+import { bindTopbarOverflow } from './game-topbar-overflow.js';
 
 function setLabel(node, text) {
     if (!node || !text) return;
@@ -110,7 +111,8 @@ export function bindChrome(opts) {
         refresh();
     }
 
-    const api = { refresh, renderSound, renderHome, renderPause, nodes };
+    const overflow = bindTopbarOverflow(document.querySelector('.game-topbar'));
+    const api = { refresh, renderSound, renderHome, renderPause, nodes, overflow };
     init();
     return api;
 }

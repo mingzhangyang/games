@@ -122,7 +122,7 @@ class GameEngine {
                 },
             ],
             triggers: [
-                { before: '#naStatsToggle', icon: true, boardId: () => this.mode === 'daily' ? 'daily' : 'endless' },
+                { selector: '#na-leaderboard-btn', icon: true, boardId: () => this.mode === 'daily' ? 'daily' : 'endless' },
                 { before: '#na-btn-result-home', boardId: () => this.mode === 'daily' ? 'daily' : 'endless' },
             ],
             onOpen: () => this.pauseOwnership.acquire('ranking'),

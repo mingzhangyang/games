@@ -393,7 +393,7 @@ export function createGame({ i18nBinder = null } = {}) {
                 label: { en: 'All-time high scores', zh: '历史最高分' },
                 description: { en: 'Each finished run, including timeouts. Highest score wins.', zh: '每局结束（包括超时）均可参赛，分数越高越好。' },
             }],
-            triggers: [{ before: '#cpStatsToggle', icon: true }, { before: '#cp-menu-btn' }],
+            triggers: [{ selector: '#cp-leaderboard-btn', icon: true }, { before: '#cp-menu-btn' }],
             onOpen: () => pauseOwnership.acquire('ranking'),
             onClose: () => pauseOwnership.release('ranking'),
         });

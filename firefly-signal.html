@@ -53,8 +53,9 @@
                 <span class="fs-brand game-topbar-name" data-i18n="title">Firefly Signal</span>
             </div>
             <div class="fs-topbar-actions game-topbar-group">
-                <button type="button" class="fs-icon-btn game-icon-btn" id="fs-btn-restart" title="Restart" aria-label="Restart" disabled data-i18n-title="restart" data-i18n-label="restart"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
-                <button type="button" class="fs-icon-btn game-icon-btn" id="fs-btn-mute" data-chrome="sound" title="Sound" aria-label="Sound"></button>
+                <button type="button" class="fs-icon-btn game-icon-btn" id="fs-btn-restart" title="Restart" aria-label="Restart" disabled data-i18n-title="restart" data-i18n-label="restart" data-topbar-action="restart"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
+                <button type="button" id="fs-leaderboard-btn" class="scoreboard-trigger scoreboard-trigger--icon game-icon-btn" data-scoreboard-trigger="" data-scoreboard-icon="true" title="View rankings" aria-label="View rankings" aria-haspopup="dialog" data-topbar-action="leaderboard"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5.5a4 4 0 0 1-8 0V4z"/><path d="M8 5.5H5.2v1.4a3 3 0 0 0 3 3"/><path d="M16 5.5h2.8v1.4a3 3 0 0 1-3 3"/><path d="M12 13.5v4"/><path d="M8.5 20.5h7"/></svg></button>
+                <button type="button" class="fs-icon-btn game-icon-btn" id="fs-btn-mute" data-chrome="sound" title="Sound" aria-label="Sound" data-topbar-action="sound"></button>
             </div>
         </header>
         <!-- registry:end topbar -->

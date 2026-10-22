@@ -61,7 +61,7 @@ onReady(() => {
                 zh: '每天只计第一次完成的成绩，推理分越高越好。',
             },
         }],
-        triggers: [{ before: '#sm-pause-btn', icon: true }, { before: '#sm-btn-menu' }],
+        triggers: [{ selector: '#sm-leaderboard-btn', icon: true }, { before: '#sm-btn-menu' }],
         onOpen: () => game.pauseOwnership.acquire('ranking'),
         onClose: () => game.pauseOwnership.release('ranking'),
     });

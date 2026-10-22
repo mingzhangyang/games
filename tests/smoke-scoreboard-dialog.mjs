@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { clickTopbarAction, revealTopbarAction } from './lib/topbar-actions.mjs';
 // Browser-visible leaderboard coverage for all scores.ui="dialog" games.
 import puppeteer from 'puppeteer-core';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
@@ -93,6 +94,7 @@ try {
             const trigger = game.id === 'math-rain'
                 ? '#start-screen .scoreboard-trigger--icon' : '.scoreboard-trigger--icon';
             await page.waitForSelector(trigger, { timeout: 18000 });
+            const presented = await revealTopbarAction(page, trigger);
             const state = await page.evaluate(selector => {
                 const icon = document.querySelector(selector);
                 const box = icon?.getBoundingClientRect();
@@ -104,16 +106,16 @@ try {
                 const visualSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tok-btn-size'));
                 const hit = box && document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
                 return { visible, width: box?.width, height: box?.height,
-                    visualSize, targetHeight, layoutHeight: iconStyle?.height,
+                    menuItem: icon?.hasAttribute('data-topbar-proxy'), visualSize, targetHeight, layoutHeight: iconStyle?.height,
                     insideViewport: !!box && box.left >= 0 && box.right <= innerWidth && box.top >= 0 && box.bottom <= innerHeight,
                     tappable: hit === icon || icon?.contains(hit),
                     aria: icon?.getAttribute('aria-label') };
-            }, trigger);
+            }, presented);
             if (!state.visible || !state.aria || !state.tappable || !state.insideViewport || state.width < 32 || state.height < 32) {
                 errors.push(game.id + ': rank entry missing: ' + JSON.stringify(state));
                 continue;
             }
-            if (['needle-awn', 'shadow-loom'].includes(game.id)
+            if (!state.menuItem && ['needle-awn', 'shadow-loom'].includes(game.id)
                 && (Math.abs(state.height - state.visualSize) > 1 || state.targetHeight < 44)) {
                 errors.push(game.id + ': topbar rank control changed frame chrome or lost its 44px hit area: '
                     + JSON.stringify(state));
@@ -121,7 +123,7 @@ try {
             // The modal consumes keyup. A key/button held before opening must
             // be explicitly released by the owning game input controller.
             await setHeldMovement(page, game.id);
-            await page.click(trigger);
+            await clickTopbarAction(page, trigger);
             await page.waitForFunction(() => document.querySelector('dialog[data-scoreboard-dialog]')?.open, { timeout: 6000 });
             if (!await heldMovementReleased(page, game.id)) {
                 errors.push(game.id + ': modal open left held keyboard/joystick/fire state behind');
@@ -304,9 +306,11 @@ try {
                     const playing = id === 'carrot-pull'
                         ? window.cpGame.state.mode === 'playing' && !window.cpGame.state.paused
                         : window.slGame.state === 'playing' && !window.slGame.isPaused;
-                    return playing && button && !button.disabled && getComputedStyle(button).display !== 'none';
+                    return playing && button && !button.disabled && !button.classList.contains('hidden')
+                        && (button.getBoundingClientRect().width > 0
+                            || document.querySelector('[data-topbar-proxy="' + button.id + '"]')?.hidden === false);
                 }, { timeout: 6000 }, game.id);
-                await page.click(trigger);
+                await clickTopbarAction(page, trigger);
                 await page.waitForFunction(id => {
                     const button = document.getElementById(id === 'carrot-pull' ? 'cp-reset-btn' : 'sl-reset-btn');
                     const paused = id === 'carrot-pull'
@@ -322,14 +326,16 @@ try {
                         ? window.cpGame.state.mode === 'playing' && !window.cpGame.state.paused
                         : window.slGame.state === 'playing' && !window.slGame.isPaused;
                     return !document.querySelector('dialog[data-scoreboard-dialog]')?.open
-                        && resumed && button && !button.disabled && getComputedStyle(button).display !== 'none';
+                        && resumed && button && !button.disabled && !button.classList.contains('hidden')
+                        && (button.getBoundingClientRect().width > 0
+                            || document.querySelector('[data-topbar-proxy="' + button.id + '"]')?.hidden === false);
                 }, { timeout: 6000 }, game.id);
             }
 
             // Simulate a Cloudflare auto-published site outrunning the manually
             // deployed scoring Worker. Old Worker rejects the new board key.
             scoreWorkerReady = false;
-            await page.click(trigger);
+            await clickTopbarAction(page, trigger);
             await page.waitForFunction(() => {
                 const dialog = document.querySelector('dialog[data-scoreboard-dialog]');
                 return dialog?.open && dialog.querySelector('.scoreboard-status')?.textContent

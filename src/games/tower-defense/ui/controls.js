@@ -334,6 +334,17 @@ export function bindUI(game) {
         game.closeTacticalPanel();
     });
 
+    // The non-modal field manual owns its keys even before a run starts.
+    for (const type of ['keydown', 'keyup', 'keypress']) {
+        game.el.tacticalPanel?.addEventListener(type, event => {
+            event.stopPropagation();
+            if (type === 'keydown' && event.key === 'Escape') {
+                event.preventDefault();
+                game.closeTacticalPanel();
+            }
+        });
+    }
+
     // 战术技能
     if (game.el['skill-emp']) game.el['skill-emp'].addEventListener('click', () => game.castEmp());
     if (game.el['skill-boost']) game.el['skill-boost'].addEventListener('click', () => game.castOverdrive());

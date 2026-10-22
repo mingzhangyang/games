@@ -166,3 +166,23 @@ eslint 忽略，源 SVG、生成器与同步检查才是权威。
 ### Dialog leaderboard surface
 
 Games with `scores.ui: "dialog"` use `src/platform/scoreboard-dialog.js` to mount a visible topbar/result entry, locale-aware native dialog, player nickname, leaderboard selection, loading/error/empty states, and read/submission through the shared leaderboard module. This ensures a submit-only implementation cannot masquerade as a functioning leaderboard. `verify-scoreboard-contract.mjs` validates this against the registry and Worker; `smoke-scoreboard-dialog.mjs` exercises the actual dialog. These dialog-hosted `game-lb-*` surfaces are deliberately outside the existing **page-local overlay** geometry fixture.
+
+### Mobile topbar policy (Step 5b)
+
+The generated action list includes `leaderboard` for every topbar page using the
+shared scoreboard dialog. Its runtime trigger references the generated button by
+`selector` instead of inserting another topbar control. Home/Sound are pinned;
+Stats/Pause participate in the mobile two-action budget.
+
+```json
+"mobile": {
+  "priority": { "speed": 100, "pause": 90, "stats": 60, "range": 30 }
+}
+```
+
+This optional object belongs under `chrome`. Shared defaults cover other pages;
+only real priority exceptions are declared. `maxVisibleActions` defaults to 2,
+with allowed integer values 0..2. Unknown/unused roles, Sound priorities, and
+invalid priorities fail generation. The serializer emits both representations;
+CSS switches at 480px and the shared controller mirrors availability, never game
+state. See `chrome.md` section 5 for interaction and focus ownership.

@@ -4,7 +4,6 @@
 //   ① 顶栏所有控件（含 visibility:hidden 的 —— 它们照样占位）垂直中心落在同一行。
 //      minesweeper 曾将「Home · 雷数 · 笑脸 · 计时 · 暂停 · 声音」挤进 320px 顶栏，
 //      计时器被挤到第二行、顶栏高 92px，把开始界面压得很挤（PR #169 截图复盘）。
-//      （2026-10-21 起塔防的状态胶囊并进底部战术条，顶栏回到单行，TWO_ROW 为空。）
 //   ② 顶栏里只有标题允许省略号，其它文字不得截断：reversi 的「AI · Medium」曾被 max-width: 52px 截成「AI · Me…」。
 //   ④ 字体余量：本机 sans-serif 回退到 Inter，CI（Ubuntu）回退到更宽的 DejaVu Sans，真机又是
 //      Roboto / SF / Segoe —— 只按一种字体刚好塞下等于没修（PR #169 本地绿、CI 红）。
@@ -20,7 +19,6 @@ const BASE = process.argv.slice(2).find(a => a.startsWith('http')) || 'http://12
 const PAGES = registry.withCap('topbar').map(g => g.id).filter(keepPage);
 exitIfNoPages(PAGES, 'verify-topbar-row');
 
-const TWO_ROW = new Set();
 const START_HUD = {
     // Reversi scorecards moved to the stage; only Minesweeper Pause remains hidden in topbar.
     minesweeper: { start: '#ms-start', play: '#ms-btn-play', hud: ['#ms-btn-pause'] },
@@ -85,8 +83,7 @@ for (const id of PAGES) {
                 await page.close();
                 continue;
             }
-            if (!TWO_ROW.has(id))
-                check(snap.spread <= 12, `${tag}: 顶栏折成多行（控件中心高差 ${snap.spread}px，顶栏高 ${snap.height}px）`);
+            check(snap.spread <= 12, `${tag}: 顶栏折成多行（控件中心高差 ${snap.spread}px，顶栏高 ${snap.height}px）`);
             check(snap.truncated.length === 0, `${tag}: 顶栏文字被截断：${snap.truncated.join(', ')}`);
 
             const spec = START_HUD[id];

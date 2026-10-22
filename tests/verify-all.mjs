@@ -47,7 +47,7 @@ const QUICK_BROWSER = new Set(['smoke-index', 'verify-chrome', 'verify-theme', '
 const DIST_SUITE = new Set([
     'verify-chrome', 'verify-theme', 'verify-desktop-frame', 'verify-stats-drawer', 'verify-immersive',
     'verify-start-menus', 'smoke-index', 'smoke-carrot-pull', 'smoke-needle-awn', 'smoke-tower-defense',
-    'smoke-sword-flight',
+    'smoke-sword-flight', 'verify-topbar-overflow', 'verify-contextual-restart',
 ]);
 // Approximate CI seconds of the slowest browser steps. Only used to balance --shard; a stale or
 // missing entry costs balance, never coverage. Unlisted browser steps count as DEFAULT_WEIGHT.
@@ -58,6 +58,7 @@ const WEIGHTS = {
     'verify-tetris-drawer': 35, 'verify-stage-status': 30, 'smoke-magnetic-garden': 30, 'verify-science-howto': 55,
     'verify-tetris-topbar-mobile': 30, 'smoke-silk-dew': 25, 'smoke-crystal-bloom': 25,
     'verify-mobile-viewport-fit': 25, 'verify-service-worker': 35, 'smoke-shadow-loom': 20, 'smoke-ripple-duet': 20,
+    'verify-topbar-overflow': 100,
     'verify-topbar-desktop': 145, 'verify-topbar-grid': 145,
     'verify-sidebar-family': 20, 'smoke-index': 15, 'smoke-carrot-pull': 15, 'smoke-maxwell-demon': 15,
 };

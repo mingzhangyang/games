@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { clickTopbarAction } from './lib/topbar-actions.mjs';
 /**
  * smoke-shadow-loom — 影织页运行时冒烟 + 玩法内核真机验证。
  *
@@ -232,7 +233,7 @@ console.log('▶ 重置与键盘');
         }, 4000);
         page.once('dialog', onDialog);
     });
-    await page.click('#sl-reset-btn');
+    await clickTopbarAction(page, '#sl-reset-btn');
     check(/restart|重新开始/i.test(await prompted), '重置已有移动的关卡前要求确认');
     await wait(150);
     const st = await game(() => ({ p: { ...window.slGame.st.pieces[0] }, resets: window.slGame.resets, moves: window.slGame.moves }));

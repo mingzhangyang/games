@@ -244,6 +244,8 @@ export class TowerDefenseGame {
         this.boostCd = 0;
         this.overdriveUntil = 0;
         this.showAllRanges = false;
+        this.el['range-btn']?.classList.remove('active');
+        this.el['range-btn']?.setAttribute('aria-pressed', 'false');
         this.shakeMag = 0;
         this.shakeDur = 0;
 

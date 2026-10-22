@@ -40,7 +40,7 @@ const isFiniteScore = score => Number.isFinite(score) && score >= 0;
 /**
  * @param {object} opts
  * @param {{id:string,key:string|function,label:object,format?:function}[]} opts.boards
- * @param {{before?:string,after?:string,icon?:boolean}[]} opts.triggers
+ * @param {{selector?:string,before?:string,after?:string,icon?:boolean}[]} opts.triggers
  * @param {function} [opts.onOpen]   Called exactly once after opening.
  * @param {function} [opts.onClose]  Called when the native dialog closes.
  */
@@ -193,23 +193,28 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
 
     const buttons = [];
     for (const target of triggers) {
-        const anchor = document.querySelector(target.before || target.after);
-        if (!anchor?.parentElement) {
-            throw new Error('Missing scoreboard entry anchor: ' + (target.before || target.after));
-        }
-        const button = el(document.createElement('button'), target.icon
-            ? 'scoreboard-trigger scoreboard-trigger--icon game-icon-btn'
-            : 'scoreboard-trigger scoreboard-trigger--text game-btn game-action-btn');
-        button.type = 'button';
-        button.dataset.scoreboardTrigger = '';
-        if (target.icon) {
-            button.innerHTML = ICONS.trophy;
-            button.dataset.scoreboardIcon = 'true';
+        let button;
+        if (target.selector) {
+            button = document.querySelector(target.selector);
+            if (target.before || target.after || button?.tagName !== 'BUTTON' || buttons.includes(button)) {
+                throw new Error('Invalid or duplicate generated scoreboard entry: ' + target.selector);
+            }
         } else {
+            const anchor = document.querySelector(target.before || target.after);
+            if (!anchor?.parentElement) {
+                throw new Error('Missing scoreboard entry anchor: ' + (target.before || target.after));
+            }
+            button = el(document.createElement('button'), target.icon
+                ? 'scoreboard-trigger scoreboard-trigger--icon game-icon-btn'
+                : 'scoreboard-trigger scoreboard-trigger--text game-btn game-action-btn');
+            button.type = 'button';
+            button.dataset.scoreboardTrigger = '';
             button.innerHTML = ICONS.trophy;
-            button.append(el(document.createElement('span')));
+            if (target.icon) button.dataset.scoreboardIcon = 'true';
+            else button.append(el(document.createElement('span')));
+            anchor.parentElement.insertBefore(button, target.before ? anchor : anchor.nextSibling);
         }
-        anchor.parentElement.insertBefore(button, target.before ? anchor : anchor.nextSibling);
+        button.setAttribute('aria-haspopup', 'dialog');
         button.addEventListener('click', () => {
             const selected = typeof target.boardId === 'function' ? target.boardId() : target.boardId;
             open(selected);

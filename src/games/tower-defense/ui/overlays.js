@@ -43,18 +43,27 @@ export function toggleTacticalPanel(game) {
     if (!panel) return;
     const open = panel.classList.contains('hidden');
     if (open) {
+        game.tacticalReturnFocus = document.activeElement;
         panel.classList.remove('hidden');
         game.renderTacticalPanel();
+        game.el.tacticalClose?.focus({ preventScroll: true });
     } else {
         game.closeTacticalPanel();
     }
 }
 
 export function closeTacticalPanel(game) {
+    const ownedFocus = game.el.tacticalPanel?.contains(document.activeElement);
     if (game.el.tacticalPanel) game.el.tacticalPanel.classList.add('hidden');
     if (game.el.statsToggle) {
         game.el.statsToggle.setAttribute('aria-expanded', 'false');
     }
+    if (ownedFocus) {
+        const target = [game.tacticalReturnFocus, game.el.statsToggle, document.getElementById('tdTopbarMore')]
+            .find(node => node?.isConnected && node.getBoundingClientRect().width > 0);
+        target?.focus({ preventScroll: true });
+    }
+    game.tacticalReturnFocus = null;
 }
 
 export function renderTacticalPanel(game) {
