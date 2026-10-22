@@ -60,10 +60,25 @@ for (const game of registry.all()) {
 for (const file of ['index.html', 'math-rain.html', 'tank-battle.html']) {
     assert(!read(file).includes(BEGIN), file + ': explicitly out of scope');
 }
-// Negative proof: modifying a previously preserved accessibility field is observable.
+// The convention template must represent real pages without verbatim button markup.
+assert(games.some(game => !game.chrome.overrides),
+    'at least one game must use only the default template');
+for (const game of games) {
+    assert(game.chrome.actions.every(role => typeof role === 'string'),
+        game.id + ': actions must be compact role names');
+}
 const mutated = JSON.parse(JSON.stringify(games[0]));
-mutated.chrome.home.attrs['aria-label'] = 'NOT HOME';
+mutated.chrome.overrides ||= {};
+mutated.chrome.overrides.home ||= {};
+mutated.chrome.overrides.home.attrs ||= {};
+mutated.chrome.overrides.home.attrs['aria-label'] = 'NOT HOME';
 assert.notEqual(renderTopbar(mutated), renderTopbar(games[0]),
     'an aria-label mutation must be detected by the generated-region check');
+const unknownRole = JSON.parse(JSON.stringify(games[0]));
+unknownRole.chrome.actions.unshift('unsupported');
+assert.throws(() => renderTopbar(unknownRole), /invalid or duplicate topbar action role/);
+const unusedOverride = JSON.parse(JSON.stringify(games[0]));
+unusedOverride.chrome.overrides.unused = { attrs: { id: 'not-a-real-action' } };
+assert.throws(() => renderTopbar(unusedOverride), /unused topbar override/);
 console.log('verify-topbar-registry: ' + passed + '/' + games.length
-    + ' generated headers exact; 3 exempt pages; mutation gate passed');
+    + ' generated headers exact; 3 exempt pages; default/override mutation gates passed');
