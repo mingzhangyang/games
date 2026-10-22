@@ -114,9 +114,10 @@ jobs:
         run: node tests/verify-all.mjs --browser --with-dist --shard=${{ matrix.shard }}/${SHARDS} --jobs=2
 
       # Capture every desktop viewport in both languages for the step-4 chrome review.
+      # Do not launch 168 expensive screenshots on superseded/cancelled PR runs.
       # One shard only, on chrome PRs, to avoid unnecessary browser work and CI storage.
       - name: Full-site desktop topbar screenshots
-        if: always() && matrix.shard == 1 && contains(github.event.pull_request.title, 'chrome')
+        if: always() && !cancelled() && matrix.shard == 1 && contains(github.event.pull_request.title, 'chrome')
         env:
           LANGS: 'zh,en'
           SHOTS_VIEWPORTS: '1280x900,1440x900,1920x1080'
@@ -128,7 +129,7 @@ jobs:
           node tools/dev/shots.mjs /tmp/chrome-step4-desktop-shots http://127.0.0.1:8899
 
       - name: Upload full-site screenshots
-        if: always() && matrix.shard == 1 && contains(github.event.pull_request.title, 'chrome')
+        if: always() && !cancelled() && matrix.shard == 1 && contains(github.event.pull_request.title, 'chrome')
         uses: actions/upload-artifact@v4
         with:
           name: chrome-step4-desktop-all-pages
