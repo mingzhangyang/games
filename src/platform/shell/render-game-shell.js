@@ -21,6 +21,14 @@ export function renderGameShell(game, {
     const themeSupport = light ? 'dark light' : 'dark';
     const themeColor = game.themeColor || '#0b0f26';
     const themeColorLight = game.themeColorLight || themeColor;
+    const topbarHtml = renderTopbar(game, '        ');
+    // The default title is a div. Give new scaffolds a semantic H1 without
+    // modifying the registry-generated header or duplicating a custom heading.
+    const supplied = [topbarHtml, stageHtml, startHtml, sidebarHtml].join('\n');
+    const headingCount = (supplied.match(/<h1(?:\s|>)/gi) || []).length;
+    if (headingCount > 1) throw new Error('multiple H1 headings in game shell: ' + game.id);
+    const heading = headingCount ? '' :
+        `            <h1 class="sr-only" data-i18n="title">${esc(title)}</h1>\n`;
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -39,10 +47,10 @@ export function renderGameShell(game, {
 <body>
     <div class="game-shell" data-game="${esc(game.id)}">
         <!-- registry:begin topbar -->
-${renderTopbar(game, '        ')}
+${topbarHtml}
         <!-- registry:end topbar -->
         <main class="game-main">
-            <section class="game-stage" id="${prefix}Stage">
+${heading}            <section class="game-stage" id="${prefix}Stage">
                 ${stageHtml}
                 ${startHtml}
             </section>
