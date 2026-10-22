@@ -191,7 +191,7 @@ ok(scaffold.includes('registry:begin topbar') && scaffold.includes('registry:end
 
 // New-game scaffolds use only actions and have no per-game Home/Sound handlers.
 ok(/chrome:\s*\{\s*owns:\s*\['home', 'sound'\],\s*getText:/.test(read('tools/generators/new-game.mjs')),
-'new-game entry hands default Home/Sound buttons to bindChrome');
+    'new-game entry hands default Home/Sound buttons to bindChrome');
 ok(/<button\b[^>]*data-chrome="home"/.test(scaffold)
     && /<main class="game-main">\s*<h1 class="sr-only" data-i18n="title">Fixture Game<\/h1>/.test(scaffold)
     && (scaffold.match(/<h1\b/g) || []).length === 1,
@@ -205,7 +205,7 @@ ok((customTitle.match(/<h1\b/g) || []).length === 1
 'custom topbar H1 suppresses the fallback heading');
 const customStage = renderGameShell(scaffoldGame, { stageHtml: '<h1>Provided heading</h1>' });
 ok((customStage.match(/<h1\b/g) || []).length === 1,
-'custom stage H1 suppresses the fallback heading');
+    'custom stage H1 suppresses the fallback heading');
 let duplicateRejected = false;
 try {
     renderGameShell({ ...scaffoldGame,
