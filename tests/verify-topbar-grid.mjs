@@ -108,7 +108,12 @@ for (const [w, h] of VIEWPORTS) {
                 assert(r.home && r.sound && r.center && r.name, tag + ': missing required anchor/title');
                 if (!r.home || !r.sound || !r.center || !r.name) continue;
                 const titleException = id === 'tower-defense' && w <= 480 && h > w;
-                assert(titleException || !r.nameHidden, tag + ': name unexpectedly hidden');
+                if (titleException) {
+                    assert(r.nameHidden && r.display === 'none',
+                        tag + ': Tower Defense portrait title must remain display:none, got ' + r.display);
+                } else {
+                    assert(!r.nameHidden, tag + ': visible game title unexpectedly hidden');
+                }
                 assert(r.truncatedOther.length === 0,
                     tag + ': non-title text truncated: ' + r.truncatedOther.join(','));
                 assert(near(r.sound.right, w - 10, 1.5) || w >= 1024,
@@ -179,6 +184,34 @@ for (const [w, h] of VIEWPORTS) {
                 await page.close();
             }
         }
+    }
+}
+// Tower Defense has an intentional exception: portrait hides the header name,
+// but turning the device to landscape must restore it without reloading.
+// Also exercise the 480px portrait CSS breakpoint (the main matrix ends at 390px).
+if (GAMES.includes('tower-defense')) {
+    const page = await browser.newPage();
+    try {
+        await page.setViewport({ width: 480, height: 640, deviceScaleFactor: 1 });
+        await page.goto(BASE + '/tower-defense.html', { waitUntil: 'domcontentloaded', timeout: 25000 });
+        await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
+        for (const [width, height, hidden] of [
+            [480, 640, true],
+            [568, 320, false],
+            [390, 664, true],
+        ]) {
+            await page.setViewport({ width, height, deviceScaleFactor: 1 });
+            await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
+            const r = await measure(page);
+            assert(r.nameHidden === hidden && r.display === (hidden ? 'none' : 'block'),
+                'tower-defense@' + width + 'x' + height
+                + ': responsive title must ' + (hidden ? 'hide' : 'appear')
+                + ', got display=' + r.display + '/hidden=' + r.nameHidden);
+        }
+    } catch (e) {
+        assert(false, 'tower-defense portrait/landscape title transition: ' + (e.message || e));
+    } finally {
+        await page.close();
     }
 }
 await browser.close();

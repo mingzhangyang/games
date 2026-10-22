@@ -390,8 +390,10 @@
        右 5 颗功能钮之间只剩 56–126px，放不下「Neon Tower Defense」（165px），省略号截断
        比不写更糟（verify-topbar-row 断言顶栏文字不截断）。横屏与桌面照常显示。 */
     @media (width <= 480px) and (orientation: portrait) {
-        .td-brand {
-            display: none;
+        /* Same layer and specificity as the shared game-title block rule;
+           keep the intentional portrait exception after title normalization. */
+        .game-topbar .td-brand {
+            display: none !important;
         }
     }
 
