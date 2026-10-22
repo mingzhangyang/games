@@ -174,21 +174,11 @@ const scaffold = renderGameShell({
     name: { en: 'Fixture Game', zh: '示例游戏' },
     caps: ['theme-light', 'topbar'],
     chrome: {
-        home: {
-            tag: 'a', attrs: { 'data-chrome': 'home', href: 'index.html', 'aria-label': 'Home' },
-            icon: 'home',
+        actions: ['stats', 'sound'],
+        overrides: {
+            home: { tag: 'a', attrs: { href: 'index.html' } },
+            name: { tag: 'h1', attrs: { class: 'game-topbar-name' } },
         },
-        name: { tag: 'h1', attrs: { class: 'game-topbar-name' }, textFrom: 'name.en' },
-        actions: [
-            {
-                role: 'stats', tag: 'button', attrs: {
-                    'data-chrome': 'stats', type: 'button', 'aria-label': 'Stats',
-                    'aria-haspopup': 'dialog', 'aria-expanded': 'false',
-                    'aria-controls': 'fgStatsDrawer',
-                },
-            },
-            { role: 'sound', tag: 'button', attrs: { 'data-chrome': 'sound', 'aria-label': 'Sound' } },
-        ],
     },
     themeColor: '#101820',
     themeColorLight: '#eef4f8',
