@@ -465,80 +465,9 @@
       },
       "additionalProperties": false
     },
-    "chromeAction": {
-      "type": "object",
-      "required": [
-        "role",
-        "tag",
-        "attrs"
-      ],
-      "properties": {
-        "role": {
-          "enum": [
-            "restart",
-            "theme",
-            "help",
-            "range",
-            "speed",
-            "stats",
-            "pause",
-            "sound",
-            "custom"
-          ]
-        },
-        "tag": {
-          "enum": [
-            "a",
-            "button",
-            "div",
-            "h1",
-            "span"
-          ]
-        },
-        "attrs": {
-          "$ref": "#/$defs/chromeAttrs"
-        },
-        "icon": {
-          "enum": [
-            "home",
-            "sound",
-            "sound-no-stroke",
-            "pause",
-            "pause-rounded",
-            "pause-solid",
-            "restart",
-            "help",
-            "stats",
-            "range"
-          ]
-        },
-        "multiline": {
-          "type": "boolean"
-        },
-        "text": {
-          "type": "string"
-        },
-        "textFrom": {
-          "enum": [
-            "name.en",
-            "name.zh"
-          ]
-        },
-        "children": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/$defs/chromeNode"
-          }
-        }
-      },
-      "additionalProperties": false
-    },
     "chrome": {
       "type": "object",
       "required": [
-        "home",
-        "name",
         "actions"
       ],
       "properties": {
@@ -558,34 +487,192 @@
         "rightAttrs": {
           "$ref": "#/$defs/chromeAttrs"
         },
-        "home": {
-          "$ref": "#/$defs/chromeNode"
-        },
         "leftExtra": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/chromeNode"
           }
         },
-        "name": {
+        "actions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "restart",
+              "theme",
+              "help",
+              "range",
+              "speed",
+              "stats",
+              "pause",
+              "sound"
+            ]
+          }
+        },
+        "overrides": {
+          "type": "object",
+          "properties": {
+            "home": {
+              "$ref": "#/$defs/chromePatch"
+            },
+            "name": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/chromePatch"
+                },
+                {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "$ref": "#/$defs/chromeNode"
+                  }
+                }
+              ]
+            },
+            "restart": {
+              "$ref": "#/$defs/chromePatch"
+            },
+            "theme": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/chromePatch"
+                }
+              ],
+              "required": [
+                "tag",
+                "attrs"
+              ]
+            },
+            "help": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/chromePatch"
+                }
+              ],
+              "required": [
+                "tag",
+                "attrs"
+              ]
+            },
+            "range": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/chromePatch"
+                }
+              ],
+              "required": [
+                "tag",
+                "attrs"
+              ]
+            },
+            "speed": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/chromePatch"
+                }
+              ],
+              "required": [
+                "tag",
+                "attrs"
+              ]
+            },
+            "stats": {
+              "$ref": "#/$defs/chromePatch"
+            },
+            "pause": {
+              "$ref": "#/$defs/chromePatch"
+            },
+            "sound": {
+              "$ref": "#/$defs/chromePatch"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "chromePatch": {
+      "type": "object",
+      "properties": {
+        "tag": {
+          "enum": [
+            "a",
+            "button",
+            "div",
+            "h1",
+            "span"
+          ]
+        },
+        "attrs": {
+          "$ref": "#/$defs/chromeAttrs"
+        },
+        "icon": {
           "oneOf": [
             {
-              "$ref": "#/$defs/chromeNode"
+              "enum": [
+                "home",
+                "sound",
+                "sound-no-stroke",
+                "pause",
+                "pause-rounded",
+                "pause-solid",
+                "restart",
+                "help",
+                "stats",
+                "range"
+              ]
             },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "multiline": {
+          "type": "boolean"
+        },
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "textFrom": {
+          "oneOf": [
+            {
+              "enum": [
+                "name.en",
+                "name.zh"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "children": {
+          "oneOf": [
             {
               "type": "array",
               "minItems": 1,
               "items": {
                 "$ref": "#/$defs/chromeNode"
               }
+            },
+            {
+              "type": "null"
             }
           ]
         },
-        "actions": {
+        "replaceAttrs": {
+          "type": "boolean"
+        },
+        "omitAttrs": {
           "type": "array",
-          "minItems": 1,
+          "uniqueItems": true,
           "items": {
-            "$ref": "#/$defs/chromeAction"
+            "type": "string",
+            "pattern": "^[A-Za-z_:][A-Za-z0-9_:.-]*$"
           }
         }
       },
