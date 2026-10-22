@@ -104,7 +104,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq fonts-wqy-microhei
-          fc-match :lang=zh | grep -i -E 'wenquanyi|wqy'
+          fc-match 'WenQuanYi Micro Hei'
 
       # dist:* steps re-run the shared layout/theme/chrome gates and art smokes on the real build.
       - name: Production build
