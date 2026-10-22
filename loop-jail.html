@@ -40,6 +40,7 @@
     <!-- Immersive Stage（games.config.json layout: "immersive"，契约 docs/contracts/layout.md §7）：
          顶栏以下的整块视口都是场地；HUD 是场地上的浮层；页脚随流在首屏之下 -->
     <div class="lj-shell game-shell game-shell--immersive">
+        <!-- registry:begin topbar -->
         <header class="lj-topbar game-topbar">
             <div class="lj-topbar-lead game-topbar-group">
                 <button data-chrome="home" type="button" class="lj-icon-btn game-icon-btn" id="lj-btn-home" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
@@ -50,13 +51,13 @@
                     <span class="lj-title-main" data-i18n="brand">Loop Jail</span>
                 </div>
             </div>
-            <!-- 右簇固定顺序：专属（重开 → 排行榜，由 scoreboard-dialog 插在暂停之前）→ pause → sound -->
             <div class="lj-topbar-actions game-topbar-group">
                 <button type="button" data-contextual-restart="retry" class="lj-icon-btn game-icon-btn hidden" id="lj-reset-btn" title="Restart" aria-label="Restart"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
                 <button type="button" data-chrome="pause" class="lj-icon-btn game-icon-btn" id="lj-pause-btn" title="Pause" aria-label="Pause" disabled><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8.5 5v14M15.5 5v14"/></svg></button>
                 <button type="button" data-chrome="sound" class="lj-icon-btn game-icon-btn" id="lj-mute-btn" title="Sound" aria-label="Sound"></button>
             </div>
         </header>
+        <!-- registry:end topbar -->
 
         <main class="lj-main game-main">
             <div class="lj-stage game-stage game-stage--immersive" id="lj-stage">

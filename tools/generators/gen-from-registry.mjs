@@ -13,6 +13,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { registry } from '../lib/registry.mjs';
+import { renderTopbar } from '../../src/platform/shell/render-topbar.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const CHECK = process.argv.includes('--check');
@@ -312,6 +313,29 @@ function installSeoScript(src, content, game) {
         + src.slice(at);
 }
 
+// ---------- Header/topbar: registry owns DOM, never the per-page HTML ----------
+function topbarTransform(g) {
+    return src => {
+        const marker = /^([ \t]*)<!-- registry:begin topbar -->/m.exec(src);
+        const legacy = /^([ \t]*)<header\b[^\n]*\bgame-topbar\b[^\n]*>/m.exec(src);
+        if (!marker && !legacy) throw new Error('topbar header missing for ' + g.id);
+        const indent = (marker || legacy)[1];
+        return applyRegion(src, 'topbar', renderTopbar(g, indent), (source, content) => {
+            const matches = [...source.matchAll(/<header\b[^>]*class="[^"]*\bgame-topbar\b[^"]*"[^>]*>/g)];
+            if (matches.length !== 1) throw new Error('expected exactly one topbar: ' + g.id);
+            const start = matches[0].index;
+            const end = source.indexOf('</header>', start);
+            if (end < 0) throw new Error('unclosed topbar: ' + g.id);
+            const lineStart = source.lastIndexOf('\n', start) + 1;
+            if (source.slice(lineStart, start).trim()) throw new Error('topbar must start on own line: ' + g.id);
+            return source.slice(0, lineStart)
+                + indent + '<!-- registry:begin topbar -->\n' + content + '\n'
+                + indent + '<!-- registry:end topbar -->'
+                + source.slice(end + '</header>'.length);
+        }, 'html');
+    };
+}
+
 // ---------- sitemap ----------
 function sitemapContent() {
     return GAMES.map(g =>
@@ -516,6 +540,7 @@ for (const g of GAMES) {
     processFile(g.href, [
         s => applyRegion(s, 'head', headBlock(g), (s, c) => installHead(s, c), 'html'),
         s => applyRegion(s, 'seo-script', seoScriptBlock(g), (s, c) => installSeoScript(s, c, g), 'html'),
+        ...((g.caps || []).includes('topbar') ? [topbarTransform(g)] : []),
     ]);
 }
 processFile('index.html', [homeNewTransform, homeFilterTransform, homeCardsTransform]);

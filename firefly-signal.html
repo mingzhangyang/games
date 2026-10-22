@@ -43,6 +43,7 @@
     <!-- Immersive Stage（games.config.json layout: "immersive"，契约 docs/contracts/layout.md §7）：
          顶栏以下的整块视口都是场景；HUD 是场景里的浮层；页脚随流在首屏之下 -->
     <div class="fs-shell game-shell game-shell--immersive">
+        <!-- registry:begin topbar -->
         <header class="fs-topbar game-topbar">
             <div class="fs-topbar-lead game-topbar-group">
                 <button data-chrome="home" type="button" class="fs-icon-btn game-icon-btn" id="fs-btn-home" title="Home" aria-label="Home"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.3V21h13V9.3"/></svg></button>
@@ -51,12 +52,12 @@
                 <h1 class="sr-only" id="fs-h1" data-i18n="title">Firefly Signal</h1>
                 <span class="fs-brand game-topbar-name" data-i18n="title">Firefly Signal</span>
             </div>
-            <!-- 右簇固定顺序：专属（重来）→ sound -->
             <div class="fs-topbar-actions game-topbar-group">
                 <button type="button" class="fs-icon-btn game-icon-btn" id="fs-btn-restart" title="Restart" aria-label="Restart" disabled data-i18n-title="restart" data-i18n-label="restart"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 3.5v4h-4"/></svg></button>
                 <button type="button" class="fs-icon-btn game-icon-btn" id="fs-btn-mute" data-chrome="sound" title="Sound" aria-label="Sound"></button>
             </div>
         </header>
+        <!-- registry:end topbar -->
 
         <main class="fs-main game-main">
             <div class="fs-stage game-stage game-stage--immersive" id="fs-stage">

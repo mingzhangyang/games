@@ -60,6 +60,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # This one-time comparison uses the precise pre-migration Step 4 merge SHA.
+      # Do not run on other PRs or merged main (future header edits are allowed).
+      - name: Chrome step 5a pre/post DOM parity
+        if: github.head_ref == 'refactor/chrome-step5a-registry-topbar'
+        run: |
+          git fetch --no-tags --depth=1 origin 46f2aad08beb0a6221b012473e69efa1f903bdea
+          node tools/checks/compare-topbar-html.mjs 46f2aad08beb0a6221b012473e69efa1f903bdea
+
       # Prove a fresh checkout works without dist before generating build output.
       # Browser shards below still verify the real stamped build after build.
       - name: Service Worker source-only regression
@@ -113,11 +121,29 @@ jobs:
       - name: Browser verification (shard ${{ matrix.shard }})
         run: node tests/verify-all.mjs --browser --with-dist --shard=${{ matrix.shard }}/${SHARDS} --jobs=2
 
+      # Static full-page screenshot audit against the exact pre-migration commit.
+      # Both servers disable page JavaScript to exclude nondeterministic game physics;
+      # the normal browser suite above still exercises live interactivity.
+      - name: Chrome step 5a pixel-exact full-site diff
+        if: github.head_ref == 'refactor/chrome-step5a-registry-topbar' && matrix.shard == 1
+        run: |
+          git fetch --no-tags --depth=1 origin 46f2aad08beb0a6221b012473e69efa1f903bdea
+          git worktree add --detach /tmp/chrome-step5a-before 46f2aad08beb0a6221b012473e69efa1f903bdea
+          (cd /tmp/chrome-step5a-before && node tests/lib/serve-static.mjs 8898) > /tmp/chrome5a-before.log 2>&1 &
+          BEFORE_PID=$!
+          node tests/lib/serve-static.mjs 8899 > /tmp/chrome5a-after.log 2>&1 &
+          AFTER_PID=$!
+          trap 'kill "$BEFORE_PID" "$AFTER_PID" || true' EXIT
+          sleep 2
+          node tools/checks/compare-topbar-screenshots.mjs http://127.0.0.1:8898 http://127.0.0.1:8899
+
+      # The step-5a PR has a dedicated before/after pixel audit; skip redundant
+      # 156-shot Step-4 artifact capture for it (all other Chrome PRs unchanged).
       # Capture every desktop viewport in both languages for the step-4 chrome review.
       # Do not launch 168 expensive screenshots on superseded/cancelled PR runs.
       # One shard only, on chrome PRs, to avoid unnecessary browser work and CI storage.
       - name: Full-site desktop topbar screenshots
-        if: always() && !cancelled() && matrix.shard == 1 && contains(github.event.pull_request.title, 'chrome')
+        if: always() && !cancelled() && matrix.shard == 1 && contains(github.event.pull_request.title, 'chrome') && github.head_ref != 'refactor/chrome-step5a-registry-topbar'
         env:
           LANGS: 'zh,en'
           SHOTS_VIEWPORTS: '1280x900,1440x900,1920x1080'
@@ -129,7 +155,7 @@ jobs:
           node tools/dev/shots.mjs /tmp/chrome-step4-desktop-shots http://127.0.0.1:8899
 
       - name: Upload full-site screenshots
-        if: always() && !cancelled() && matrix.shard == 1 && contains(github.event.pull_request.title, 'chrome')
+        if: always() && !cancelled() && matrix.shard == 1 && contains(github.event.pull_request.title, 'chrome') && github.head_ref != 'refactor/chrome-step5a-registry-topbar'
         uses: actions/upload-artifact@v4
         with:
           name: chrome-step4-desktop-all-pages

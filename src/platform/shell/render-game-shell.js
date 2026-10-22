@@ -1,3 +1,5 @@
+import { renderTopbar } from './render-topbar.js';
+
 function esc(value) {
     return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -5,7 +7,7 @@ function esc(value) {
 
 /**
  * Render the standard platform shell for a registry game.
- * Existing hand-authored games remain valid; new games should start here.
+ * The topbar is rendered from the same registry chrome description as all shipped games.
  */
 export function renderGameShell(game, {
     cssHref = `css/${game.id}.css`,
@@ -15,11 +17,18 @@ export function renderGameShell(game, {
 } = {}) {
     const prefix = game.prefix || game.id.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
     const title = game.name?.en || game.id;
-    const zh = game.name?.zh || title;
     const light = (game.caps || []).includes('theme-light');
     const themeSupport = light ? 'dark light' : 'dark';
     const themeColor = game.themeColor || '#0b0f26';
     const themeColorLight = game.themeColorLight || themeColor;
+    const topbarHtml = renderTopbar(game, '        ');
+    // The default title is a div. Give new scaffolds a semantic H1 without
+    // modifying the registry-generated header or duplicating a custom heading.
+    const supplied = [topbarHtml, stageHtml, startHtml, sidebarHtml].join('\n');
+    const headingCount = (supplied.match(/<h1(?:\s|>)/gi) || []).length;
+    if (headingCount > 1) throw new Error('multiple H1 headings in game shell: ' + game.id);
+    const heading = headingCount ? '' :
+        `            <h1 class="sr-only" data-i18n="title">${esc(title)}</h1>\n`;
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -37,21 +46,11 @@ export function renderGameShell(game, {
 </head>
 <body>
     <div class="game-shell" data-game="${esc(game.id)}">
-        <header class="game-topbar">
-            <div class="game-topbar-group">
-                <a class="game-icon-btn" data-chrome="home" href="index.html" aria-label="Home"></a>
-            </div>
-            <div class="game-topbar-center">
-                <h1 data-i18n="title">${esc(title)}</h1>
-                <span class="sr-only" data-i18n="titleZh">${esc(zh)}</span>
-            </div>
-            <div class="game-topbar-actions game-topbar-group">
-                <button class="game-icon-btn game-stats-btn" id="${prefix}StatsToggle" data-chrome="stats" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="${prefix}StatsDrawer"></button>
-                <button class="game-icon-btn" data-chrome="sound" type="button"></button>
-            </div>
-        </header>
+        <!-- registry:begin topbar -->
+${topbarHtml}
+        <!-- registry:end topbar -->
         <main class="game-main">
-            <section class="game-stage" id="${prefix}Stage">
+${heading}            <section class="game-stage" id="${prefix}Stage">
                 ${stageHtml}
                 ${startHtml}
             </section>

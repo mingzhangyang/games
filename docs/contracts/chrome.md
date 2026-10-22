@@ -5,7 +5,7 @@
 
 - 契约文件：`css/layout.css`（`.game-topbar-center` / `.game-footer` 系列）
 - 行为实现：`src/platform/game-chrome.js`（`bindChrome`）
-- 按本文直接实现 markup、i18n 与 `bindChrome` 接入，再运行现行校验（当年的一次性迁移脚本已删除，见 git 历史）。
+- 游戏顶栏 markup 由 registry 生成，按 `registry.md` §3.1 通过 `chrome.actions` 角色列表及稀疏 `chrome.overrides` 编辑并运行 `npm run gen`；i18n 与 `bindChrome` 行为仍按本文接入。
 - 校验工具：`tests/verify-chrome.mjs`（按文件名自动发现，verify-all 校验项 `verify-chrome`）
 
 ---
@@ -33,10 +33,14 @@
 
 **第 4 步（桌面 ≥1024px）：** 顶栏仍是 shell 直接子元素，不改变 DOM 或 `bindFrame` 的选择器；`css/layout.css` 用 `width: min(1200px, 100vw - 80px)` 与 `align-self:center` 使顶栏相对视口居中，统一 12px 水平内距。仅在 `html:has(.game-shell > .game-topbar)` 的游戏页启用 `scrollbar-gutter: stable both-edges`，消除不同页面纵向滚动条造成的横向锚点漂移；根元素使用 `--tok-bg` 填充预留区域，避免 body 渐变背景外出现白色滚动条侧边，同时不影响无共享顶栏的全屏游戏。桌面 Home / 标题起点 / Sound 的屏幕 x 在全部 26 个顶栏页、中文英文和 1280×900 / 1440×900 / 1920×1080 下严格一致，见 `tests/verify-topbar-desktop.mjs`；原 640/800px immersive 上限仅约束舞台与页脚，不再约束桌面顶栏。小于 1024px 保留原布局。
 
+**第 5 步 a（顶栏声明式生成，纯重构）：** 上面的三槽 DOM 由 `games.config.json` 的紧凑 `chrome.actions` 与 `chrome.overrides` 生成，通用属性、SVG、约定 ID 均由共享模板派生，不再在 26 个 HTML 页面中手写。共享渲染源：`src/platform/shell/render-topbar.js`；`tools/generators/gen-from-registry.mjs` 负责静态就地生成 `registry:begin/end topbar`；`src/platform/shell/render-game-shell.js` 复用同一渲染函数。所有既有节点、class、id、data-chrome、aria-label/title、SVG、初始 disabled/hidden、按钮顺序严格保留。左簇 Home 永远先出现，中槽只放游戏名，右簇页面专属动作依 registry 顺序；不要把个别历史特例强改成新的视觉形态。维护时只改 `game.chrome` 然后 `npm run gen`，严禁手改 HTML 的 topbar 哨兵区域。静态防漂移：`verify-topbar-registry`、`gen --check`；本轮一次性 DOM 比对详见 `tools/checks/compare-topbar-html.mjs` 与 PR 报告。
+
 **核心性质：Sound 永远是最右一颗。** 它是 11 页全有的全站开关，无论一页有没有
 Stats / Pause，它的屏幕位置都一致。页面专属钮一律排在右簇最左。
 
 **唯一性：** 全页只有顶栏这一个声音开关。开始菜单 / 结算层 / 暂停层不得再放第二颗（如历史上的
+**新游戏脚手架：** `chrome.actions` 仅声明角色时，默认 Home 为 `button`，`tools/generators/new-game.mjs` 生成的 `mountGameRuntime` 必须通过 `chrome.owns: ['home', 'sound']` 接管导航和静音点击。默认标题为 `div`；`renderGameShell()` 仅在顶栏及自定义内容都不含 H1 时，于 `<main>` 添加可本地化的 `.sr-only` H1；检测到多个 H1 则直接报错。现有 26 页的顶栏及生成区域不受影响。
+
 `xx-start-mute` / `na-start-sound`，2026-10-20 已从 15 页移除）；`tests/verify-chrome.mjs` ⑨ 按运行时 DOM 计数。
 唯一的这颗必须**指针可达**：视口级全屏开始层（reversi / minesweeper）不得盖住顶栏，顶栏抬到其上、
 开始层内容按 `--game-topbar-bottom`（`src/platform/topbar-clearance.js`）让位，开局前的局内 HUD 用 `visibility` 隐藏；

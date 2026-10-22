@@ -88,6 +88,7 @@ caps 是校验器与迁移脚本的唯一判据：
 | 派生点 | 区域哨兵 | 内容 |
 | --- | --- | --- |
 | 各游戏 `<head>` | `head` | viewport / theme-support + theme-color（+`data-light`）+ `theme-boot.js` / description / keywords / canonical / OG / twitter / title；`title.i18nKey` 存在时同时输出对应的 `data-i18n` |
+| 26 个 `topbar` 游戏页 | `topbar` | 由 `game.chrome` 与共享 `src/platform/shell/render-topbar.js` 生成整个 `<header>`，包含 Home、专属按钮、标题、Stats / Pause / Sound 的顺序和原有 id / class / ARIA / SVG / hidden / disabled；非顶栏页不生成 |
 | 各游戏 SEO 脚本 | `seo-script` | canonical 纠正 + og:image/twitter:image + JSON-LD（VideoGame / BreadcrumbList）；分享图优先 `public/<ogImageDir>/og-<id>.jpg`（`tools/generators/game-covers.mjs` 用游戏美术生成），没有才用 `og-<id>.svg` |
 | `public/sitemap.xml` | `games` | 全部 `<url>` 条目 |
 | `public/manifest.json` | （JSON 感知） | `shortcuts` 数组 |
@@ -112,6 +113,21 @@ caps 是校验器与迁移脚本的唯一判据：
 - 无哨兵时自安装：定位旧内容（如旧行内 SEO 块）整体替换为哨兵区域。
 - 加新游戏：在 `games` 数组加条目 → `npm run gen` → 各文件区域自动更新。
   无 `scores` 字段（每日-only 榜）只进 `DAILY_PATTERNS`。
+
+### 3.1 顶栏生成源（Chrome Step 5a）
+
+`caps: ["topbar"]` 的游戏必须有 `chrome`，其余游戏不得添加这个字段（`games.schema.json` 通过条件约束）。`chrome` 是**声明式结构**，不是 HTML 模板：
+
+- `actions`：只列角色，如 `["restart", "stats", "sound"]`；公共按钮的 DOM、内联 SVG、属性顺序和 id/class/ARIA 都由共享模板按 `game.prefix` 派生，Sound 唯一且最右。
+- `overrides`：可选的稀疏对象，键为 `home`、`name` 或已声明 action 角色，**只写真正不同于默认值的字段**，例如 `{"home":{"attrs":{"id":"pm-home-btn"}}}`。
+- `overrides.*.attrs` 默认合并，保持模板属性的插入顺序；`omitAttrs` 删除默认属性；`icon: null` 移除图标。只有历史属性顺序不同、精确 DOM 对比需要时才用 `replaceAttrs: true` 和完整 `attrs`。
+- 复杂标题（sr-only H1、双语嵌套）使用 `overrides.name` 节点数组；少数无共享模板的页面专属动作（Theme、Help、Range、Speed）需在 `overrides` 明确 `tag` + `attrs`。
+- 分组类名有真实差异时仍可用 `headerAttrs/leftAttrs/centerAttrs/rightAttrs/classPrefix`；禁止在配置中重新手抄一套正常按钮或改动派生 HTML。
+`npm run gen` 自安装或更新 `<!-- registry:begin topbar -->` / `<!-- registry:end topbar -->`，不触碰区域外字节；`npm run gen -- --check` 漂移报错。新游戏脚手架 `render-game-shell.js` 同样使用 `renderTopbar()`，并写出哨兵。
+
+`tests/verify-topbar-registry.mjs` 对 **全部带 topbar cap 的游戏** 检查登记字段、唯一哨兵、区域内容逐字匹配及 renderer 与脚手架同源。迁移时的一次性 `tools/checks/compare-topbar-html.mjs <baseline-sha>` 通过解析 HTML、移除纯格式空白与注释，逐元素比较原/新 header outerHTML（包含 SVG、初始 disabled/hidden），仅用于这次零变化证明；其结果记录在 PR。另须执行全站双语截图像素比对与 `npm run verify`。
+
+`index.html`、`math-rain.html`、`tank-battle.html` **明确排除**，不得生成 topbar 标记。此变更不移动 Header 节点位置，也不改绑定器与 CSS。
 
 ## 4. verify-registry.mjs：caps ⟺ 代码事实
 
