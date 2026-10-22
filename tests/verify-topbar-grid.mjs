@@ -43,7 +43,7 @@ async function measure(page) {
         // A centered anonymous flex item can clip the *start* of the title
         // despite text-overflow:ellipsis on its parent. Measure its first glyph.
         const bareText = name && [...name.childNodes]
-            .find(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
+            .find(node => node.nodeType === 3 /* TEXT_NODE */ && node.textContent.trim());
         let firstGlyphOffset = null;
         if (bareText) {
             const index = bareText.textContent.search(/\S/);
