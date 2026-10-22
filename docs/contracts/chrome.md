@@ -31,7 +31,7 @@
 
 **第 3 步：** 三槽 `grid-template-columns: auto minmax(0,1fr) auto`，中槽游戏名 `.game-topbar-name` 从 Home 右侧 12px 起、左对齐，手机 16px / 桌面 17px、700 字重，颜色 `--game-title-color`，可选字体 `--game-title-font`。标题是唯一允许单行省略号的顶栏文字；390px 下中文标题必须完整（塔防竖屏沿用明确的隐藏例外）。每日猜词的 Help 已从左簇移到右簇。
 
-**第 4 步（桌面 ≥1024px）：** 顶栏仍是 shell 直接子元素，不改变 DOM 或 `bindFrame` 的选择器；`css/layout.css` 用 `width: min(1200px, 100vw - 80px)` 与 `align-self:center` 使顶栏相对视口居中，统一 12px 水平内距。仅在 `html:has(.game-shell > .game-topbar)` 的游戏页启用 `scrollbar-gutter: stable both-edges`，消除不同页面纵向滚动条造成的横向锚点漂移，且不影响无共享顶栏的全屏游戏。桌面 Home / 标题起点 / Sound 的屏幕 x 在全部 26 个顶栏页、中文英文和 1280×900 / 1440×900 / 1920×1080 下严格一致，见 `tests/verify-topbar-desktop.mjs`；原 640/800px immersive 上限仅约束舞台与页脚，不再约束桌面顶栏。小于 1024px 保留原布局。
+**第 4 步（桌面 ≥1024px）：** 顶栏仍是 shell 直接子元素，不改变 DOM 或 `bindFrame` 的选择器；`css/layout.css` 用 `width: min(1200px, 100vw - 80px)` 与 `align-self:center` 使顶栏相对视口居中，统一 12px 水平内距。仅在 `html:has(.game-shell > .game-topbar)` 的游戏页启用 `scrollbar-gutter: stable both-edges`，消除不同页面纵向滚动条造成的横向锚点漂移；根元素使用 `--tok-bg` 填充预留区域，避免 body 渐变背景外出现白色滚动条侧边，同时不影响无共享顶栏的全屏游戏。桌面 Home / 标题起点 / Sound 的屏幕 x 在全部 26 个顶栏页、中文英文和 1280×900 / 1440×900 / 1920×1080 下严格一致，见 `tests/verify-topbar-desktop.mjs`；原 640/800px immersive 上限仅约束舞台与页脚，不再约束桌面顶栏。小于 1024px 保留原布局。
 
 **核心性质：Sound 永远是最右一颗。** 它是 11 页全有的全站开关，无论一页有没有
 Stats / Pause，它的屏幕位置都一致。页面专属钮一律排在右簇最左。

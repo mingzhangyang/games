@@ -1207,7 +1207,12 @@ html.game-reset * {
      * The stage and immersive/footer width caps intentionally remain unchanged.
      */
     @layer contracts {
-        html:has(.game-shell > .game-topbar) { scrollbar-gutter: stable both-edges; }
+        /* The root paints the symmetric reserved gutters; otherwise pages with
+           a body-only dark gradient expose white 15px rails at both edges. */
+        html:has(.game-shell > .game-topbar) {
+            scrollbar-gutter: stable both-edges;
+            background-color: var(--tok-bg);
+        }
 
         .game-shell > .game-topbar {
             width: min(1200px, calc(100vw - 80px)) !important;

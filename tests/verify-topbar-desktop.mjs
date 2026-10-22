@@ -41,6 +41,7 @@ const measure = page => page.evaluate(() => {
         w: innerWidth, clientW: document.documentElement.clientWidth,
         scrollW: document.documentElement.scrollWidth,
         rootGutter: getComputedStyle(document.documentElement).scrollbarGutter,
+        rootBackground: getComputedStyle(document.documentElement).backgroundColor,
         bar: rect(bar), home: rect(home), name: rect(name), sound: rect(sound),
         shell: rect(shell), stage: rect(stage), side: rect(side),
         status: rect(status),
@@ -76,6 +77,10 @@ function verifyGeometry(m, tag, w) {
         tag + ': max-width must be 1200px, got ' + m.maxWidth);
     check(m.rootGutter === 'stable both-edges',
         tag + ': inconsistent native scrollbar gutter: ' + m.rootGutter);
+    // Native scrollbar-gutter is painted by html, not by body's gradient.
+    // Transparent html exposes bright default-canvas rails on dark games.
+    check(m.rootBackground !== 'rgba(0, 0, 0, 0)' && m.rootBackground !== 'rgb(255, 255, 255)',
+        tag + ': unpainted/white root gutter: ' + m.rootBackground);
     check(close((m.bar.left + m.bar.right) / 2, w / 2, 0.55),
         tag + ': bar not centered in viewport: ' + m.bar.left + '..' + m.bar.right);
     check(m.bar.left >= 24 - 0.5 && m.bar.right <= w - 24 + 0.5,
