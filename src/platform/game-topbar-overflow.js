@@ -146,6 +146,10 @@ export function bindTopbarOverflow(header) {
             event.stopImmediatePropagation();
             return;
         }
+        // Release-only keyups must reach the input owner even if More captured
+        // a later keydown. Otherwise WASD/arrow movement may stay latched.
+        // Keep Enter/Space for native menu activation and Escape for dismissal.
+        if (event.type === 'keyup' && event.key !== 'Enter' && event.key !== ' ') return;
         const fromMore = more.contains(event.target);
         const fromMenu = menu.contains(event.target);
         if (!isOpen() && (!fromMore || !['Enter', ' ', 'ArrowDown', 'ArrowUp'].includes(event.key))) return;

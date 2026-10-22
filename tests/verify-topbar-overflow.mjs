@@ -156,6 +156,17 @@ try {
                     await page.keyboard.press('Escape');
                     await page.waitForFunction(() => !document.querySelector('dialog[data-scoreboard-dialog]').open);
                     check(await page.$eval('[data-topbar-more]', node => node === document.activeElement), 'dialog returns to visible menu invoker');
+                    // Real input-owner regression: releasing W with the popover
+                    // open must clear Needle Awn's held movement state.
+                    await page.waitForFunction(() => window.gameEngine?.artReady, { timeout: 15000 });
+                    await page.evaluate(() => window.gameEngine.startEndlessMode());
+                    await page.keyboard.down('w');
+                    check(await page.evaluate(() => window.gameEngine.keys.KeyW === true), 'needle held W registers before menu');
+                    await openMenu(page);
+                    await page.keyboard.up('w');
+                    check(await page.evaluate(() => window.gameEngine.keys.KeyW === false), 'needle held W releases through open menu');
+                    await closeMenu(page);
+                    check(await page.evaluate(() => window.gameEngine.keys.KeyW === false), 'needle movement remains released after dismissal');
                 }
                 check(!errors.length, game.id + ': runtime errors ' + errors.join('; '));
             } finally {
