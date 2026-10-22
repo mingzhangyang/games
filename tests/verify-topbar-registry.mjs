@@ -61,7 +61,7 @@ for (const file of ['index.html', 'math-rain.html', 'tank-battle.html']) {
     assert(!read(file).includes(BEGIN), file + ': explicitly out of scope');
 }
 // Negative proof: modifying a previously preserved accessibility field is observable.
-const mutated = structuredClone(games[0]);
+const mutated = JSON.parse(JSON.stringify(games[0]));
 mutated.chrome.home.attrs['aria-label'] = 'NOT HOME';
 assert.notEqual(renderTopbar(mutated), renderTopbar(games[0]),
     'an aria-label mutation must be detected by the generated-region check');

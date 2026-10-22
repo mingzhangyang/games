@@ -172,7 +172,24 @@ const scaffold = renderGameShell({
     prefix: 'fg',
     entry: 'src/games/fixture-game/index.js',
     name: { en: 'Fixture Game', zh: '示例游戏' },
-    caps: ['theme-light'],
+    caps: ['theme-light', 'topbar'],
+    chrome: {
+        home: {
+            tag: 'a', attrs: { 'data-chrome': 'home', href: 'index.html', 'aria-label': 'Home' },
+            icon: 'home',
+        },
+        name: { tag: 'h1', attrs: { class: 'game-topbar-name' }, textFrom: 'name.en' },
+        actions: [
+            {
+                role: 'stats', tag: 'button', attrs: {
+                    'data-chrome': 'stats', type: 'button', 'aria-label': 'Stats',
+                    'aria-haspopup': 'dialog', 'aria-expanded': 'false',
+                    'aria-controls': 'fgStatsDrawer',
+                },
+            },
+            { role: 'sound', tag: 'button', attrs: { 'data-chrome': 'sound', 'aria-label': 'Sound' } },
+        ],
+    },
     themeColor: '#101820',
     themeColorLight: '#eef4f8',
 });
@@ -183,6 +200,9 @@ ok(scaffold.includes('aria-haspopup="dialog"')
 ok(scaffold.includes('data-light="#eef4f8"'), 'generated shell emits light theme color');
 ok(scaffold.includes('registry:begin seo-script') && scaffold.includes('registry:end seo-script'),
     'generated shell seeds the SEO generation region');
+ok(scaffold.includes('registry:begin topbar') && scaffold.includes('registry:end topbar')
+    && scaffold.includes('<header class="fg-topbar game-topbar">'),
+    'generated shell uses the registry-driven shared topbar');
 
 console.log(failed ? `\n${failed} architecture failure(s) ❌` : '\narchitecture contract passed ✅');
 process.exit(failed ? 1 : 0);
