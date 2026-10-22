@@ -73,7 +73,7 @@ const measure = page => page.evaluate(() => {
     return {
         vw: innerWidth, vh: innerHeight, dpr: window.devicePixelRatio,
         stage: { top: st.top, bottom: st.bottom, left: st.left, width: st.width, height: st.height },
-        topbarBottom: tb.bottom, topbarH: tb.height,
+        topbarBottom: tb.bottom, topbarH: tb.height, topbarLeft: tb.left, topbarW: tb.width,
         padTop: parseFloat(cs.paddingTop) || 0,
         chromeVar: parseFloat(shell.style.getPropertyValue('--frame-chrome')),
         footerTop: ft ? ft.top : null, footerH: ft ? ft.height : 0,
@@ -189,8 +189,21 @@ for (const g of RUN_PAGES) {
             check(Math.abs(m.stageStyle.minHeight - m.immersiveMinH) <= 1,
                 `②b ${tag}：stage min-height 跟随 --frame-immersive-min-h`,
                 `${m.stageStyle.minHeight} vs ${m.immersiveMinH}`);
-            check(Math.abs(m.topbarStyle.maxWidth - m.immersiveMax) <= 1,
-                `②b ${tag}：topbar max-width 与 immersive 上限一致`, `${m.topbarStyle.maxWidth} vs ${m.immersiveMax}`);
+            if (w >= 1024) {
+                const expectedBar = Math.min(1200, w - 80);
+                check(Math.abs(m.topbarStyle.maxWidth - 1200) <= 1,
+                    `②b ${tag}：desktop topbar 已脱离 immersive 宽度上限`,
+                    `${m.topbarStyle.maxWidth} vs 1200`);
+                check(Math.abs(m.topbarW - expectedBar) <= 1,
+                    `②b ${tag}：desktop topbar 使用全站共享宽度`,
+                    `${m.topbarW} vs ${expectedBar}`);
+                check(Math.abs(m.topbarLeft - (w - m.topbarW) / 2) <= 1,
+                    `②b ${tag}：desktop topbar 在视口居中`, m.topbarLeft);
+            } else {
+                check(Math.abs(m.topbarStyle.maxWidth - m.immersiveMax) <= 1,
+                    `②b ${tag}：mobile topbar max-width 保持 immersive 上限`,
+                    `${m.topbarStyle.maxWidth} vs ${m.immersiveMax}`);
+            }
             check(m.topbarStyle.paddingLeft >= 9.5 && m.topbarStyle.paddingRight >= 9.5,
                 `②b ${tag}：topbar 保留左右 safe-area 下限`, `${m.topbarStyle.paddingLeft}/${m.topbarStyle.paddingRight}`);
             if (m.footerStyle) {

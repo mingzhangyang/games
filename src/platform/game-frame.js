@@ -14,8 +14,10 @@
  * 每次写入后向 window 派发 `game-frame:changed`（与 site-settings:changed 同模式），
  * 页面监听它调用自己的 resize() —— 画布后端缓冲区必须在 CSS 尺寸变化之后重算。
  *
- * ⚠️ 反馈环护栏（--frame-chrome → 舞台宽 → 容器 max-width → 顶栏宽 →
- *    顶栏可能折行 → 顶栏高变化 → 又回到 --frame-chrome）：
+ * ⚠️ 反馈环护栏：2026-10-22 桌面顶栏宽度已独立于 shell，
+ *    原先 --frame-chrome → 舞台宽 → shell 宽 → 顶栏宽 → 折行 → chrome
+ *    的桌面反馈链因此断开。护栏仍用于页面专属 chrome、状态行变化以及
+ *    视口/字体切换等情况，不能因桌面解耦而删除：
  *    ① 新旧值差 ≤1px 不写（1px 死区）；
  *    ② 500ms 窗口内写入超过 10 次视为振荡，锁定当前值并 console.warn；
  *    ③ 所有测量/写入合并进 requestAnimationFrame，每帧至多一轮。

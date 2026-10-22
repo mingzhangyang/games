@@ -1194,6 +1194,34 @@ html.game-reset * {
 /* ── 响应式：桌面横排 ── */
 @media (width >= 1024px) {
     /*
+     * Chrome step 4: the header stays a DIRECT shell child for bindFrame,
+     * but its width no longer depends on the stage/sidebar-driven shell.
+     * Flex align-self:center centres the wider item without changing shell
+     * or main sizing. Keep 40px viewport reserve on each side: 100vw includes
+     * classic scrollbars, and the symmetric stable gutter prevents pages with
+     * different vertical-scroll states from shifting the three anchors.
+     *
+     * This is the only desktop topbar width owner, including immersive pages.
+     * Gutter reservation must not leak to full-bleed non-topbar games
+     * (e.g. Math Rain), despite their also loading layout.css.
+     * The stage and immersive/footer width caps intentionally remain unchanged.
+     */
+    @layer contracts {
+        /* The root paints the symmetric reserved gutters; otherwise pages with
+           a body-only dark gradient expose white 15px rails at both edges. */
+        html:has(.game-shell > .game-topbar) {
+            scrollbar-gutter: stable both-edges;
+            background-color: var(--tok-bg);
+        }
+
+        .game-shell > .game-topbar {
+            width: min(1200px, calc(100vw - 80px)) !important;
+            max-width: 1200px !important;
+            align-self: center !important;
+            padding-inline: 12px !important;
+        }
+    }
+    /*
      * 桌面纵向预算（2026-09-19）：舞台宽度由「视口可用高度 × 画幅比」推导，
      * 而不再是固定像素上限 —— 1920×1080 下 480×640 逻辑场从 460px 放大到 ~700px。
      *
