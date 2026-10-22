@@ -174,7 +174,20 @@ try {
                     // open must clear Needle Awn's held movement state.
                     await page.waitForFunction(() => window.gameEngine?.artReady, { timeout: 15000 });
                     await page.evaluate(() => window.gameEngine.startEndlessMode());
+                    await page.waitForFunction(() => window.gameEngine.state === 'playing');
+                    // This is an input-owner test, not a second scoreboard test:
+                    // reset any leftover menu focus and put keyboard input on
+                    // the actual canvas before holding a movement key.
+                    await page.evaluate(() => {
+                        const menu = document.querySelector('[popover]');
+                        if (menu?.matches(':popover-open')) menu.hidePopover();
+                        const canvas = document.getElementById('na-canvas');
+                        canvas.tabIndex = 0;
+                        canvas.focus({ preventScroll: true });
+                    });
+                    check(await page.$eval('#na-canvas', node => node === document.activeElement), 'needle gameplay canvas owns keyboard focus');
                     await page.keyboard.down('w');
+                    await page.waitForFunction(() => window.gameEngine.keys.KeyW === true, { timeout: 3000 });
                     check(await page.evaluate(() => window.gameEngine.keys.KeyW === true), 'needle held W registers before menu');
                     await openMenu(page);
                     await page.keyboard.up('w');
