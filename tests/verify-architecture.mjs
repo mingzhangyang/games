@@ -167,22 +167,17 @@ ok(read('src/generated/shadow-loom/silhouettes.js').split('\n').slice(0, 5).join
     'generated shadow-loom cache carries its generator stamp');
 
 console.log('\n▶ new-game shell scaffold');
-const scaffold = renderGameShell({
+const scaffoldGame = {
     id: 'fixture-game',
     prefix: 'fg',
     entry: 'src/games/fixture-game/index.js',
     name: { en: 'Fixture Game', zh: '示例游戏' },
     caps: ['theme-light', 'topbar'],
-    chrome: {
-        actions: ['stats', 'sound'],
-        overrides: {
-            home: { tag: 'a', attrs: { href: 'index.html' } },
-            name: { tag: 'h1', attrs: { class: 'game-topbar-name' } },
-        },
-    },
+    chrome: { actions: ['stats', 'sound'] },
     themeColor: '#101820',
     themeColorLight: '#eef4f8',
-});
+};
+const scaffold = renderGameShell(scaffoldGame);
 ok(scaffold.includes('aria-haspopup="dialog"')
     && scaffold.includes('aria-controls="fgStatsDrawer"')
     && scaffold.includes('aria-expanded="false"'),
@@ -193,6 +188,33 @@ ok(scaffold.includes('registry:begin seo-script') && scaffold.includes('registry
 ok(scaffold.includes('registry:begin topbar') && scaffold.includes('registry:end topbar')
     && scaffold.includes('<header class="fg-topbar game-topbar">'),
 'generated shell uses the registry-driven shared topbar');
+
+// New-game scaffolds use only actions and have no per-game Home/Sound handlers.
+ok(/chrome:\s*\{\s*owns:\s*\['home', 'sound'\],\s*getText:/.test(read('tools/generators/new-game.mjs')),
+'new-game entry hands default Home/Sound buttons to bindChrome');
+ok(/<button\b[^>]*data-chrome="home"/.test(scaffold)
+    && /<main class="game-main">\s*<h1 class="sr-only" data-i18n="title">Fixture Game<\/h1>/.test(scaffold)
+    && (scaffold.match(/<h1\b/g) || []).length === 1,
+'actions-only scaffold has Home button and exactly one localizable semantic H1');
+const customTitle = renderGameShell({
+    ...scaffoldGame,
+    chrome: { actions: ['stats', 'sound'], overrides: { name: { tag: 'h1' } } },
+});
+ok((customTitle.match(/<h1\b/g) || []).length === 1
+    && !/<main class="game-main">\s*<h1\b/.test(customTitle),
+'custom topbar H1 suppresses the fallback heading');
+const customStage = renderGameShell(scaffoldGame, { stageHtml: '<h1>Provided heading</h1>' });
+ok((customStage.match(/<h1\b/g) || []).length === 1,
+'custom stage H1 suppresses the fallback heading');
+let duplicateRejected = false;
+try {
+    renderGameShell({ ...scaffoldGame,
+        chrome: { actions: ['stats', 'sound'], overrides: { name: { tag: 'h1' } } },
+    }, { startHtml: '<h1>Duplicate heading</h1>' });
+} catch (error) {
+    duplicateRejected = /multiple H1/.test(error.message);
+}
+ok(duplicateRejected, 'new-game shell rejects multiple semantic H1 headings');
 
 console.log(failed ? `\n${failed} architecture failure(s) ❌` : '\narchitecture contract passed ✅');
 process.exit(failed ? 1 : 0);
