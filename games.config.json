@@ -379,6 +379,84 @@
           "en": "Classic",
           "zh": "经典游戏"
         }
+      },
+      "chrome": {
+        "classPrefix": "tt",
+        "headerAttrs": {
+          "class": "game-topbar"
+        },
+        "home": {
+          "tag": "button",
+          "attrs": {
+            "data-chrome": "home",
+            "class": "icon-btn game-icon-btn home-toggle",
+            "id": "homeBtn",
+            "title": "Home",
+            "aria-label": "Home",
+            "onclick": "location.href='index.html'"
+          },
+          "icon": "home"
+        },
+        "name": [
+          {
+            "tag": "h1",
+            "attrs": {
+              "class": "sr-only",
+              "data-i18n": "heading"
+            },
+            "textFrom": "name.en"
+          },
+          {
+            "tag": "div",
+            "attrs": {
+              "class": "tt-brand game-topbar-name",
+              "aria-hidden": "true",
+              "data-i18n": "heading"
+            },
+            "textFrom": "name.en"
+          }
+        ],
+        "actions": [
+          {
+            "role": "theme",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "class": "icon-btn game-icon-btn theme-toggle",
+              "id": "themeToggle",
+              "aria-pressed": "false"
+            }
+          },
+          {
+            "role": "stats",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "stats",
+              "type": "button",
+              "class": "icon-btn game-icon-btn game-stats-btn",
+              "id": "statsToggle",
+              "data-i18n-title": "stats",
+              "data-i18n-label": "stats",
+              "aria-label": "Stats",
+              "aria-haspopup": "dialog",
+              "aria-expanded": "false",
+              "aria-controls": "statsDrawer"
+            }
+          },
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "class": "tt-icon-btn game-icon-btn",
+              "id": "tt-mute-btn",
+              "data-chrome": "sound",
+              "title": "Sound",
+              "aria-label": "Sound"
+            },
+            "icon": "sound"
+          }
+        ]
       }
     },
     {
@@ -479,6 +557,48 @@
           "en": "Strategy",
           "zh": "策略棋牌"
         }
+      },
+      "chrome": {
+        "classPrefix": "gm",
+        "headerAttrs": {
+          "class": "gomoku-top-row game-topbar"
+        },
+        "home": {
+          "tag": "a",
+          "attrs": {
+            "data-chrome": "home",
+            "href": "index.html",
+            "id": "homeLink",
+            "class": "icon-btn game-icon-btn",
+            "title": "Home",
+            "aria-label": "Home"
+          },
+          "icon": "home"
+        },
+        "name": {
+          "tag": "h1",
+          "attrs": {
+            "id": "gameTitle",
+            "class": "gomoku-title game-title-pill game-topbar-name",
+            "data-i18n": "h1"
+          },
+          "textFrom": "name.en"
+        },
+        "actions": [
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "class": "gm-icon-btn game-icon-btn",
+              "id": "gm-mute-btn",
+              "data-chrome": "sound",
+              "title": "Sound",
+              "aria-label": "Sound"
+            },
+            "icon": "sound"
+          }
+        ]
       }
     },
     {
@@ -542,6 +662,68 @@
           "en": "Casual",
           "zh": "休闲爆款"
         }
+      },
+      "chrome": {
+        "home": {
+          "tag": "button",
+          "attrs": {
+            "data-chrome": "home",
+            "class": "pm-icon-btn game-icon-btn",
+            "id": "pm-home-btn",
+            "title": "Home",
+            "aria-label": "Home"
+          },
+          "icon": "home"
+        },
+        "name": {
+          "tag": "div",
+          "attrs": {
+            "class": "pm-brand game-topbar-name",
+            "data-i18n": "title"
+          },
+          "textFrom": "name.en"
+        },
+        "actions": [
+          {
+            "role": "stats",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "stats",
+              "type": "button",
+              "class": "pm-icon-btn game-icon-btn pm-stats-btn game-stats-btn",
+              "id": "pmStatsToggle",
+              "aria-label": "Stats",
+              "aria-haspopup": "dialog",
+              "aria-expanded": "false",
+              "aria-controls": "pmStatsDrawer"
+            }
+          },
+          {
+            "role": "pause",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "pause",
+              "class": "pm-icon-btn game-icon-btn",
+              "id": "pm-pause-btn",
+              "title": "Pause",
+              "aria-label": "Pause"
+            },
+            "icon": "pause"
+          },
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "class": "pm-icon-btn game-icon-btn",
+              "id": "pm-mute-btn",
+              "data-chrome": "sound",
+              "title": "Sound",
+              "aria-label": "Sound"
+            },
+            "icon": "sound"
+          }
+        ]
       }
     },
     {
@@ -593,6 +775,69 @@
           "en": "Daily",
           "zh": "每日智力"
         }
+      },
+      "chrome": {
+        "home": {
+          "tag": "a",
+          "attrs": {
+            "data-chrome": "home",
+            "class": "wd-icon-btn wd-home-link game-icon-btn",
+            "href": "index.html",
+            "title": "Home",
+            "aria-label": "Home"
+          },
+          "icon": "home"
+        },
+        "name": {
+          "tag": "h1",
+          "attrs": {
+            "class": "wd-title game-topbar-name",
+            "id": "wd-title",
+            "data-i18n": "title"
+          },
+          "textFrom": "name.en"
+        },
+        "actions": [
+          {
+            "role": "help",
+            "tag": "button",
+            "attrs": {
+              "class": "wd-icon-btn game-icon-btn",
+              "id": "wd-btn-help",
+              "title": "How to play",
+              "aria-label": "How to play",
+              "data-i18n-title": "help",
+              "data-i18n-label": "help"
+            },
+            "icon": "help"
+          },
+          {
+            "role": "stats",
+            "tag": "button",
+            "attrs": {
+              "class": "wd-icon-btn game-icon-btn",
+              "id": "wd-btn-stats",
+              "title": "Stats",
+              "aria-label": "Stats",
+              "data-i18n-title": "stats",
+              "data-i18n-label": "stats"
+            },
+            "icon": "stats"
+          },
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "class": "wd-icon-btn game-icon-btn",
+              "id": "wd-btn-mute",
+              "data-chrome": "sound",
+              "title": "Sound",
+              "aria-label": "Sound"
+            },
+            "icon": "sound"
+          }
+        ]
       }
     },
     {
@@ -658,6 +903,68 @@
           "en": "Sports",
           "zh": "运动街机"
         }
+      },
+      "chrome": {
+        "home": {
+          "tag": "button",
+          "attrs": {
+            "data-chrome": "home",
+            "class": "hs-icon-btn game-icon-btn",
+            "id": "hs-btn-home-top",
+            "title": "Home",
+            "aria-label": "Home"
+          },
+          "icon": "home"
+        },
+        "name": {
+          "tag": "div",
+          "attrs": {
+            "class": "hs-brand game-topbar-name",
+            "data-i18n": "title"
+          },
+          "textFrom": "name.en"
+        },
+        "actions": [
+          {
+            "role": "stats",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "stats",
+              "type": "button",
+              "class": "hs-icon-btn game-icon-btn hs-stats-btn game-stats-btn",
+              "id": "hsStatsToggle",
+              "aria-label": "Stats",
+              "aria-haspopup": "dialog",
+              "aria-expanded": "false",
+              "aria-controls": "hsStatsDrawer"
+            }
+          },
+          {
+            "role": "pause",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "pause",
+              "class": "hs-icon-btn game-icon-btn",
+              "id": "hs-pause-btn",
+              "title": "Pause",
+              "aria-label": "Pause"
+            },
+            "icon": "pause"
+          },
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "class": "hs-icon-btn game-icon-btn",
+              "id": "hs-mute-btn",
+              "data-chrome": "sound",
+              "title": "Sound",
+              "aria-label": "Sound"
+            },
+            "icon": "sound"
+          }
+        ]
       }
     },
     {
@@ -717,6 +1024,53 @@
           "en": "Puzzle",
           "zh": "益智经典"
         }
+      },
+      "chrome": {
+        "home": {
+          "tag": "button",
+          "attrs": {
+            "data-chrome": "home",
+            "class": "ms-icon-btn game-icon-btn",
+            "id": "ms-btn-home",
+            "title": "Home",
+            "aria-label": "Home"
+          },
+          "icon": "home"
+        },
+        "name": {
+          "tag": "span",
+          "attrs": {
+            "class": "ms-brand game-topbar-name",
+            "data-i18n": "title"
+          },
+          "textFrom": "name.en"
+        },
+        "actions": [
+          {
+            "role": "pause",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "pause",
+              "class": "ms-icon-btn game-icon-btn",
+              "id": "ms-btn-pause",
+              "title": "Pause",
+              "aria-label": "Pause"
+            },
+            "icon": "pause-solid"
+          },
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "sound",
+              "class": "ms-icon-btn game-icon-btn",
+              "id": "ms-mute-btn",
+              "title": "Sound",
+              "aria-label": "Sound"
+            },
+            "icon": "sound-no-stroke"
+          }
+        ]
       }
     },
     {
@@ -772,6 +1126,41 @@
           "en": "Strategy",
           "zh": "策略棋牌"
         }
+      },
+      "chrome": {
+        "home": {
+          "tag": "button",
+          "attrs": {
+            "data-chrome": "home",
+            "class": "rv-icon-btn game-icon-btn",
+            "id": "rv-btn-home",
+            "title": "Home",
+            "aria-label": "Home"
+          },
+          "icon": "home"
+        },
+        "name": {
+          "tag": "span",
+          "attrs": {
+            "class": "rv-brand game-topbar-name",
+            "data-i18n": "title"
+          },
+          "textFrom": "name.en"
+        },
+        "actions": [
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "sound",
+              "class": "rv-icon-btn game-icon-btn",
+              "id": "rv-mute-btn",
+              "title": "Sound",
+              "aria-label": "Sound"
+            },
+            "icon": "sound-no-stroke"
+          }
+        ]
       }
     },
     {
@@ -836,6 +1225,98 @@
           "en": "Strategy",
           "zh": "策略塔防"
         }
+      },
+      "chrome": {
+        "home": {
+          "tag": "button",
+          "attrs": {
+            "data-chrome": "home",
+            "class": "td-icon-btn game-icon-btn",
+            "id": "td-btn-home",
+            "title": "Home",
+            "aria-label": "Home",
+            "data-i18n-title": "homeBtnTitle",
+            "data-i18n-label": "homeBtnTitle"
+          },
+          "icon": "home"
+        },
+        "name": {
+          "tag": "div",
+          "attrs": {
+            "class": "td-brand game-topbar-name",
+            "data-i18n": "title"
+          },
+          "text": "Neon Tower Defense"
+        },
+        "actions": [
+          {
+            "role": "range",
+            "tag": "button",
+            "attrs": {
+              "class": "td-icon-btn game-icon-btn",
+              "id": "td-range-btn",
+              "title": "Toggle Ranges (R)",
+              "aria-label": "Toggle Ranges",
+              "data-i18n-title": "rangeBtnTitle",
+              "data-i18n-label": "rangeBtnTitle"
+            },
+            "icon": "range"
+          },
+          {
+            "role": "speed",
+            "tag": "button",
+            "attrs": {
+              "class": "td-icon-btn game-icon-btn",
+              "id": "td-speed-btn",
+              "title": "Speed",
+              "data-i18n-title": "speedBtnTitle"
+            },
+            "text": "×1"
+          },
+          {
+            "role": "stats",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "stats",
+              "type": "button",
+              "class": "td-icon-btn game-icon-btn td-stats-btn game-stats-btn",
+              "id": "tdStatsToggle",
+              "aria-label": "Stats",
+              "aria-haspopup": "dialog",
+              "aria-expanded": "false",
+              "aria-controls": "tdTacticalPanel"
+            }
+          },
+          {
+            "role": "pause",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "pause",
+              "class": "td-icon-btn game-icon-btn",
+              "id": "td-pause-btn",
+              "title": "Pause",
+              "aria-label": "Pause",
+              "data-i18n-title": "pauseBtnTitle",
+              "data-i18n-label": "pauseBtnTitle"
+            },
+            "icon": "pause"
+          },
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "class": "td-icon-btn game-icon-btn",
+              "id": "td-mute-btn",
+              "data-chrome": "sound",
+              "title": "Sound",
+              "aria-label": "Sound",
+              "data-i18n-title": "muteBtnTitle",
+              "data-i18n-label": "muteBtnTitle"
+            },
+            "icon": "sound"
+          }
+        ]
       }
     },
     {
@@ -898,6 +1379,73 @@
           "en": "Physics",
           "zh": "物理弹道"
         }
+      },
+      "chrome": {
+        "home": {
+          "tag": "button",
+          "attrs": {
+            "data-chrome": "home",
+            "class": "gd-icon-btn game-icon-btn",
+            "id": "gd-btn-home",
+            "title": "Home",
+            "aria-label": "Home",
+            "data-i18n-title": "home",
+            "data-i18n-label": "home"
+          },
+          "icon": "home"
+        },
+        "name": {
+          "tag": "div",
+          "attrs": {
+            "class": "gd-brand game-topbar-name",
+            "data-i18n": "title"
+          },
+          "textFrom": "name.en"
+        },
+        "actions": [
+          {
+            "role": "restart",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "data-contextual-restart": "attempt",
+              "class": "gd-icon-btn game-icon-btn hidden",
+              "id": "gd-reset-btn",
+              "title": "Retry",
+              "aria-label": "Retry"
+            },
+            "icon": "restart"
+          },
+          {
+            "role": "stats",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "stats",
+              "type": "button",
+              "class": "gd-icon-btn game-icon-btn gd-stats-btn game-stats-btn",
+              "id": "gdStatsToggle",
+              "aria-label": "Stats",
+              "aria-haspopup": "dialog",
+              "aria-expanded": "false",
+              "aria-controls": "gdStatsDrawer"
+            }
+          },
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "class": "gd-icon-btn game-icon-btn",
+              "id": "gd-mute-btn",
+              "data-chrome": "sound",
+              "title": "Sound",
+              "aria-label": "Sound",
+              "data-i18n-title": "sound",
+              "data-i18n-label": "sound"
+            },
+            "icon": "sound"
+          }
+        ]
       }
     },
     {
@@ -970,6 +1518,78 @@
           "en": "Action",
           "zh": "硬核动作"
         }
+      },
+      "chrome": {
+        "home": {
+          "tag": "button",
+          "attrs": {
+            "data-chrome": "home",
+            "class": "na-icon-btn game-icon-btn",
+            "id": "na-btn-home",
+            "title": "Home",
+            "aria-label": "Home"
+          },
+          "icon": "home",
+          "multiline": true
+        },
+        "name": {
+          "tag": "div",
+          "attrs": {
+            "class": "na-title-pill game-title-pill game-topbar-name"
+          },
+          "children": [
+            {
+              "tag": "span",
+              "attrs": {
+                "class": "na-stage-label",
+                "id": "na-brand"
+              },
+              "textFrom": "name.zh"
+            }
+          ]
+        },
+        "actions": [
+          {
+            "role": "stats",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "stats",
+              "type": "button",
+              "class": "na-icon-btn game-icon-btn na-stats-btn game-stats-btn",
+              "id": "naStatsToggle",
+              "aria-label": "Stats",
+              "aria-haspopup": "dialog",
+              "aria-expanded": "false",
+              "aria-controls": "naStatsDrawer"
+            }
+          },
+          {
+            "role": "pause",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "pause",
+              "class": "na-icon-btn game-icon-btn",
+              "id": "na-btn-pause",
+              "title": "Pause",
+              "aria-label": "Pause"
+            },
+            "icon": "pause-rounded",
+            "multiline": true
+          },
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "class": "na-icon-btn game-icon-btn",
+              "id": "na-btn-sound",
+              "data-chrome": "sound",
+              "title": "Sound",
+              "aria-label": "Sound"
+            },
+            "icon": "sound"
+          }
+        ]
       }
     },
     {
@@ -1038,6 +1658,79 @@
           "en": "Action",
           "zh": "国风仙侠"
         }
+      },
+      "chrome": {
+        "home": {
+          "tag": "button",
+          "attrs": {
+            "data-chrome": "home",
+            "class": "sf-icon-btn game-icon-btn",
+            "id": "sf-btn-home",
+            "title": "Home",
+            "aria-label": "Home"
+          },
+          "icon": "home",
+          "multiline": true
+        },
+        "name": {
+          "tag": "div",
+          "attrs": {
+            "class": "sf-title-pill game-title-pill game-topbar-name"
+          },
+          "children": [
+            {
+              "tag": "span",
+              "attrs": {
+                "class": "sf-stage-label",
+                "id": "sf-stage-label",
+                "data-i18n": "gameTitle"
+              },
+              "textFrom": "name.zh"
+            }
+          ]
+        },
+        "actions": [
+          {
+            "role": "stats",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "stats",
+              "type": "button",
+              "class": "sf-icon-btn game-icon-btn sf-stats-btn game-stats-btn",
+              "id": "sfStatsToggle",
+              "aria-label": "Stats",
+              "aria-haspopup": "dialog",
+              "aria-expanded": "false",
+              "aria-controls": "sfStatsDrawer"
+            }
+          },
+          {
+            "role": "pause",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "pause",
+              "class": "sf-icon-btn game-icon-btn",
+              "id": "sf-btn-pause",
+              "title": "Pause",
+              "aria-label": "Pause"
+            },
+            "icon": "pause-rounded",
+            "multiline": true
+          },
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "class": "sf-icon-btn game-icon-btn",
+              "id": "sf-btn-sound",
+              "data-chrome": "sound",
+              "title": "Sound",
+              "aria-label": "Sound"
+            },
+            "icon": "sound"
+          }
+        ]
       }
     },
     {
@@ -1100,6 +1793,71 @@
           "en": "Puzzle",
           "zh": "光路解谜"
         }
+      },
+      "chrome": {
+        "home": {
+          "tag": "button",
+          "attrs": {
+            "data-chrome": "home",
+            "class": "lm-icon-btn game-icon-btn",
+            "id": "lm-btn-home",
+            "title": "Home",
+            "aria-label": "Home",
+            "data-i18n-title": "home",
+            "data-i18n-label": "home"
+          },
+          "icon": "home"
+        },
+        "name": {
+          "tag": "div",
+          "attrs": {
+            "class": "lm-brand game-topbar-name",
+            "data-i18n": "title"
+          },
+          "textFrom": "name.en"
+        },
+        "actions": [
+          {
+            "role": "restart",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "data-contextual-restart": "retry",
+              "class": "lm-icon-btn game-icon-btn hidden",
+              "id": "lm-reset-btn",
+              "title": "Reset",
+              "aria-label": "Reset"
+            },
+            "icon": "restart"
+          },
+          {
+            "role": "stats",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "stats",
+              "type": "button",
+              "class": "lm-icon-btn game-icon-btn lm-stats-btn game-stats-btn",
+              "id": "lmStatsToggle",
+              "aria-label": "Stats",
+              "aria-haspopup": "dialog",
+              "aria-expanded": "false",
+              "aria-controls": "lmStatsDrawer"
+            }
+          },
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "class": "lm-icon-btn game-icon-btn",
+              "id": "lm-mute-btn",
+              "data-chrome": "sound",
+              "title": "Sound",
+              "aria-label": "Sound"
+            },
+            "icon": "sound"
+          }
+        ]
       }
     },
     {
@@ -1165,6 +1923,69 @@
           "en": "Puzzle",
           "zh": "电路解谜"
         }
+      },
+      "chrome": {
+        "home": {
+          "tag": "button",
+          "attrs": {
+            "data-chrome": "home",
+            "class": "cc-icon-btn game-icon-btn",
+            "id": "cc-btn-home",
+            "title": "Home",
+            "aria-label": "Home"
+          },
+          "icon": "home"
+        },
+        "name": {
+          "tag": "div",
+          "attrs": {
+            "class": "cc-brand game-topbar-name",
+            "data-i18n": "title"
+          },
+          "textFrom": "name.en"
+        },
+        "actions": [
+          {
+            "role": "restart",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "data-contextual-restart": "retry",
+              "class": "cc-icon-btn game-icon-btn hidden",
+              "id": "cc-reset-btn",
+              "title": "Reset",
+              "aria-label": "Reset"
+            },
+            "icon": "restart"
+          },
+          {
+            "role": "stats",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "stats",
+              "type": "button",
+              "class": "cc-icon-btn game-icon-btn cc-stats-btn game-stats-btn",
+              "id": "ccStatsToggle",
+              "aria-label": "Stats",
+              "aria-haspopup": "dialog",
+              "aria-expanded": "false",
+              "aria-controls": "ccStatsDrawer"
+            }
+          },
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "class": "cc-icon-btn game-icon-btn",
+              "id": "cc-mute-btn",
+              "data-chrome": "sound",
+              "title": "Sound",
+              "aria-label": "Sound"
+            },
+            "icon": "sound"
+          }
+        ]
       }
     },
     {
@@ -1229,6 +2050,69 @@
           "en": "Physics",
           "zh": "绳物理"
         }
+      },
+      "chrome": {
+        "home": {
+          "tag": "button",
+          "attrs": {
+            "data-chrome": "home",
+            "class": "sd-icon-btn game-icon-btn",
+            "id": "sd-btn-home",
+            "title": "Home",
+            "aria-label": "Home"
+          },
+          "icon": "home"
+        },
+        "name": {
+          "tag": "div",
+          "attrs": {
+            "class": "sd-brand game-topbar-name",
+            "data-i18n": "title"
+          },
+          "textFrom": "name.en"
+        },
+        "actions": [
+          {
+            "role": "restart",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "data-contextual-restart": "retry",
+              "class": "sd-icon-btn game-icon-btn hidden",
+              "id": "sd-reset-btn",
+              "title": "Reset",
+              "aria-label": "Reset"
+            },
+            "icon": "restart"
+          },
+          {
+            "role": "stats",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "stats",
+              "type": "button",
+              "class": "sd-icon-btn game-icon-btn sd-stats-btn game-stats-btn",
+              "id": "sdStatsToggle",
+              "aria-label": "Stats",
+              "aria-haspopup": "dialog",
+              "aria-expanded": "false",
+              "aria-controls": "sdStatsDrawer"
+            }
+          },
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "class": "sd-icon-btn game-icon-btn",
+              "id": "sd-mute-btn",
+              "data-chrome": "sound",
+              "title": "Sound",
+              "aria-label": "Sound"
+            },
+            "icon": "sound"
+          }
+        ]
       }
     },
     {
@@ -1293,6 +2177,69 @@
           "en": "Chemistry",
           "zh": "化学"
         }
+      },
+      "chrome": {
+        "home": {
+          "tag": "button",
+          "attrs": {
+            "data-chrome": "home",
+            "class": "bf-icon-btn game-icon-btn",
+            "id": "bf-btn-home",
+            "title": "Home",
+            "aria-label": "Home"
+          },
+          "icon": "home"
+        },
+        "name": {
+          "tag": "div",
+          "attrs": {
+            "class": "bf-brand game-topbar-name",
+            "data-i18n": "title"
+          },
+          "textFrom": "name.en"
+        },
+        "actions": [
+          {
+            "role": "restart",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "data-contextual-restart": "retry",
+              "class": "bf-icon-btn game-icon-btn hidden",
+              "id": "bf-reset-btn",
+              "title": "Reset",
+              "aria-label": "Reset"
+            },
+            "icon": "restart"
+          },
+          {
+            "role": "stats",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "stats",
+              "type": "button",
+              "class": "bf-icon-btn game-icon-btn bf-stats-btn game-stats-btn",
+              "id": "bfStatsToggle",
+              "aria-label": "Stats",
+              "aria-haspopup": "dialog",
+              "aria-expanded": "false",
+              "aria-controls": "bfStatsDrawer"
+            }
+          },
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "class": "bf-icon-btn game-icon-btn",
+              "id": "bf-mute-btn",
+              "data-chrome": "sound",
+              "title": "Sound",
+              "aria-label": "Sound"
+            },
+            "icon": "sound"
+          }
+        ]
       }
     },
     {
@@ -1355,6 +2302,69 @@
           "en": "Physics",
           "zh": "声学"
         }
+      },
+      "chrome": {
+        "home": {
+          "tag": "button",
+          "attrs": {
+            "data-chrome": "home",
+            "class": "ec-icon-btn game-icon-btn",
+            "id": "ec-btn-home",
+            "title": "Home",
+            "aria-label": "Home"
+          },
+          "icon": "home"
+        },
+        "name": {
+          "tag": "div",
+          "attrs": {
+            "class": "ec-brand game-topbar-name",
+            "data-i18n": "title"
+          },
+          "textFrom": "name.en"
+        },
+        "actions": [
+          {
+            "role": "restart",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "data-contextual-restart": "retry",
+              "class": "ec-icon-btn game-icon-btn hidden",
+              "id": "ec-reset-btn",
+              "title": "Reset",
+              "aria-label": "Reset"
+            },
+            "icon": "restart"
+          },
+          {
+            "role": "stats",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "stats",
+              "type": "button",
+              "class": "ec-icon-btn game-icon-btn ec-stats-btn game-stats-btn",
+              "id": "ecStatsToggle",
+              "aria-label": "Stats",
+              "aria-haspopup": "dialog",
+              "aria-expanded": "false",
+              "aria-controls": "ecStatsDrawer"
+            }
+          },
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "class": "ec-icon-btn game-icon-btn",
+              "id": "ec-mute-btn",
+              "data-chrome": "sound",
+              "title": "Sound",
+              "aria-label": "Sound"
+            },
+            "icon": "sound"
+          }
+        ]
       }
     },
     {
@@ -1417,6 +2427,55 @@
           "en": "Physics",
           "zh": "热力学"
         }
+      },
+      "chrome": {
+        "home": {
+          "tag": "button",
+          "attrs": {
+            "data-chrome": "home",
+            "class": "md-icon-btn game-icon-btn",
+            "id": "md-btn-home",
+            "title": "Home",
+            "aria-label": "Home"
+          },
+          "icon": "home"
+        },
+        "name": {
+          "tag": "div",
+          "attrs": {
+            "class": "md-brand game-topbar-name",
+            "data-i18n": "title"
+          },
+          "textFrom": "name.en"
+        },
+        "actions": [
+          {
+            "role": "restart",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "data-contextual-restart": "retry",
+              "class": "md-icon-btn game-icon-btn hidden",
+              "id": "md-reset-btn",
+              "title": "Reset",
+              "aria-label": "Reset"
+            },
+            "icon": "restart"
+          },
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "class": "md-icon-btn game-icon-btn",
+              "id": "md-mute-btn",
+              "data-chrome": "sound",
+              "title": "Sound",
+              "aria-label": "Sound"
+            },
+            "icon": "sound"
+          }
+        ]
       }
     },
     {
@@ -1481,6 +2540,69 @@
           "en": "Crystallization",
           "zh": "结晶"
         }
+      },
+      "chrome": {
+        "home": {
+          "tag": "button",
+          "attrs": {
+            "data-chrome": "home",
+            "class": "cb-icon-btn game-icon-btn",
+            "id": "cb-btn-home",
+            "title": "Home",
+            "aria-label": "Home"
+          },
+          "icon": "home"
+        },
+        "name": {
+          "tag": "div",
+          "attrs": {
+            "class": "cb-brand game-topbar-name",
+            "data-i18n": "title"
+          },
+          "textFrom": "name.en"
+        },
+        "actions": [
+          {
+            "role": "restart",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "data-contextual-restart": "retry",
+              "class": "cb-icon-btn game-icon-btn hidden",
+              "id": "cb-reset-btn",
+              "title": "Reset",
+              "aria-label": "Reset"
+            },
+            "icon": "restart"
+          },
+          {
+            "role": "stats",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "stats",
+              "type": "button",
+              "class": "cb-icon-btn game-icon-btn cb-stats-btn game-stats-btn",
+              "id": "cbStatsToggle",
+              "aria-label": "Stats",
+              "aria-haspopup": "dialog",
+              "aria-expanded": "false",
+              "aria-controls": "cbStatsDrawer"
+            }
+          },
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "class": "cb-icon-btn game-icon-btn",
+              "id": "cb-mute-btn",
+              "data-chrome": "sound",
+              "title": "Sound",
+              "aria-label": "Sound"
+            },
+            "icon": "sound"
+          }
+        ]
       }
     },
     {
@@ -1543,6 +2665,69 @@
           "en": "Spectroscopy",
           "zh": "光谱"
         }
+      },
+      "chrome": {
+        "home": {
+          "tag": "button",
+          "attrs": {
+            "data-chrome": "home",
+            "class": "fv-icon-btn game-icon-btn",
+            "id": "fv-btn-home",
+            "title": "Home",
+            "aria-label": "Home"
+          },
+          "icon": "home"
+        },
+        "name": {
+          "tag": "div",
+          "attrs": {
+            "class": "fv-brand game-topbar-name",
+            "data-i18n": "title"
+          },
+          "textFrom": "name.en"
+        },
+        "actions": [
+          {
+            "role": "restart",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "data-contextual-restart": "retry",
+              "class": "fv-icon-btn game-icon-btn hidden",
+              "id": "fv-reset-btn",
+              "title": "Reset",
+              "aria-label": "Reset"
+            },
+            "icon": "restart"
+          },
+          {
+            "role": "stats",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "stats",
+              "type": "button",
+              "class": "fv-icon-btn game-icon-btn fv-stats-btn game-stats-btn",
+              "id": "fvStatsToggle",
+              "aria-label": "Stats",
+              "aria-haspopup": "dialog",
+              "aria-expanded": "false",
+              "aria-controls": "fvStatsDrawer"
+            }
+          },
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "class": "fv-icon-btn game-icon-btn",
+              "id": "fv-mute-btn",
+              "data-chrome": "sound",
+              "title": "Sound",
+              "aria-label": "Sound"
+            },
+            "icon": "sound"
+          }
+        ]
       }
     },
     {
@@ -1607,6 +2792,69 @@
           "en": "Interference",
           "zh": "干涉"
         }
+      },
+      "chrome": {
+        "home": {
+          "tag": "button",
+          "attrs": {
+            "data-chrome": "home",
+            "class": "rd-icon-btn game-icon-btn",
+            "id": "rd-btn-home",
+            "title": "Home",
+            "aria-label": "Home"
+          },
+          "icon": "home"
+        },
+        "name": {
+          "tag": "div",
+          "attrs": {
+            "class": "rd-brand game-topbar-name",
+            "data-i18n": "title"
+          },
+          "textFrom": "name.en"
+        },
+        "actions": [
+          {
+            "role": "restart",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "data-contextual-restart": "retry",
+              "class": "rd-icon-btn game-icon-btn hidden",
+              "id": "rd-reset-btn",
+              "title": "Reset",
+              "aria-label": "Reset"
+            },
+            "icon": "restart"
+          },
+          {
+            "role": "stats",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "stats",
+              "type": "button",
+              "class": "rd-icon-btn game-icon-btn rd-stats-btn game-stats-btn",
+              "id": "rdStatsToggle",
+              "aria-label": "Stats",
+              "aria-haspopup": "dialog",
+              "aria-expanded": "false",
+              "aria-controls": "rdStatsDrawer"
+            }
+          },
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "class": "rd-icon-btn game-icon-btn",
+              "id": "rd-mute-btn",
+              "data-chrome": "sound",
+              "title": "Sound",
+              "aria-label": "Sound"
+            },
+            "icon": "sound"
+          }
+        ]
       }
     },
     {
@@ -1672,6 +2920,85 @@
         "maxScore": 1000000,
         "maxEntries": 50,
         "ui": "dialog"
+      },
+      "chrome": {
+        "home": {
+          "tag": "button",
+          "attrs": {
+            "data-chrome": "home",
+            "class": "cp-icon-btn game-icon-btn",
+            "id": "cp-btn-home",
+            "title": "Home",
+            "aria-label": "Home"
+          },
+          "icon": "home",
+          "multiline": true
+        },
+        "name": {
+          "tag": "div",
+          "attrs": {
+            "class": "cp-brand game-topbar-name"
+          },
+          "children": [
+            {
+              "tag": "span",
+              "attrs": {
+                "class": "cp-brand-zh",
+                "id": "cp-brand-zh",
+                "data-i18n": "brand"
+              },
+              "textFrom": "name.zh"
+            },
+            {
+              "tag": "span",
+              "attrs": {
+                "class": "cp-brand-en"
+              },
+              "text": "CARROT PULL"
+            }
+          ]
+        },
+        "actions": [
+          {
+            "role": "restart",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "data-contextual-restart": "exit",
+              "class": "cp-icon-btn game-icon-btn hidden",
+              "id": "cp-reset-btn",
+              "title": "Reset",
+              "aria-label": "Reset"
+            },
+            "icon": "restart",
+            "multiline": true
+          },
+          {
+            "role": "stats",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "stats",
+              "type": "button",
+              "class": "cp-icon-btn game-icon-btn cp-stats-btn game-stats-btn",
+              "id": "cpStatsToggle",
+              "aria-label": "Stats",
+              "aria-haspopup": "dialog",
+              "aria-expanded": "false",
+              "aria-controls": "cpStatsDrawer"
+            }
+          },
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "sound",
+              "type": "button",
+              "class": "cp-icon-btn game-icon-btn",
+              "id": "cp-mute-btn",
+              "aria-label": "Sound"
+            }
+          }
+        ]
       }
     },
     {
@@ -1731,6 +3058,68 @@
         "maxScore": 100000,
         "maxEntries": 50,
         "ui": "dialog"
+      },
+      "chrome": {
+        "home": {
+          "tag": "button",
+          "attrs": {
+            "data-chrome": "home",
+            "type": "button",
+            "class": "fs-icon-btn game-icon-btn",
+            "id": "fs-btn-home",
+            "title": "Home",
+            "aria-label": "Home"
+          },
+          "icon": "home"
+        },
+        "name": [
+          {
+            "tag": "h1",
+            "attrs": {
+              "class": "sr-only",
+              "id": "fs-h1",
+              "data-i18n": "title"
+            },
+            "textFrom": "name.en"
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "fs-brand game-topbar-name",
+              "data-i18n": "title"
+            },
+            "textFrom": "name.en"
+          }
+        ],
+        "actions": [
+          {
+            "role": "restart",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "class": "fs-icon-btn game-icon-btn",
+              "id": "fs-btn-restart",
+              "title": "Restart",
+              "aria-label": "Restart",
+              "disabled": null,
+              "data-i18n-title": "restart",
+              "data-i18n-label": "restart"
+            },
+            "icon": "restart"
+          },
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "class": "fs-icon-btn game-icon-btn",
+              "id": "fs-btn-mute",
+              "data-chrome": "sound",
+              "title": "Sound",
+              "aria-label": "Sound"
+            }
+          }
+        ]
       }
     },
     {
@@ -1800,6 +3189,77 @@
         "maxScore": 9007199254740991,
         "maxEntries": 50,
         "ui": "dialog"
+      },
+      "chrome": {
+        "home": {
+          "tag": "button",
+          "attrs": {
+            "data-chrome": "home",
+            "class": "sl-icon-btn game-icon-btn",
+            "id": "sl-btn-home",
+            "title": "Home",
+            "aria-label": "Home"
+          },
+          "icon": "home"
+        },
+        "name": {
+          "tag": "div",
+          "attrs": {
+            "class": "sl-brand game-topbar-name"
+          },
+          "children": [
+            {
+              "tag": "span",
+              "attrs": {
+                "class": "sl-brand-zh",
+                "id": "sl-brand",
+                "data-i18n": "brand"
+              },
+              "textFrom": "name.zh"
+            }
+          ]
+        },
+        "actions": [
+          {
+            "role": "restart",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "data-contextual-restart": "retry",
+              "class": "sl-icon-btn game-icon-btn hidden",
+              "id": "sl-reset-btn",
+              "title": "Reset",
+              "aria-label": "Reset"
+            },
+            "icon": "restart"
+          },
+          {
+            "role": "stats",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "stats",
+              "type": "button",
+              "class": "sl-icon-btn game-icon-btn sl-stats-btn game-stats-btn",
+              "id": "slStatsToggle",
+              "aria-label": "Stats",
+              "aria-haspopup": "dialog",
+              "aria-expanded": "false",
+              "aria-controls": "slStatsDrawer"
+            }
+          },
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "data-chrome": "sound",
+              "type": "button",
+              "class": "sl-icon-btn game-icon-btn",
+              "id": "sl-mute-btn",
+              "title": "Sound",
+              "aria-label": "Sound"
+            }
+          }
+        ]
       }
     },
     {
@@ -1859,6 +3319,89 @@
         "maxScore": 9007199254740991,
         "maxEntries": 50,
         "ui": "dialog"
+      },
+      "chrome": {
+        "home": {
+          "tag": "button",
+          "attrs": {
+            "data-chrome": "home",
+            "type": "button",
+            "class": "lj-icon-btn game-icon-btn",
+            "id": "lj-btn-home",
+            "title": "Home",
+            "aria-label": "Home"
+          },
+          "icon": "home"
+        },
+        "name": [
+          {
+            "tag": "h1",
+            "attrs": {
+              "class": "sr-only",
+              "id": "lj-h1",
+              "data-i18n": "title"
+            },
+            "textFrom": "name.en"
+          },
+          {
+            "tag": "div",
+            "attrs": {
+              "class": "lj-title-pill game-title-pill game-topbar-name",
+              "aria-hidden": "true"
+            },
+            "children": [
+              {
+                "tag": "span",
+                "attrs": {
+                  "class": "lj-title-main",
+                  "data-i18n": "brand"
+                },
+                "textFrom": "name.en"
+              }
+            ]
+          }
+        ],
+        "actions": [
+          {
+            "role": "restart",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "data-contextual-restart": "retry",
+              "class": "lj-icon-btn game-icon-btn hidden",
+              "id": "lj-reset-btn",
+              "title": "Restart",
+              "aria-label": "Restart"
+            },
+            "icon": "restart"
+          },
+          {
+            "role": "pause",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "data-chrome": "pause",
+              "class": "lj-icon-btn game-icon-btn",
+              "id": "lj-pause-btn",
+              "title": "Pause",
+              "aria-label": "Pause",
+              "disabled": null
+            },
+            "icon": "pause"
+          },
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "data-chrome": "sound",
+              "class": "lj-icon-btn game-icon-btn",
+              "id": "lj-mute-btn",
+              "title": "Sound",
+              "aria-label": "Sound"
+            }
+          }
+        ]
       }
     },
     {
@@ -1922,6 +3465,71 @@
           "en": "Magnetic Logic",
           "zh": "磁力解谜"
         }
+      },
+      "chrome": {
+        "leftAttrs": {
+          "class": "game-topbar-group"
+        },
+        "centerAttrs": {
+          "class": "game-topbar-center"
+        },
+        "rightAttrs": {
+          "class": "game-topbar-group"
+        },
+        "home": {
+          "tag": "button",
+          "attrs": {
+            "id": "mg-home",
+            "data-chrome": "home",
+            "class": "mg-icon-btn game-icon-btn",
+            "type": "button",
+            "aria-label": "Home"
+          }
+        },
+        "name": [
+          {
+            "tag": "h1",
+            "attrs": {
+              "class": "sr-only",
+              "data-i18n": "title"
+            },
+            "textFrom": "name.en"
+          },
+          {
+            "tag": "div",
+            "attrs": {
+              "class": "game-title-pill mg-brand game-topbar-name",
+              "aria-hidden": "true",
+              "data-i18n": "brand"
+            },
+            "textFrom": "name.en"
+          }
+        ],
+        "actions": [
+          {
+            "role": "pause",
+            "tag": "button",
+            "attrs": {
+              "id": "mg-pause-btn",
+              "data-chrome": "pause",
+              "class": "mg-icon-btn game-icon-btn",
+              "type": "button",
+              "aria-label": "Pause",
+              "disabled": null
+            }
+          },
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "id": "mg-sound",
+              "data-chrome": "sound",
+              "class": "mg-icon-btn game-icon-btn",
+              "type": "button",
+              "aria-label": "Sound"
+            }
+          }
+        ]
       }
     },
     {
@@ -1981,6 +3589,89 @@
           "en": "Logic Puzzle",
           "zh": "推理数独"
         }
+      },
+      "chrome": {
+        "home": {
+          "tag": "button",
+          "attrs": {
+            "data-chrome": "home",
+            "type": "button",
+            "class": "sm-icon-btn game-icon-btn",
+            "id": "sm-btn-home",
+            "title": "Home",
+            "aria-label": "Home"
+          },
+          "icon": "home"
+        },
+        "name": [
+          {
+            "tag": "h1",
+            "attrs": {
+              "class": "sr-only",
+              "id": "sm-h1",
+              "data-i18n": "title"
+            },
+            "textFrom": "name.en"
+          },
+          {
+            "tag": "div",
+            "attrs": {
+              "class": "sm-title-pill game-title-pill game-topbar-name",
+              "aria-hidden": "true"
+            },
+            "children": [
+              {
+                "tag": "span",
+                "attrs": {
+                  "class": "sm-title-main",
+                  "data-i18n": "brand"
+                },
+                "textFrom": "name.en"
+              }
+            ]
+          }
+        ],
+        "actions": [
+          {
+            "role": "restart",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "data-contextual-restart": "retry",
+              "class": "sm-icon-btn game-icon-btn hidden",
+              "id": "sm-reset-btn",
+              "title": "Restart",
+              "aria-label": "Restart"
+            },
+            "icon": "restart"
+          },
+          {
+            "role": "pause",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "data-chrome": "pause",
+              "class": "sm-icon-btn game-icon-btn",
+              "id": "sm-pause-btn",
+              "title": "Pause",
+              "aria-label": "Pause",
+              "disabled": null
+            },
+            "icon": "pause"
+          },
+          {
+            "role": "sound",
+            "tag": "button",
+            "attrs": {
+              "type": "button",
+              "data-chrome": "sound",
+              "class": "sm-icon-btn game-icon-btn",
+              "id": "sm-mute-btn",
+              "title": "Sound",
+              "aria-label": "Sound"
+            }
+          }
+        ]
       }
     }
   ],
