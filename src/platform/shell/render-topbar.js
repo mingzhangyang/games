@@ -56,6 +56,116 @@ function nodeHtml(node, indent, game) {
     return open + value + close;
 }
 
+// Canonical defaults for the shared topbar. Page-level configuration stores
+// only a role list and true historical exceptions, not repeated HTML tags.
+function defaultNode(game, role) {
+    const p = game.chrome.classPrefix || game.prefix;
+    const cls = p + '-icon-btn game-icon-btn';
+    switch (role) {
+        case 'home':
+            return { tag: 'button', attrs: {
+                'data-chrome': 'home', class: cls, id: p + '-btn-home',
+                title: 'Home', 'aria-label': 'Home',
+            }, icon: 'home' };
+        case 'name':
+            return { tag: 'div', attrs: {
+                class: p + '-brand game-topbar-name', 'data-i18n': 'title',
+            }, textFrom: 'name.en' };
+        case 'restart':
+            return { tag: 'button', attrs: {
+                type: 'button', 'data-contextual-restart': 'retry', class: cls + ' hidden',
+                id: p + '-reset-btn', title: 'Reset', 'aria-label': 'Reset',
+            }, icon: 'restart' };
+        case 'stats':
+            return { tag: 'button', attrs: {
+                'data-chrome': 'stats', type: 'button',
+                class: p + '-icon-btn game-icon-btn ' + p + '-stats-btn game-stats-btn',
+                id: p + 'StatsToggle', 'aria-label': 'Stats',
+                'aria-haspopup': 'dialog', 'aria-expanded': 'false',
+                'aria-controls': p + 'StatsDrawer',
+            } };
+        case 'pause':
+            return { tag: 'button', attrs: {
+                'data-chrome': 'pause', class: cls, id: p + '-pause-btn',
+                title: 'Pause', 'aria-label': 'Pause',
+            }, icon: 'pause' };
+        case 'sound':
+            return { tag: 'button', attrs: {
+                type: 'button', class: cls, id: p + '-mute-btn',
+                'data-chrome': 'sound', title: 'Sound', 'aria-label': 'Sound',
+            }, icon: 'sound' };
+        default:
+            return null; // The few page-only buttons declare an explicit node.
+    }
+}
+
+const CONTENT_KEYS = ['icon', 'text', 'textFrom', 'children'];
+const ACTION_ROLES = new Set([
+    'restart', 'theme', 'help', 'range', 'speed', 'stats', 'pause', 'sound',
+]);
+
+function applyNodeOverride(base, patch, role) {
+    if (Array.isArray(patch)) {
+        if (role !== 'name') throw new Error('array override allowed only for the title');
+        return patch;
+    }
+    if (!base && (!patch?.tag || !patch?.attrs)) {
+        throw new Error('special topbar action requires tag + attrs: ' + role);
+    }
+    const node = base ? { ...base, attrs: { ...base.attrs } } : { tag: patch.tag, attrs: {} };
+    if (!patch) return node;
+    if (patch.tag !== undefined) node.tag = patch.tag;
+    if (patch.replaceAttrs) {
+        if (!patch.attrs) throw new Error('replaceAttrs requires attrs: ' + role);
+        node.attrs = { ...patch.attrs }; // Keep historical attribute insertion order.
+    } else {
+        Object.assign(node.attrs, patch.attrs || {});
+    }
+    for (const key of patch.omitAttrs || []) {
+        if (!Object.hasOwn(node.attrs, key)) {
+            throw new Error('cannot omit missing topbar attribute ' + role + '.' + key);
+        }
+        delete node.attrs[key];
+    }
+    const added = CONTENT_KEYS.filter(k => Object.hasOwn(patch, k) && patch[k] !== null);
+    if (added.length > 1) throw new Error('ambiguous topbar override: ' + role);
+    if (added.length) for (const key of CONTENT_KEYS) delete node[key];
+    for (const key of [...CONTENT_KEYS, 'multiline']) {
+        if (Object.hasOwn(patch, key)) {
+            if (patch[key] === null) delete node[key];
+            else node[key] = patch[key];
+        }
+    }
+    return node;
+}
+
+/** Expand role defaults and sparse overrides before every static render.
+ * The generator and new-game scaffold share exactly this expansion.
+ */
+export function expandTopbarChrome(game) {
+    const chrome = game.chrome;
+    if (!chrome || !Array.isArray(chrome.actions)) {
+        throw new Error('game ' + game.id + ' must declare chrome.actions');
+    }
+    const actions = chrome.actions;
+    if (actions.some(role => !ACTION_ROLES.has(role))
+        || new Set(actions).size !== actions.length) {
+        throw new Error('invalid or duplicate topbar action role: ' + game.id);
+    }
+    const overrides = chrome.overrides || {};
+    const active = ['home', 'name', ...actions];
+    for (const role of Object.keys(overrides)) {
+        if (!active.includes(role)) throw new Error('unused topbar override: ' + game.id + '.' + role);
+    }
+    const node = role => applyNodeOverride(defaultNode(game, role), overrides[role], role);
+    return {
+        ...chrome,
+        home: node('home'),
+        name: node('name'),
+        actions: actions.map(role => ({ role, ...node(role) })),
+    };
+}
+
 function groupAttrs(chrome, key, fallback) {
     return chrome[key + 'Attrs'] || { class: fallback };
 }
@@ -66,8 +176,8 @@ function groupAttrs(chrome, key, fallback) {
  * right actions appear in the explicit registry order with Sound last.
  */
 export function renderTopbar(game, indent = '        ') {
-    const chrome = game.chrome;
-    if (!chrome || !chrome.home || !chrome.name || !Array.isArray(chrome.actions)) {
+    const chrome = expandTopbarChrome(game);
+    if (!chrome.home || !chrome.name || !Array.isArray(chrome.actions)) {
         throw new Error('game ' + game.id + ' must define chrome in the registry');
     }
     if (chrome.home.attrs['data-chrome'] !== 'home') {
