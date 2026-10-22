@@ -64,6 +64,9 @@ export function bindTopbarOverflow(header) {
     }
 
     function sync() {
+        // Changing disabled on the focused command can synchronously blur it.
+        // Remember its identity before mirroring the canonical action state.
+        const focusedItem = menu.contains(document.activeElement) ? document.activeElement : null;
         const label = MORE[getLang()] || MORE.en;
         more.title = label;
         more.setAttribute('aria-label', label);
@@ -92,7 +95,7 @@ export function bindTopbarOverflow(header) {
             if (ownedFocus && (document.activeElement === document.body || !rendered(document.activeElement))) restoreFocus();
         }
         else if (isOpen()) {
-            if (menu.contains(document.activeElement) && !enabled.includes(document.activeElement)) {
+            if (focusedItem && !enabled.includes(focusedItem)) {
                 enabled[0].focus({ preventScroll: true });
             }
             position();
