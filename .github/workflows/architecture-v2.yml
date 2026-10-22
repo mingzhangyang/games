@@ -137,11 +137,13 @@ jobs:
           sleep 2
           node tools/checks/compare-topbar-screenshots.mjs http://127.0.0.1:8898 http://127.0.0.1:8899
 
+      # The step-5a PR has a dedicated before/after pixel audit; skip redundant
+      # 156-shot Step-4 artifact capture for it (all other Chrome PRs unchanged).
       # Capture every desktop viewport in both languages for the step-4 chrome review.
       # Do not launch 168 expensive screenshots on superseded/cancelled PR runs.
       # One shard only, on chrome PRs, to avoid unnecessary browser work and CI storage.
       - name: Full-site desktop topbar screenshots
-        if: always() && !cancelled() && matrix.shard == 1 && contains(github.event.pull_request.title, 'chrome')
+        if: always() && !cancelled() && matrix.shard == 1 && contains(github.event.pull_request.title, 'chrome') && github.head_ref != 'refactor/chrome-step5a-registry-topbar'
         env:
           LANGS: 'zh,en'
           SHOTS_VIEWPORTS: '1280x900,1440x900,1920x1080'
@@ -153,7 +155,7 @@ jobs:
           node tools/dev/shots.mjs /tmp/chrome-step4-desktop-shots http://127.0.0.1:8899
 
       - name: Upload full-site screenshots
-        if: always() && !cancelled() && matrix.shard == 1 && contains(github.event.pull_request.title, 'chrome')
+        if: always() && !cancelled() && matrix.shard == 1 && contains(github.event.pull_request.title, 'chrome') && github.head_ref != 'refactor/chrome-step5a-registry-topbar'
         uses: actions/upload-artifact@v4
         with:
           name: chrome-step4-desktop-all-pages

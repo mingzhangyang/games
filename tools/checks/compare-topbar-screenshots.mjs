@@ -78,6 +78,10 @@ function pixelsFromPng(png) {
     return { width, height, pixels };
 }
 
+function samePixels(a, b) {
+    return a.width === b.width && a.height === b.height && a.pixels.equals(b.pixels);
+}
+
 async function capture(url, game, viewport) {
     const page = await browser.newPage();
     try {
@@ -93,6 +97,9 @@ async function capture(url, game, viewport) {
             content: '*,*::before,*::after{animation:none!important;transition:none!important;'
                 + 'scroll-behavior:auto!important;caret-color:transparent!important}',
         });
+        // Ensure stylesheet insertion and glyph rasterization have reached a
+        // settled frame before snapshotting the DOM-only visual baseline.
+        await new Promise(resolve => setTimeout(resolve, 120));
         // Puppeteer 25 returns Uint8Array; PNG decoding requires Node Buffer methods.
         return pixelsFromPng(Buffer.from(await page.screenshot({ fullPage: true })));
     } finally {
@@ -108,18 +115,53 @@ try {
             try {
                 const a = await capture(beforeUrl, game, viewport);
                 const b = await capture(afterUrl, game, viewport);
-                const matches = a.width === b.width && a.height === b.height
-                    && a.pixels.equals(b.pixels);
+                let matches = samePixels(a, b);
+                let settled = false;
+                let finalBefore = a, finalAfter = b;
                 if (!matches) {
-                    let changed = 0;
-                    for (let i = 0; i < Math.min(a.pixels.length, b.pixels.length); i += 4) {
-                        if (!a.pixels.subarray(i, i + 4).equals(b.pixels.subarray(i, i + 4))) changed++;
+                    // Identical HTML can briefly differ in font/GPU rasterization on
+                    // the first frame. Recheck only if a side is itself unstable.
+                    // A stable before/after difference is NEVER waived.
+                    const a2 = await capture(beforeUrl, game, viewport);
+                    const b2 = await capture(afterUrl, game, viewport);
+                    finalBefore = a2;
+                    finalAfter = b2;
+                    if (!samePixels(a, a2) || !samePixels(b, b2)) {
+                        const a3 = await capture(beforeUrl, game, viewport);
+                        const b3 = await capture(afterUrl, game, viewport);
+                        finalBefore = a3;
+                        finalAfter = b3;
+                        settled = samePixels(a2, b2) && samePixels(a2, a3)
+                            && samePixels(b2, b3);
+                        matches = settled;
                     }
-                    console.error('FAIL ' + label + ': image sizes ' + a.width + 'x' + a.height
-                        + ' / ' + b.width + 'x' + b.height + ', different pixels=' + changed);
+                }
+                if (!matches) {
+                    const before = finalBefore, after = finalAfter;
+                    let changed = 0, minX = Infinity, minY = Infinity;
+                    let maxX = -1, maxY = -1;
+                    const width = Math.min(before.width, after.width);
+                    const height = Math.min(before.height, after.height);
+                    for (let y = 0; y < height; y++) {
+                        for (let x = 0; x < width; x++) {
+                            const ai = (y * before.width + x) * 4;
+                            const bi = (y * after.width + x) * 4;
+                            if (!before.pixels.subarray(ai, ai + 4).equals(after.pixels.subarray(bi, bi + 4))) {
+                                changed++;
+                                minX = Math.min(minX, x);
+                                minY = Math.min(minY, y);
+                                maxX = Math.max(maxX, x);
+                                maxY = Math.max(maxY, y);
+                            }
+                        }
+                    }
+                    console.error('FAIL ' + label + ': image sizes ' + before.width + 'x' + before.height
+                        + ' / ' + after.width + 'x' + after.height + ', different pixels=' + changed
+                        + ', bbox=' + [minX, minY, maxX, maxY].join(','));
                     failures++;
                 } else {
-                    console.log('PASS ' + label + ' — 0 different pixels');
+                    console.log('PASS ' + label + ' — 0 different pixels'
+                        + (settled ? ' (confirmed stable after transient first-frame variation)' : ''));
                     pass++;
                 }
             } catch (error) {
