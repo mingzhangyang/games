@@ -80,8 +80,8 @@ function verifyGeometry(m, tag, w) {
         tag + ': bar not centered in viewport: ' + m.bar.left + '..' + m.bar.right);
     check(m.bar.left >= 24 - 0.5 && m.bar.right <= w - 24 + 0.5,
         tag + ': less than 24px viewport clearance');
-    check(m.scrollW <= w + 1,
-        tag + ': horizontal scrolling: document=' + m.scrollW + ' viewport=' + w);
+    check(m.scrollW <= m.clientW + 1,
+        tag + ': horizontal scrolling: document=' + m.scrollW + ' scrollport=' + m.clientW);
     check(close(m.padLeft, 12) && close(m.padRight, 12),
         tag + ': inconsistent horizontal header padding: ' + m.padLeft + '/' + m.padRight);
     check(close(m.home.left, m.bar.left + 12, 0.55),
@@ -194,6 +194,41 @@ for (const game of [GAMES[0], GAMES.find(g => g.layout === 'immersive')].filter(
         } finally {
             await page.close();
         }
+    }
+}
+// Negative scope gate: Math Rain / Tank Battle consume layout.css without
+// a shared topbar. They must not acquire the root's symmetric scrollbar gutter,
+// which would otherwise shrink their edge-to-edge viewport geometries.
+for (const game of registry.all().filter(g => !(g.caps || []).includes('topbar') && keepPage(g.id))) {
+    const page = await classic.newPage();
+    const tag = game.id + '@1280x900/no-shared-topbar';
+    try {
+        await open(page, game, 1280, 900, 'en');
+        const scope = await page.evaluate(() => ({
+            gutter: getComputedStyle(document.documentElement).scrollbarGutter,
+            hasSharedTopbar: !!document.querySelector('.game-shell > .game-topbar'),
+        }));
+        check(!scope.hasSharedTopbar, tag + ': negative control unexpectedly gained shared topbar');
+        check(scope.gutter === 'auto',
+            tag + ': unrelated full-bleed page received shared chrome scrollbar gutter: ' + scope.gutter);
+        // Reverse scope test: a deliberately injected shared shell + header
+        // must activate the gutter contract. This is a selector regression,
+        // not a mutation of the production DOM.
+        await page.evaluate(() => {
+            const shell = document.createElement('div');
+            shell.className = 'game-shell';
+            const header = document.createElement('header');
+            header.className = 'game-topbar';
+            shell.appendChild(header);
+            document.body.appendChild(shell);
+        });
+        const activated = await page.evaluate(() => getComputedStyle(document.documentElement).scrollbarGutter);
+        check(activated === 'stable both-edges',
+            tag + ': inverse injected shared topbar failed to activate gutter scope');
+    } catch (error) {
+        check(false, tag + ': ' + (error.message || error));
+    } finally {
+        await page.close();
     }
 }
 await classic.close();
