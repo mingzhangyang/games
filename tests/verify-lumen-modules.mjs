@@ -5,7 +5,7 @@
 //   1) 包内 import 只能向下：i18n/storage/audio → model/ → systems/ → render/ → input/ → ui/
 //      → runtime.js → index.js，且没有环；包里不允许出现不在分层表里的文件；
 //   2) model/ 是纯模块（无 DOM / window / 计时器 / 存储），浏览器与校验器共用；
-//   3) 只有 systems/records.js 碰存储，只有 ui/daily-board.js 碰排行榜网络层；
+//   3) 只有 systems/records.js 碰存储，提交服务与视图由共享模块负责；
 //   4) render/ 不碰 DOM 查询、存储与网络；ui/ 不碰画布；
 //   5) runtime.js 只编排：不画画、不拼 DOM、不碰存储与网络。
 //
@@ -103,8 +103,14 @@ const storageUsers = files.filter(f => usesPlatform(f, 'safe-storage.js') || imp
 check(storageUsers.length === 1 && rel(storageUsers[0]) === 'systems/records.js',
     '只有 systems/records.js 碰存储', storageUsers.map(rel).join(', '));
 const networkUsers = files.filter(f => usesPlatform(f, 'leaderboard.js'));
-check(networkUsers.length === 1 && rel(networkUsers[0]) === 'ui/daily-board.js',
-    '只有 ui/daily-board.js 碰排行榜网络层', networkUsers.map(rel).join(', '));
+check(networkUsers.length === 0,
+    '包内不直接发起榜单网络请求', networkUsers.map(rel).join(', '));
+const submissionUsers = files.filter(f => usesPlatform(f, 'scoreboard-submission.js'));
+check(submissionUsers.length === 1 && rel(submissionUsers[0]) === 'runtime.js',
+    '只有 runtime.js 持有共享提交 Session', submissionUsers.map(rel).join(', '));
+const resultViewUsers = files.filter(f => usesPlatform(f, 'scoreboard-result-view.js'));
+check(resultViewUsers.length === 1 && rel(resultViewUsers[0]) === 'ui/view.js',
+    '只有 ui/view.js 使用共享结果呈现模块', resultViewUsers.map(rel).join(', '));
 const sfxUsers = files.filter(f => usesPlatform(f, 'game-sfx.js'));
 check(sfxUsers.length === 1 && rel(sfxUsers[0]) === 'audio.js', '只有 audio.js 建音效引擎', sfxUsers.map(rel).join(', '));
 
