@@ -39,7 +39,8 @@ import { ICONS } from '../../platform/icons.js';
 import { storageGet } from '../../platform/safe-storage.js';
 import { track } from '../../platform/analytics.js';
 import { todayKey, todayKeyDisplay } from '../../platform/daily.js';
-import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
+import { createScoreboardResultSession, retryScoreResults } from '../../platform/scoreboard-submission.js';
+import { renderEmbeddedScoreResult, resetEmbeddedScoreResult } from '../../platform/scoreboard-result-view.js';
 import { LANGUAGES } from './i18n.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
 import { createSilkDewScene } from './render/scene.js';
@@ -192,6 +193,12 @@ export class SilkfallGame {
         this.animationId = null;
         this.lastFrame = 0;
 
+        this.scoreRunId = 0;
+        this.resultSession = createScoreboardResultSession({
+            onChange: result => this.renderScoreResult(result),
+        });
+        this.el['lb-status']?.setAttribute('role', 'status');
+
         this.stageEl = document.getElementById('sd-stage');
         this.reducedMotionQuery = typeof window.matchMedia === 'function'
             ? window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -213,6 +220,8 @@ export class SilkfallGame {
         this.bindUI();
         this.resize();
         this.startLoop();
+        // Restore journaled results even while the player stays at the menu.
+        void retryScoreResults();
     }
 
     /* ---------------------- 视觉底料 ---------------------- */
@@ -358,6 +367,7 @@ export class SilkfallGame {
         this.renderLevelGrid();
         this.renderSideRecords();
         this.updateHud();
+        this.renderScoreResult();
         document.documentElement.lang = this.lang === 'zh' ? 'zh-CN' : 'en';
     }
 
@@ -450,6 +460,8 @@ export class SilkfallGame {
      *   反查不到（理论上不会发生）就退回 0，绝不因索引为 -1 而崩。
      */
     startLevel(ref) {
+        resetEmbeddedScoreResult(this.resultSession, this.el);
+        this.scoreRunId++;
         const spec = (ref && typeof ref === 'object') ? ref : LEVELS[clamp(ref, 0, LEVELS.length - 1)];
         const idx = LEVELS.indexOf(spec);
         this.levelIdx = idx >= 0 ? idx : 0;
@@ -497,6 +509,7 @@ export class SilkfallGame {
     }
 
     toMenu() {
+        resetEmbeddedScoreResult(this.resultSession, this.el);
         this.pauseOwnership?.invalidate();
         this.state = 'menu'; this.contextualRestart?.sync();
         this.world = null;
@@ -510,6 +523,7 @@ export class SilkfallGame {
     /* ---------------------- 结算 ---------------------- */
 
     onLevelWon() {
+        if (this.state !== 'playing') return;
         Sfx.win();
         vibrate(30);
         const starsTaken = this.world ? this.world.starsTaken : 0;
@@ -575,6 +589,7 @@ export class SilkfallGame {
     }
 
     finishDaily() {
+        if (!this.daily || this.state === 'won-daily') return;
         this.state = 'won-daily'; this.contextualRestart?.sync();
         const el = this.el;
         this.showClearPanelSilent();
@@ -602,17 +617,20 @@ export class SilkfallGame {
     /* ---------------------- 榜单 ---------------------- */
 
     submit(game, score) {
-        const name = ensurePlayerName();
-        const el = this.el;
-        if (el['lb-status']) el['lb-status'].textContent = '…';
-        submitScore({ game, name, score })
-            .then(() => fetchBoard(game))
-            .then((rows) => this.renderBoard(rows))
-            .catch(() => {
-                if (el['lb-status']) el['lb-status'].textContent = this.t('lbOffline');
-                const local = this.readLocalBoard(game);
-                if (local.length) this.renderBoard(local);
-            });
+        return this.resultSession.publish({
+            runId: this.scoreRunId,
+            date: this.mode === 'daily' ? this.daily?.key : null,
+            game, name: ensurePlayerName(), score,
+        });
+    }
+
+    renderScoreResult(result = this.resultSession.getState()) {
+        renderEmbeddedScoreResult({
+            result, el: this.el,
+            text: key => this.t(key),
+            renderBoard: rows => this.renderBoard(rows),
+            readLocalBoard: game => this.readLocalBoard(game),
+        });
     }
 
     readLocalBoard(game) {
@@ -631,14 +649,12 @@ export class SilkfallGame {
         if (!list) return;
         list.innerHTML = '';
         if (!rows || !rows.length) {
-            if (el['lb-status']) el['lb-status'].textContent = '';
             const empty = document.createElement('div');
             empty.className = 'sd-lb-empty game-lb-empty';
             empty.textContent = this.t('noScores');
             list.appendChild(empty);
             return;
         }
-        if (el['lb-status']) el['lb-status'].textContent = '';
         rows.slice(0, 10).forEach((row, i) => {
             const li = document.createElement('li');
             li.className = 'sd-lb-row game-lb-row';
@@ -845,6 +861,10 @@ export class SilkfallGame {
     }
 
     bindUI() {
+        window.addEventListener('online', () => {
+            if (this.resultSession.getState()) void this.resultSession.refresh();
+            else void retryScoreResults();
+        });
         window.addEventListener('site-settings:changed', () => {
             this.lang = getLang();
             this.applyLanguage();

@@ -56,7 +56,8 @@ import { storageGet } from '../../platform/safe-storage.js';
 import { FLAME_VERSE_STORAGE, FLAME_VERSE_STORAGE_SLOTS } from './storage.js';
 import { track } from '../../platform/analytics.js';
 import { todayKey, todayKeyDisplay } from '../../platform/daily.js';
-import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
+import { createScoreboardResultSession, retryScoreResults } from '../../platform/scoreboard-submission.js';
+import { renderEmbeddedScoreResult, resetEmbeddedScoreResult } from '../../platform/scoreboard-result-view.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
 
 /* ────────────────────────── 常量 ────────────────────────── */
@@ -168,7 +169,7 @@ export class FlameVerseGame {
             'fv-level-label', 'fv-level-grid', 'fv-daily-best',
             'fv-side-howto-title', 'fv-side-howto', 'fv-side-records-title', 'fv-side-records',
             'fv-side-legend-title', 'fv-side-legend',
-            'fv-clear', 'fv-clear-stars', 'fv-clear-line', 'fv-btn-next', 'fv-btn-replay', 'fv-btn-menu1',
+            'fv-clear', 'fv-clear-stars', 'fv-clear-line', 'fv-clear-status', 'fv-btn-next', 'fv-btn-replay', 'fv-btn-menu1',
             'fv-over', 'fv-over-title', 'fv-over-score', 'fv-over-sub',
             'fv-btn-again', 'fv-btn-copy', 'fv-btn-menu2',
             'fv-lb-title', 'fv-lb-list', 'fv-lb-status', 'fv-username', 'fv-username-label',
@@ -202,6 +203,12 @@ export class FlameVerseGame {
         this.animationId = null;
         this.lastFrame = 0;
 
+        this.scoreRunId = 0;
+        this.resultSession = createScoreboardResultSession({
+            onChange: result => this.renderScoreResult(result),
+        });
+        this.el['lb-status']?.setAttribute('role', 'status');
+
         this.labConsole = createLabConsole(this);
         this.initUI();
         this.applyLanguage();
@@ -210,6 +217,8 @@ export class FlameVerseGame {
         this.syncActionVisibility();
         this.resize();
         this.startLoop();
+        // Restore journaled results even while the player stays at the menu.
+        void retryScoreResults();
     }
 
     /* ---------------------- 基础 ---------------------- */
@@ -361,6 +370,7 @@ export class FlameVerseGame {
         this.renderLegend();
         this.renderSideRecords();
         this.updateHud();
+        this.renderScoreResult();
         document.documentElement.lang = this.lang === 'zh' ? 'zh-CN' : 'en';
     }
 
@@ -491,6 +501,8 @@ export class FlameVerseGame {
     }
 
     startLevel(ref) {
+        resetEmbeddedScoreResult(this.resultSession, this.el);
+        this.scoreRunId++;
         const spec = (ref && typeof ref === 'object') ? ref : LEVELS[clamp(ref, 0, LEVELS.length - 1)];
         const idx = LEVELS.indexOf(spec);
         this.levelIdx = idx >= 0 ? idx : 0;
@@ -545,6 +557,7 @@ export class FlameVerseGame {
     }
 
     toMenu() {
+        resetEmbeddedScoreResult(this.resultSession, this.el);
         this.pauseOwnership?.invalidate();
         this.state = 'menu'; this.contextualRestart?.sync();
         this.recipe = emptyRecipe();
@@ -627,6 +640,7 @@ export class FlameVerseGame {
     /* ---------------------- 结算 ---------------------- */
 
     onLevelCleared() {
+        if (this.state !== 'playing') return;
         const cost = this.cost();
         const par = this.spec.par;
         const stars = starsForLevel(cost, par);
@@ -678,6 +692,7 @@ export class FlameVerseGame {
     }
 
     finishDaily() {
+        if (!this.daily || this.state === 'won-daily') return;
         this.state = 'won-daily'; this.contextualRestart?.sync();
         const el = this.el;
         this.hide(el['clear']);
@@ -693,17 +708,20 @@ export class FlameVerseGame {
     /* ---------------------- 榜单 ---------------------- */
 
     submit(game, score) {
-        const name = ensurePlayerName();
-        const el = this.el;
-        if (el['lb-status']) el['lb-status'].textContent = '…';
-        submitScore({ game, name, score })
-            .then(() => fetchBoard(game))
-            .then((rows) => this.renderBoard(rows))
-            .catch(() => {
-                if (el['lb-status']) el['lb-status'].textContent = this.t('lbOffline');
-                const local = this.readLocalBoard(game);
-                if (local.length) this.renderBoard(local);
-            });
+        return this.resultSession.publish({
+            runId: this.scoreRunId,
+            date: this.mode === 'daily' ? this.daily?.key : null,
+            game, name: ensurePlayerName(), score,
+        });
+    }
+
+    renderScoreResult(result = this.resultSession.getState()) {
+        renderEmbeddedScoreResult({
+            result, el: this.el,
+            text: key => this.t(key),
+            renderBoard: rows => this.renderBoard(rows),
+            readLocalBoard: game => this.readLocalBoard(game),
+        });
     }
 
     readLocalBoard(game) {
@@ -722,14 +740,12 @@ export class FlameVerseGame {
         if (!list) return;
         list.innerHTML = '';
         if (!rows || !rows.length) {
-            if (el['lb-status']) el['lb-status'].textContent = '';
             const empty = document.createElement('div');
             empty.className = 'fv-lb-empty game-lb-empty';
             empty.textContent = this.t('noScores');
             list.appendChild(empty);
             return;
         }
-        if (el['lb-status']) el['lb-status'].textContent = '';
         rows.slice(0, 10).forEach((row, i) => {
             const li = document.createElement('li');
             li.className = 'fv-lb-row game-lb-row';
@@ -851,6 +867,10 @@ export class FlameVerseGame {
     }
 
     bindUI() {
+        window.addEventListener('online', () => {
+            if (this.resultSession.getState()) void this.resultSession.refresh();
+            else void retryScoreResults();
+        });
         window.addEventListener('site-settings:changed', () => {
             this.lang = getLang();
             this.applyLanguage();

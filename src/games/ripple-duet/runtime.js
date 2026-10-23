@@ -48,7 +48,8 @@ import { storageGet } from '../../platform/safe-storage.js';
 import { RIPPLE_DUET_STORAGE, RIPPLE_DUET_STORAGE_SLOTS } from './storage.js';
 import { track } from '../../platform/analytics.js';
 import { todayKey, todayKeyDisplay } from '../../platform/daily.js';
-import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
+import { createScoreboardResultSession, retryScoreResults } from '../../platform/scoreboard-submission.js';
+import { renderEmbeddedScoreResult, resetEmbeddedScoreResult } from '../../platform/scoreboard-result-view.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
 import { bindPalette } from '../../platform/theme.js';
 
@@ -157,7 +158,7 @@ export class RippleDuetGame {
             'rd-level-label', 'rd-level-grid', 'rd-daily-best',
             'rd-side-howto-title', 'rd-side-howto', 'rd-side-records-title', 'rd-side-records',
             'rd-side-legend-title', 'rd-side-legend',
-            'rd-clear', 'rd-clear-stars', 'rd-clear-line', 'rd-btn-next', 'rd-btn-replay', 'rd-btn-menu1',
+            'rd-clear', 'rd-clear-stars', 'rd-clear-line', 'rd-clear-status', 'rd-btn-next', 'rd-btn-replay', 'rd-btn-menu1',
             'rd-over', 'rd-over-title', 'rd-over-score', 'rd-over-sub',
             'rd-btn-again', 'rd-btn-copy', 'rd-btn-menu2',
             'rd-lb-title', 'rd-lb-list', 'rd-lb-status', 'rd-username', 'rd-username-label',
@@ -190,6 +191,12 @@ export class RippleDuetGame {
         this.animationId = null;
         this.lastFrame = 0;
 
+        this.scoreRunId = 0;
+        this.resultSession = createScoreboardResultSession({
+            onChange: result => this.renderScoreResult(result),
+        });
+        this.el['lb-status']?.setAttribute('role', 'status');
+
         // 波场缓冲：静态复振幅（源一动就重算），每帧只做一次旋转
         this.field = { re: new Float32Array(FW * FH), im: new Float32Array(FW * FH) };
         this.fieldCanvas = document.createElement('canvas');
@@ -207,6 +214,8 @@ export class RippleDuetGame {
         this.resize();
         this.loop = this.loop.bind(this);
         this.animationId = requestAnimationFrame(this.loop);
+        // Recover journaled results even when the player stays at the menu.
+        void retryScoreResults();
     }
 
     /* ---------------------- 关卡装载 ---------------------- */
@@ -221,6 +230,8 @@ export class RippleDuetGame {
     }
 
     startLevel(ref) {
+        resetEmbeddedScoreResult(this.resultSession, this.el);
+        this.scoreRunId++;
         const spec = typeof ref === 'number' ? LEVELS[clamp(ref, 0, LEVELS.length - 1)] : ref;
         if (!spec) return;
         this.mode = 'levels';
@@ -244,6 +255,8 @@ export class RippleDuetGame {
         const key = todayKey();
         const course = dailyCourse(key);
         if (!course.length) return;
+        resetEmbeddedScoreResult(this.resultSession, this.el);
+        this.scoreRunId++;
         this.mode = 'daily';
         this.daily = { key, display: todayKeyDisplay(), course, cursor: 0, totalCost: 0, stars: 0 };
         this.loadLevel(course[0]);
@@ -260,6 +273,8 @@ export class RippleDuetGame {
 
     restartLevel() {
         if (!this.spec) return;
+        resetEmbeddedScoreResult(this.resultSession, this.el);
+        this.scoreRunId++;
         this.loadLevel(this.spec);
         track('ripple-duet', 'play');
         this.state = 'playing'; this.contextualRestart?.sync();
@@ -270,6 +285,7 @@ export class RippleDuetGame {
     }
 
     toMenu() {
+        resetEmbeddedScoreResult(this.resultSession, this.el);
         this.pauseOwnership?.invalidate();
         this.state = 'menu'; this.contextualRestart?.sync();
         this.hide(this.el['clear']);
@@ -286,6 +302,8 @@ export class RippleDuetGame {
                 return;
             }
             // Daily course is one run across multiple waves; next wave is not another play.
+            resetEmbeddedScoreResult(this.resultSession, this.el);
+            this.scoreRunId++;
             this.loadLevel(this.daily.course[this.daily.cursor]);
             this.state = 'playing'; this.contextualRestart?.sync();
             this.isPaused = false; this.contextualRestart?.sync();
@@ -432,6 +450,7 @@ export class RippleDuetGame {
     /* ---------------------- 结算 ---------------------- */
 
     winLevel() {
+        if (this.state !== 'playing') return;
         const par = this.spec.par;
         const stars = starsForLevel(this.cost, par);
         Sfx.win();
@@ -483,6 +502,7 @@ export class RippleDuetGame {
     }
 
     finishDaily() {
+        if (!this.daily || this.state === 'won-daily') return;
         this.state = 'won-daily'; this.contextualRestart?.sync();
         const el = this.el;
         this.hide(el['clear']);
@@ -497,17 +517,20 @@ export class RippleDuetGame {
     /* ---------------------- 榜单 ---------------------- */
 
     submit(game, score) {
-        const name = ensurePlayerName();
-        const el = this.el;
-        if (el['lb-status']) el['lb-status'].textContent = '…';
-        submitScore({ game, name, score })
-            .then(() => fetchBoard(game))
-            .then((rows) => this.renderBoard(rows))
-            .catch(() => {
-                if (el['lb-status']) el['lb-status'].textContent = this.t('lbOffline');
-                const local = this.readLocalBoard(game);
-                if (local.length) this.renderBoard(local);
-            });
+        return this.resultSession.publish({
+            runId: this.scoreRunId,
+            date: this.mode === 'daily' ? this.daily?.key : null,
+            game, name: ensurePlayerName(), score,
+        });
+    }
+
+    renderScoreResult(result = this.resultSession.getState()) {
+        renderEmbeddedScoreResult({
+            result, el: this.el,
+            text: key => this.t(key),
+            renderBoard: rows => this.renderBoard(rows),
+            readLocalBoard: game => this.readLocalBoard(game),
+        });
     }
 
     readLocalBoard(game) {
@@ -525,14 +548,12 @@ export class RippleDuetGame {
         if (!list) return;
         list.innerHTML = '';
         if (!rows || !rows.length) {
-            if (el['lb-status']) el['lb-status'].textContent = '';
             const empty = document.createElement('div');
             empty.className = 'rd-lb-empty game-lb-empty';
             empty.textContent = this.t('noScores');
             list.appendChild(empty);
             return;
         }
-        if (el['lb-status']) el['lb-status'].textContent = '';
         rows.slice(0, 10).forEach((row, i) => {
             const li = document.createElement('li');
             li.className = 'rd-lb-row game-lb-row';
@@ -962,6 +983,7 @@ export class RippleDuetGame {
         this.lang = getLang();
         // 与其余 20 个游戏页一致：语言切换要同步 <html lang>（无障碍 + 断词），
         // 漏掉时 verify-chrome 会提醒「zh 下 <html lang="en">」。
+        this.renderScoreResult();
         document.documentElement.lang = this.lang === 'zh' ? 'zh-CN' : 'en';
         const el = this.el;
         const put = (id, key) => { if (el[id]) el[id].textContent = this.t(key); };
@@ -1041,6 +1063,10 @@ export class RippleDuetGame {
         // 会改变舞台 CSS 宽，只有跟着重算画布后端缓冲才不会比 CSS 宽小几像素
         // （desktop-frame 的「画布糊 attrW 654 < clientW 660」就是这个）。
         window.addEventListener('game-frame:changed', () => this.resize());
+        window.addEventListener('online', () => {
+            if (this.resultSession.getState()) void this.resultSession.refresh();
+            else void retryScoreResults();
+        });
         window.addEventListener('site-settings:changed', () => {
             this.applyLanguage();
             this.syncMuteIcons();

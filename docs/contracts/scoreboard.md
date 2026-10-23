@@ -1,7 +1,8 @@
 # 排行榜提交与结果生命周期
 
 6c-1 将共享 dialog 与 Echo Cave / Maxwell Demon 的提交语义接到同一服务。
-其他内嵌榜单按后续迁移逐页接入，不以此文声明全站已经统一。
+6c-2a 将 Silk Dew、Crystal Bloom、Flame Verse、Ripple Duet 的内嵌榜单也接入共享服务。
+其他页面仍待后续迁移，不能把本批当作全站已统一。
 
 ## 责任边界
 
@@ -64,10 +65,27 @@ Echo Cave / Maxwell Demon 的每日结果显示提交状态和读榜状态；战
 `ec_lb_*` / `md_lb_*` 仅保留既有本地榜单读取兼容路径，不将其当作持久提交队列，
 也不声称远端失败后已将成绩写入这些榜单。
 
+### 6c-2a 批量迁移范式
+
+Silk Dew / Crystal Bloom / Flame Verse / Ripple Duet 继续使用各自的计分、关卡完成条件和存档。
+页面通过 `createScoreboardResultSession` 只提交冻结的 `{ runId, date, game, name, score }`；
+通过 `renderEmbeddedScoreResult` 显示 POST 回执与 GET 榜单两条独立状态；
+通过 `resetEmbeddedScoreResult` 在真正开局、重开、下一关和返回菜单时取消旧视图，
+但不取消已发送的 POST 与持久重试。每日成绩状态出现在 `over`，三页战役全通成绩
+出现在新增的 `clear-status`；Silk Dew 只允许每日五关全部三星者上榜，不添加战役榜单。
+
+启动时调用 `retryScoreResults()`；恢复联网时若结果仍显示则调用 `session.refresh()`，
+否则重试历史队列。语言切换重译当前状态、不重新提交；一次完成事件不能重复计分或 POST。
+原日、原昵称、原分数由 Session 冻结；即使次日重试也不能使用新页面的日期和昵称。
+`sd_lb_*`、`cb_lb_*`、`fv_lb_*`、`rd_lb_*` 本地旧榜单只在读榜失败时显示，
+不是持久提交队列，也不构成上传成功回执。
+
 ## 回归门禁
 
 - `verify-scoreboard-submission`：远端确认、精确 receipt、队列清理失败、容量与过期、
   存储失败后的内存恢复、重复 publish、并发重试、关闭后确认、旧 GET 与 unsupported。
+- `verify-scoreboard-embedded-batch`：本批四页的 HTTP 500、存储失败、联网重试、
+  冻结成绩、跨日与旧 GET、开局恢复及 Silk Dew 三星资格门槛；在源码和 dist 中运行。
 - `verify-scoreboard-results`：真实 Echo / Maxwell 页面注入 HTTP 500、网络错误与存储失败；
   校验每日 / 战役可见提示、联网事件新增 POST、冻结原结果、重复结算、旧响应和启动重试。
   已接逐页过滤并进入 `DIST_SUITE`。
