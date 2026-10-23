@@ -53,12 +53,13 @@ export function renderGameShell(game, {
         + desktopCards
         + (cards.some(card => card.kind === 'more') ? '' : `                <div class="game-side-card" id="${esc(prefix)}SideMore"></div>\n`)
         + '            </aside>\n' : '';
-    const resultsHtml = resultRoles(game).map(kind => '\n' + region('result-' + kind,
+    const resultKinds = resultRoles(game);
+    const resultsHtml = resultKinds.map(kind => '\n' + region('result-' + kind,
         renderResultOverlay(game, kind, '                '), '                ')).join('');
     const drawer = hasDrawer
         ? region('stats-drawer', renderStatsDrawer(game, '    '), '    ') + '\n' : '';
     return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en"${resultKinds.length ? ' class="game-hidden-contract"' : ''}>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

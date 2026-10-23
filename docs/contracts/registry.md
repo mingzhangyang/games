@@ -147,6 +147,9 @@ caps 是校验器与迁移脚本的唯一判据：
 `tools/lib/result-regions.mjs`（经 `npm run gen` 静态写入）与
 `src/platform/shell/render-game-shell.js` 的脚手架使用。
 生成区必须是完整 overlay 节点，默认带 `hidden`，不在运行时二次建 DOM，
+新游戏脚手架只在声明 `shell.results` 时令根节点启用既有的 `game-hidden-contract`，
+保证默认隐藏及关闭状态的计算样式正确；没有结果弹层的脚手架 DOM 不变。
+
 保留 ID、节点位置、SVG、ARIA、i18n 与现有事件绑定。
 
 - 10 个 over 全部生成；除 Gravity Slingshot 没有 clear 外，八个同构 clear 生成。

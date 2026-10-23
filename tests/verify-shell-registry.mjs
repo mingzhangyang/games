@@ -216,6 +216,8 @@ function checkScaffoldCli() {
             assert.equal(html, renderGameShell(game), game.id + ': CLI uses the shared shell');
             checkStructure(html, game, true);
             const nodes = elements(html);
+            assert.equal(hasClass(nodes.find(node => node.tagName === 'html'), 'game-hidden-contract'),
+                !!game.shell?.results, game.id + ': results opt into the shared hidden contract');
             const hasDrawer = game.caps.includes('drawer');
             const hasSidebar = game.caps.includes('sidebar');
             assert.equal(!!runtime.drawer, hasDrawer, game.id + ': drawer runtime follows capability');

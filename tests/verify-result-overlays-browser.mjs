@@ -7,6 +7,7 @@ import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
 import { registry } from '../tools/lib/registry.mjs';
 import { resultRoles } from '../src/platform/shell/render-result-overlays.js';
+import { renderGameShell } from '../src/platform/shell/render-game-shell.js';
 
 const BASE = process.argv.find(arg => arg.startsWith('http')) || 'http://127.0.0.1:8899';
 const cases = registry.all().filter(game => resultRoles(game).length && keepPage(game.id));
@@ -24,6 +25,42 @@ let checks = 0;
 const prefixClass = (prefix, kind) => prefix + '-lb-' + kind + ' game-lb-' + kind;
 
 try {
+    // A real newly scaffolded page must opt into CSS hidden behavior, not just
+    // carry the 'hidden' class. Exercise the emitted markup with the actual
+    // shared source/dist stylesheets before any game runtime can change state.
+    const scaffoldGame = registry.all().find(game => game.id === 'lumen');
+    if (keepPage(scaffoldGame.id)) {
+        const scaffoldPage = await browser.newPage();
+        try {
+            await scaffoldPage.setJavaScriptEnabled(false);
+            const html = renderGameShell(scaffoldGame)
+                .replace('<head>', '<head>\n<base href="' + BASE + '/">');
+            await scaffoldPage.setContent(html, { waitUntil: 'load', timeout: 30000 });
+            const css = await scaffoldPage.evaluate(prefix => {
+                const root = document.documentElement;
+                const overlays = ['clear', 'over'].map(kind => {
+                    const target = document.getElementById(prefix + '-' + kind);
+                    if (!target) throw new Error('Missing generated ' + kind);
+                    const start = getComputedStyle(target).display;
+                    target.classList.remove('hidden');
+                    const open = getComputedStyle(target).display;
+                    target.classList.add('hidden');
+                    const closed = getComputedStyle(target).display;
+                    return { start, open, closed };
+                });
+                return { optedIn: root.classList.contains('game-hidden-contract'), overlays };
+            }, scaffoldGame.prefix);
+            assert(css.optedIn, 'scaffold uses the pre-existing game-hidden-contract CSS rule');
+            for (const overlay of css.overlays) {
+                assert.equal(overlay.start, 'none', 'new game overlay starts hidden');
+                assert.notEqual(overlay.open, 'none', 'new game overlay can open');
+                assert.equal(overlay.closed, 'none', 'new game overlay closes again');
+                checks += 3;
+            }
+        } finally {
+            await scaffoldPage.close();
+        }
+    }
     for (const game of cases) {
         for (const setting of settings) {
             const page = await browser.newPage();
