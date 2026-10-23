@@ -29,6 +29,7 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23060b1a'/%3E%3Ccircle cx='32' cy='36' r='18' fill='%23ffc85a' opacity='.22'/%3E%3Cellipse cx='32' cy='38' rx='6' ry='8' fill='%23ffd98a'/%3E%3Cellipse cx='32' cy='26' rx='4.5' ry='5' fill='%23241c16'/%3E%3Cellipse cx='23' cy='30' rx='8' ry='4' fill='%23cfe3ff' opacity='.55' transform='rotate(-25 23 30)'/%3E%3Cellipse cx='41' cy='30' rx='8' ry='4' fill='%23cfe3ff' opacity='.55' transform='rotate(25 41 30)'/%3E%3C/svg%3E">
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <!-- registry:begin stylesheets -->
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/firefly-signal.css">
@@ -36,6 +37,7 @@
     <link rel="stylesheet" href="css/stage-status.css">
     <link rel="stylesheet" href="css/mobile-fit.css">
     <link rel="stylesheet" href="css/more-games.css">
+    <!-- registry:end stylesheets -->
 </head>
 <body class="fs-body">
     <!-- 舞台两侧的夜色延展（桌面 / 平板）：JS 用背景层列平均竖条填充并对齐舞台 -->
@@ -119,9 +121,11 @@
         </main>
 
         <!-- 持久页脚：immersive 布局下随流在首屏之下（不占场景高度），只保留操作提示 -->
+        <!-- registry:begin footer -->
         <footer class="fs-footer game-footer">
             <p class="fs-footer-hint game-footer-hint" id="fs-hint" data-i18n="hint" data-i18n-touch="hintTouch"></p>
         </footer>
+        <!-- registry:end footer -->
     </div>
 
     <!-- registry:begin seo-script -->
@@ -150,8 +154,10 @@
         });
     </script>
     <!-- registry:end seo-script -->
+    <!-- registry:begin tail-scripts -->
     <script type="module" src="src/games/firefly-signal/index.js"></script>
     <script src="/analytics.js" defer></script>
     <script src="/sw-register.js" defer></script>
+    <!-- registry:end tail-scripts -->
 </body>
 </html>

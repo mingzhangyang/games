@@ -29,6 +29,7 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23173c3e'/%3E%3Cpath d='M32 38c-6-3-9-8-8-14 5 1 9 4 10 10 1-7 5-11 11-12 1 7-3 13-10 16v12h-6V38Z' fill='%235fae57'/%3E%3Cpath d='M26 34c8-1 13 2 13 9 0 7-5 13-11 13s-10-6-10-13c0-5 3-8 8-9Z' fill='%23f08a3c'/%3E%3C/svg%3E">
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <!-- registry:begin stylesheets -->
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/carrot-pull.css">
@@ -36,6 +37,7 @@
     <link rel="stylesheet" href="css/stage-status.css">
     <link rel="stylesheet" href="css/mobile-fit.css">
     <link rel="stylesheet" href="css/more-games.css">
+    <!-- registry:end stylesheets -->
 </head>
 <body>
     <div class="cp-shell game-shell">
@@ -205,11 +207,14 @@
             </aside>
         </main>
 
+        <!-- registry:begin footer -->
         <footer class="cp-footer game-footer">
             <p class="cp-footer-hint game-footer-hint" id="cp-hint">Press Pull, Space, or ↑ when the needle enters the green zone.</p>
         </footer>
+        <!-- registry:end footer -->
     </div>
 
+    <!-- registry:begin stats-drawer -->
     <div class="game-drawer" id="cpStatsDrawer" hidden>
         <div class="game-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="cpStatsDrawerTitle">
             <div class="game-drawer-handle"></div>
@@ -220,6 +225,7 @@
             <div class="game-drawer-body" id="cpStatsDrawerBody"></div>
         </div>
     </div>
+    <!-- registry:end stats-drawer -->
 
     <!-- registry:begin seo-script -->
     <script>
@@ -247,8 +253,10 @@
         });
     </script>
     <!-- registry:end seo-script -->
+    <!-- registry:begin tail-scripts -->
     <script type="module" src="src/games/carrot-pull/index.js"></script>
     <script src="/analytics.js" defer></script>
     <script src="/sw-register.js" defer></script>
+    <!-- registry:end tail-scripts -->
 </body>
 </html>

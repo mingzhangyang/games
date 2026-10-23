@@ -89,6 +89,10 @@ caps 是校验器与迁移脚本的唯一判据：
 | --- | --- | --- |
 | 各游戏 `<head>` | `head` | viewport / theme-support + theme-color（+`data-light`）+ `theme-boot.js` / description / keywords / canonical / OG / twitter / title；`title.i18nKey` 存在时同时输出对应的 `data-i18n` |
 | 26 个 `topbar` 游戏页 | `topbar` | 由 `game.chrome` 与共享 `src/platform/shell/render-topbar.js` 生成整个 `<header>`，包含 Home、专属按钮、标题、Stats / Pause / Sound 的顺序和原有 id / class / ARIA / SVG / hidden / disabled；非顶栏页不生成 |
+| 26 个 `topbar` 页的本地 CSS 链接 | `stylesheets` | 由 `shell.styles` 与既有 `scores.ui` 派生有序链接；外部字体样式表 / preconnect 留在区域外 |
+| 26 个 `topbar` 页的操作提示 | `footer` | 默认页脚模板与 `shell.footer` 稀疏覆盖；原 id / class / i18n / 初始文案保持不变 |
+| 其中带 `drawer` cap 的 16 页 | `stats-drawer` | 空统计抽屉骨架，由 `prefix` 与 `shell.drawer` 派生；不生成或复制 `StatsPanels` |
+| 26 个 `topbar` 页的入口及共享脚本 | `tail-scripts` | `game.entry` 模块入口 + `/analytics.js` + `/sw-register.js`，保留顺序和 defer 语义 |
 | 各游戏 SEO 脚本 | `seo-script` | canonical 纠正 + og:image/twitter:image + JSON-LD（VideoGame / BreadcrumbList）；分享图优先 `public/<ogImageDir>/og-<id>.jpg`（`tools/generators/game-covers.mjs` 用游戏美术生成），没有才用 `og-<id>.svg` |
 | `public/sitemap.xml` | `games` | 全部 `<url>` 条目 |
 | `public/manifest.json` | （JSON 感知） | `shortcuts` 数组 |
@@ -128,6 +132,49 @@ caps 是校验器与迁移脚本的唯一判据：
 `tests/verify-topbar-registry.mjs` 对 **全部带 topbar cap 的游戏** 检查登记字段、唯一哨兵、区域内容逐字匹配及 renderer 与脚手架同源。迁移时的一次性 `tools/checks/compare-topbar-html.mjs <baseline-sha>` 通过解析 HTML、移除纯格式空白与注释，逐元素比较原/新 header outerHTML（包含 SVG、初始 disabled/hidden），仅用于这次零变化证明；其结果记录在 PR。另须执行全站双语截图像素比对与 `npm run verify`。
 
 `index.html`、`math-rain.html`、`tank-battle.html` **明确排除**，不得生成 topbar 标记。此变更不移动 Header 节点位置，也不改绑定器与 CSS。
+
+### 3.2 页面骨架生成源（Chrome Step 6a）
+
+上述 26 个顶栏页的四类连续区域由 `src/platform/shell/render-shell-parts.js` 生成。
+它导出 `renderStylesheets(game, indent = '    ')`、`renderFooter(game, indent = '    ')`、
+`renderStatsDrawer(game, indent = '    ')`、`renderTailScripts(game, indent = '    ')`；
+返回值没有末尾换行，缩进和区域哨兵由调用方管理。无 `drawer` cap 时抽屉渲染返回空字符串。
+生成器和新游戏脚手架 `render-game-shell.js` 复用这四个函数。
+
+`game.shell` 可省略。配置只记录偏离默认模板的展示选择，不登记整份 HTML、脚本 URL 列表或可由既有字段推导的事实：
+
+| 字段 | 默认值 / 行为 | 例外用途 |
+| --- | --- | --- |
+| `shell.styles.page` | `css/<game.id>.css` | gravity-slingshot 保留 `css/gravity.css` |
+| `shell.styles.scienceShowcase` | `false` | 使用 Science Showcase 的五页为 `true` |
+| `shell.styles.stageStatus` | `true` | 不加载舞台状态样式的四页为 `false` |
+| `shell.footer.classPrefix` | `game.chrome.classPrefix` 或 `game.prefix` | `null` 只保留共享页脚 / 提示类；不改变独立的 id 默认值 |
+| `shell.footer.hintClass` | `<classPrefix>-footer-hint` | minesweeper 的历史提示类；`null` 省略页面专属提示类 |
+| `shell.footer.id` | `<chrome.classPrefix 或 prefix>-hint` | `null` 保留历史无 id 页脚 |
+| `shell.footer.key` | `hint`，输出 `data-i18n` | `null` 保留由游戏 JS 写文案的页脚 |
+| `shell.footer.touchKey` | `hintTouch`，输出 `data-i18n-touch` | `null` 保留没有此绑定的页脚 |
+| `shell.footer.text` | 空文本 | 必要的初始占位文案，按纯文本转义 |
+| `shell.drawer.idBase` | `<game.prefix>Stats` | tetris 为 `stats`，派生 Drawer / DrawerTitle / Close / DrawerBody |
+| `shell.drawer.i18n` | `false` | tetris / circuit 为 `true`，保留标题与关闭按钮的静态 i18n 属性 |
+
+本地 CSS 顺序固定为 `tokens → layout → [science-showcase] → 页面 CSS → [scoreboard-dialog] → [stage-status] → mobile-fit → more-games`。
+`scoreboard-dialog` 是否出现直接读取 `scores.ui === 'dialog'`；入口直接读取 `entry`。
+只给 `shell.drawer` 写选项而未声明 `drawer` cap、未知字段及非法字段类型都应报错。
+现有外部字体链接、preconnect、其他脚本和舞台内容不进入这些生成区。
+
+`shell.drawer.idBase` 用于保留既有页面的历史 ID；这些页面沿用自己的运行时适配器。
+新游戏 CLI `tools/generators/new-game.mjs` 使用共享运行时的 `<prefix>Stats` 约定，因此拒绝与此不同的 `idBase` 覆盖，避免生成一个无法绑定的统计入口；这不影响现有 tetris 的特殊 ID。
+CLI 按声明的页脚 `key` / `touchKey` 生成默认双语提示词，并保留已有的标题等基本词条；`key: null` 时必须提供非空静态 `text`，因为新脚手架没有游戏自有的文案写入者。
+
+维护时修改 registry 或共享模板后运行 `npm run gen`，不要手改区域内产物。
+首次安装哨兵与后续替换都只接管完整连续节点，不把手写内容夹在拆开的起止标签之间。
+写盘前先完成所有页面的渲染和保护检查：原 id 保留、最终 id 唯一、ARIA 引用能定位实际节点；
+任一页失败都停止本次产物写入。页脚仍是 shell 的直接子节点，固定定位的抽屉仍在 shell 外，
+运行时的面板搬移、暂停和焦点所有权不变。
+
+验收同时保留三类证据：生成区与渲染器逐字一致的防漂移检查；不依赖渲染器期望字符串的实际 DOM / CSS 链接 / 脚本 / id / ARIA 结构检查；迁移前后 DOM 与截图比对。
+`gen --check`、已有结构 / 交互检查与构建产物门禁都继续执行，不能用模板自比替代行为验证。
+侧栏卡片、结算弹层与榜单服务暂未纳入 6a，后续边界见 `docs/proposal-shell-generation.md`。
 
 ## 4. verify-registry.mjs：caps ⟺ 代码事实
 

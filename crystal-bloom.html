@@ -29,6 +29,7 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23070a18'/%3E%3Cpath d='M32 8 46 26 32 56 18 26z' fill='%236fd8ff' opacity='.9'/%3E%3Cpath d='M32 8 32 56 18 26z' fill='%23a8e8ff' opacity='.55'/%3E%3Cpath d='M18 26h28M32 8v48' stroke='%23ffd34d' stroke-width='1.6' opacity='.7'/%3E%3C/svg%3E">
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <!-- registry:begin stylesheets -->
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/science-showcase.css">
@@ -36,6 +37,7 @@
     <link rel="stylesheet" href="css/stage-status.css">
     <link rel="stylesheet" href="css/mobile-fit.css">
     <link rel="stylesheet" href="css/more-games.css">
+    <!-- registry:end stylesheets -->
 </head>
 <body class="science-showcase science-theme-crystal">
     <div class="cb-shell game-shell">
@@ -179,11 +181,14 @@
     <!-- 持久页脚：随流在底部（不用 sticky/fixed，避免与移动端底栏、
          统计抽屉、结算浮层抢层级，也不吃竖版画布高度）。
          ⚠️ 只保留操作提示；导航与状态控件统一留在 header / 页面主体。 -->
+    <!-- registry:begin footer -->
     <footer class="cb-footer game-footer">
         <p class="cb-footer-hint game-footer-hint" id="cb-hint" data-i18n="hint" data-i18n-touch="hintTouch"></p>
     </footer>
+    <!-- registry:end footer -->
     </div>
     <!-- 底部统计抽屉（移动端）：面板由 JS 从侧栏搬进来 -->
+    <!-- registry:begin stats-drawer -->
     <div class="game-drawer" id="cbStatsDrawer" hidden>
         <div class="game-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="cbStatsDrawerTitle">
             <div class="game-drawer-handle"></div>
@@ -194,6 +199,7 @@
             <div class="game-drawer-body" id="cbStatsDrawerBody"></div>
         </div>
     </div>
+    <!-- registry:end stats-drawer -->
 
 
         <!-- ld+json placeholder — replaced by `npm run gen` -->
@@ -223,8 +229,10 @@
         });
     </script>
         <!-- registry:end seo-script -->
+    <!-- registry:begin tail-scripts -->
     <script type="module" src="src/games/crystal-bloom/index.js"></script>
     <script src="/analytics.js" defer></script>
     <script src="/sw-register.js" defer></script>
+    <!-- registry:end tail-scripts -->
 </body>
 </html>

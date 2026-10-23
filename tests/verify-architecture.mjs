@@ -172,7 +172,7 @@ const scaffoldGame = {
     prefix: 'fg',
     entry: 'src/games/fixture-game/index.js',
     name: { en: 'Fixture Game', zh: '示例游戏' },
-    caps: ['theme-light', 'topbar'],
+    caps: ['theme-light', 'topbar', 'sidebar', 'drawer'],
     chrome: { actions: ['stats', 'sound'] },
     themeColor: '#101820',
     themeColorLight: '#eef4f8',

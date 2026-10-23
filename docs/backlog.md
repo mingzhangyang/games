@@ -72,3 +72,20 @@ display:contents 透传 + sr-only h1，横屏掌机形态保持覆盖式 HUD 不
 - **排行榜 Worker 没有写入限流**：`Workers/game-scores.js` 的 POST 只校验 Origin、分数上限与名字，
   没有像 `games-analytics` 那样的 native rate limiter；任何脚本都能刷满 Top 50。纯静态站点无法真正防作弊，
   但加一个按 IP 的写入限流能挡住批量刷榜。
+
+---
+
+## 页面骨架提案审查确认、留待 6c 的榜单提交缺口
+
+**Echo Cave / Maxwell Demon 忽略提交失败返回值**：
+`src/games/echo-cave/runtime.js` 与 `src/games/maxwell-demon/runtime.js` 的 `submit()`
+使用 `submitScore(...).then(() => fetchBoard(game))`，没有读取 POST 结果。
+`src/platform/leaderboard.js` 的契约是失败返回 `false`、不抛异常，因此 POST 失败后仍会拉榜；
+若 GET 成功，`renderBoard()` 清空状态提示，页面未告知本次成绩上传失败。
+
+控制流已由静态阅读确认；本条不声称已完成浏览器故障注入。Chrome 6a 仅迁移静态生成源，
+不修改这两页 runtime。后续 6c 应复用既有 `leaderboard.js` / `scoreboard-pending.js`，
+明确区分远端确认、本地待重试和未保存状态；GET 成功不能覆盖当前成绩未上传的事实。
+
+**验收**：注入 POST 网络失败 / 非 2xx、同时让 GET 返回有效榜单，断言仍显示未上传或已入队状态；
+再覆盖重试成功后的状态更新，以及旧请求在关闭、重开结算后不会覆盖新结果。

@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { registry } from '../lib/registry.mjs';
 import { renderTopbar } from '../../src/platform/shell/render-topbar.js';
+import { transformShellRegions, validatePageBindings } from '../lib/shell-regions.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const CHECK = process.argv.includes('--check');
@@ -22,6 +23,7 @@ const SITE = registry.site();
 const ORIGIN = SITE.origin;
 
 let drift = 0, written = 0, clean = 0;
+const pendingWrites = [];
 
 function esc(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -512,9 +514,10 @@ function readmeTransform(src) {
 }
 
 // ---------- 执行 ----------
-function processFile(rel, transforms) {
+function processFile(rel, transforms, validate = null) {
     const file = join(ROOT, rel);
-    let src = readFileSync(file, 'utf8');
+    const before = readFileSync(file, 'utf8');
+    let src = before;
     let dirty = false;
     const notes = [];
     for (const t of transforms) {
@@ -523,13 +526,12 @@ function processFile(rel, transforms) {
         if (r.state === 'written') { dirty = true; notes.push('已更新'); }
         src = r.src;
     }
+    if (validate) validate(before, src, rel);
     if (CHECK) {
         if (dirty) { drift++; console.log(`DRIFT  ${rel}`); }
         else { clean++; console.log(`OK     ${rel}`); }
     } else if (dirty) {
-        writeFileSync(file, src);
-        written++;
-        console.log(`WRITE  ${rel}`);
+        pendingWrites.push({ file, src, rel });
     } else {
         clean++;
         console.log(`OK     ${rel}`);
@@ -541,7 +543,8 @@ for (const g of GAMES) {
         s => applyRegion(s, 'head', headBlock(g), (s, c) => installHead(s, c), 'html'),
         s => applyRegion(s, 'seo-script', seoScriptBlock(g), (s, c) => installSeoScript(s, c, g), 'html'),
         ...((g.caps || []).includes('topbar') ? [topbarTransform(g)] : []),
-    ]);
+        s => transformShellRegions(s, g),
+    ], (g.caps || []).includes('topbar') ? validatePageBindings : null);
 }
 processFile('index.html', [homeNewTransform, homeFilterTransform, homeCardsTransform]);
 processFile('js/index-i18n-zh.js', [homeZhTransform]);
@@ -557,5 +560,12 @@ processFile('README.md', [readmeTransform]);
 if (CHECK) {
     console.log(drift ? `\ngen --check：${drift} 个文件漂移（跑 npm run gen 修复）` : `\ngen --check：全部一致 ✅`);
     process.exit(drift ? 1 : 0);
+}
+// Parse, render and validate every candidate before changing any file. A bad
+// later page must not leave earlier pages partially migrated.
+for (const { file, src, rel } of pendingWrites) {
+    writeFileSync(file, src);
+    written++;
+    console.log(`WRITE  ${rel}`);
 }
 console.log(`\ngen 完成：${written} 个文件更新，${clean} 个无变化`);
