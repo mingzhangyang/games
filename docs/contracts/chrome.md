@@ -15,32 +15,38 @@
 ### 1.1 Header：三槽位，右簇定序
 
 ```html
+<!-- registry:begin topbar -->  由 npm run gen 从 games.config.json 生成，勿手改
 <header class="xx-topbar game-topbar">
-  <div class="xx-topbar-lead game-topbar-group">      <!-- 左簇 -->
-    <a|button data-chrome="home">                     <!-- Home 永远第一个 -->
-    …页面专属入口（如 wd 的 Help）
+  <div class="xx-topbar-lead game-topbar-group">      <!-- 左簇：只有 Home -->
+    <a|button data-chrome="home">
   </div>
-  <div class="xx-topbar-center game-topbar-center">   <!-- 中槽：标题 / HUD，各页自由 -->
-  <div class="xx-topbar-actions game-topbar-group">   <!-- 右簇：固定顺序 -->
-    …页面专属（Retry / Range / Speed / Theme）
+  <div class="xx-topbar-center game-topbar-center">   <!-- 中槽：只放当前语言的游戏名 -->
+    <div class="xx-brand game-topbar-name" data-i18n="title">
+  </div>
+  <div class="xx-topbar-actions game-topbar-group">   <!-- 右簇：chrome.actions 顺序 -->
+    …页面专属（Restart / Range / Speed / Theme / Help / Leaderboard）
     <button data-chrome="stats">    <button data-chrome="pause">
+    <div popover="auto" role="menu">  <button data-topbar-more>   <!-- 仅有手机溢出动作的页，§5 -->
     <button data-chrome="sound">
   </div>
 </header>
+<!-- registry:end topbar -->
 ```
 
-**第 3 步：** 三槽 `grid-template-columns: auto minmax(0,1fr) auto`，中槽游戏名 `.game-topbar-name` 从 Home 右侧 12px 起、左对齐，手机 16px / 桌面 17px、700 字重，颜色 `--game-title-color`，可选字体 `--game-title-font`。标题是唯一允许单行省略号的顶栏文字；390px 下中文标题必须完整（塔防竖屏沿用明确的隐藏例外）。每日猜词的 Help 已从左簇移到右簇。
+**第 3 步：** 三槽 `grid-template-columns: auto minmax(0,1fr) auto`，中槽游戏名 `.game-topbar-name` 从 Home 右侧 12px 起、左对齐，手机 16px / 桌面 17px、700 字重，颜色 `--game-title-color`，可选字体 `--game-title-font`。标题是唯一允许单行省略号的顶栏文字；390px 下中文标题必须完整。塔防竖屏原先隐藏游戏名的例外已在第 5 步 b 删除，现在与其他页一样显示游戏名。每日猜词的 Help 已从左簇移到右簇。
 
 **第 4 步（桌面 ≥1024px）：** 顶栏仍是 shell 直接子元素，不改变 DOM 或 `bindFrame` 的选择器；`css/layout.css` 用 `width: min(1200px, 100vw - 80px)` 与 `align-self:center` 使顶栏相对视口居中，统一 12px 水平内距。仅在 `html:has(.game-shell > .game-topbar)` 的游戏页启用 `scrollbar-gutter: stable both-edges`，消除不同页面纵向滚动条造成的横向锚点漂移；根元素使用 `--tok-bg` 填充预留区域，避免 body 渐变背景外出现白色滚动条侧边，同时不影响无共享顶栏的全屏游戏。桌面 Home / 标题起点 / Sound 的屏幕 x 在全部 26 个顶栏页、中文英文和 1280×900 / 1440×900 / 1920×1080 下严格一致，见 `tests/verify-topbar-desktop.mjs`；原 640/800px immersive 上限仅约束舞台与页脚，不再约束桌面顶栏。小于 1024px 保留原布局。
 
 **第 5 步 a（顶栏声明式生成，纯重构）：** 上面的三槽 DOM 由 `games.config.json` 的紧凑 `chrome.actions` 与 `chrome.overrides` 生成，通用属性、SVG、约定 ID 均由共享模板派生，不再在 26 个 HTML 页面中手写。共享渲染源：`src/platform/shell/render-topbar.js`；`tools/generators/gen-from-registry.mjs` 负责静态就地生成 `registry:begin/end topbar`；`src/platform/shell/render-game-shell.js` 复用同一渲染函数。所有既有节点、class、id、data-chrome、aria-label/title、SVG、初始 disabled/hidden、按钮顺序严格保留。左簇 Home 永远先出现，中槽只放游戏名，右簇页面专属动作依 registry 顺序；不要把个别历史特例强改成新的视觉形态。维护时只改 `game.chrome` 然后 `npm run gen`，严禁手改 HTML 的 topbar 哨兵区域。静态防漂移：`verify-topbar-registry`、`gen --check`；本轮一次性 DOM 比对详见 `tools/checks/compare-topbar-html.mjs` 与 PR 报告。
 
-**核心性质：Sound 永远是最右一颗。** 它是 11 页全有的全站开关，无论一页有没有
-Stats / Pause，它的屏幕位置都一致。页面专属钮一律排在右簇最左。
-
-**唯一性：** 全页只有顶栏这一个声音开关。开始菜单 / 结算层 / 暂停层不得再放第二颗（如历史上的
 **新游戏脚手架：** `chrome.actions` 仅声明角色时，默认 Home 为 `button`，`tools/generators/new-game.mjs` 生成的 `mountGameRuntime` 必须通过 `chrome.owns: ['home', 'sound']` 接管导航和静音点击。默认标题为 `div`；`renderGameShell()` 仅在顶栏及自定义内容都不含 H1 时，于 `<main>` 添加可本地化的 `.sr-only` H1；检测到多个 H1 则直接报错。现有 26 页的顶栏及生成区域不受影响。
 
+**第 5 步 b（手机 ≤480px 动作预算）：** Home 与 Sound 固定，其余动作最多直接显示 2 个，多出的进「⋯」原生弹出菜单，详见 §5。
+
+**核心性质：Sound 永远是最右一颗。** 它是全部 26 个顶栏页都有的全站开关，无论一页有没有
+Stats / Pause / 「⋯」，它的屏幕位置都一致。页面专属钮一律排在右簇最左。
+
+**唯一性：** 全页只有顶栏这一个声音开关。开始菜单 / 结算层 / 暂停层不得再放第二颗（如历史上的
 `xx-start-mute` / `na-start-sound`，2026-10-20 已从 15 页移除）；`tests/verify-chrome.mjs` ⑨ 按运行时 DOM 计数。
 唯一的这颗必须**指针可达**：视口级全屏开始层（reversi / minesweeper）不得盖住顶栏，顶栏抬到其上、
 开始层内容按 `--game-topbar-bottom`（`src/platform/topbar-clearance.js`）让位，开局前的局内 HUD 用 `visibility` 隐藏；
@@ -209,21 +215,16 @@ CDP 和 `--blink-settings` 都改不了；所以桌面轮在 CSSOM 里把这类�
 
 ## 2. 各页现状
 
-| 页面 | 左簇 | 右簇（专属 → stats → pause → sound） | 页脚 hint 来源 |
-| --- | --- | --- | --- |
-| gravity-slingshot | Home | Retry · Stats · Sound | `t.hint` |
-| hoop-shot | Home | Stats · Pause · Sound | `t.hint`（原 `footerHint`） |
-| planet-merge | Home | Stats · Pause · Sound | `t.hint` |
-| sword-flight | Home | Stats · Pause · Sound | `t.hint`（新） |
-| needle-awn | Home | Stats · Pause · Sound | `t.hint`（新） |
-| tower-defense | Home | Range · Speed · Stats · Pause · Sound | `t.hint` |
-| reversi | Home | Sound | `t.hint`（原 `muteHint`） |
-| minesweeper | Home | Pause · Sound | `hintDefault` / `hintFlagMode` |
-| word-daily | Home · Help | Stats · Sound | `t.hint`（新） |
-| gomoku | Home | Sound | `t.hint`（新） |
-| tetris | Home | Theme · Stats · Sound | `TEXT.hint`（新） |
+26 个顶栏页的右簇动作以 `games.config.json` 的 `chrome.actions` 为唯一出处，本文不再维护逐页副本
+（旧表停在 2026-09-21 的 11 页，已删除）。手机端哪些动作直接显示、哪些进「⋯」，用生成器同一个函数查看：
 
-（表为 2026-09-21 语言钮收敛后的现状；历史含 Lang 的版本见 git。）
+```bash
+node --input-type=module -e "import c from './games.config.json' with { type: 'json' };
+import { planMobileTopbar } from './src/platform/shell/render-topbar.js';
+for (const g of c.games.filter(g => g.chrome)) console.log(g.id, g.chrome.actions.join(' · '), planMobileTopbar(g));"
+```
+
+页脚 hint 由各页自己的 i18n 提供（§1.2）。
 
 **豁免**（维持既定豁免，P4 只做了最小语义对齐，不套三槽位）：
 
@@ -281,7 +282,7 @@ node tests/verify-registry.mjs
 > 不再依赖固定的 Puppeteer 版本目录。换机器时优先设置 `CHROME_BIN`；WSL 里的 Linux Node
 > 若要使用 Windows Chrome，请用 Windows 侧 Node 运行校验，或在 WSL 安装 Linux Chrome 后设置 `CHROME_BIN`。
 
-`verify-chrome.mjs` 的断言（11 页 × 移动 390 / 桌面 1280 × zh / en = 44 组）：
+`verify-chrome.mjs` 的断言（26 个顶栏页 × 移动 390 / 桌面 1280 × zh / en = 104 组）：
 
 1. 顶栏三槽位齐全；右簇通用钮顺序符合契约
 2. 页面至少一个 `<h1>`（`h1Count >= 1`，可为 `.sr-only`）—— P3-3 并入
@@ -292,6 +293,7 @@ node tests/verify-registry.mjs
 6. 点一次静音钮：`site_muted` 必须翻转（双绑导致的「切两次 = 没切」会被抓出来）
 7. 顶栏首页钮点击后真的导航回 `index.html`（行为断言，防死按钮）
 8. Footer 不含 `data-chrome` 控件或 `.game-footer-nav`；全程无 `pageerror`
+9. 运行时 DOM 里恰好一个声音开关（顶栏那颗，§1.1「唯一性」）
 
 > ⚠️ **覆盖范围陷阱**：上面的 ①–⑧ 只遍历 `registry.withCap('topbar')` 的页面。
 > tank-battle / math-rain 这类豁免页根本不进循环 —— 它们的语言钮回归**一条断言都抓不到**。
@@ -318,6 +320,15 @@ overrides the shared role priorities; `maxVisibleActions` defaults to 2 and cann
 exceed 2. Equal priorities retain registry order. Slot membership is decided at
 build time, not reassigned as a game starts/pauses, so buttons never shuffle under
 a finger. An empty/unavailable overflow hides More entirely.
+
+That is why an action that only exists during play (the contextual Restart, §1.5)
+must stay in the row, never be the only thing behind More: More would then be hidden
+on the start menu, appear when the run starts, and push every action to its left by
+one slot (fixed 2026-10-23 on carrot-pull / shadow-loom / loop-jail / sudoku-mist,
+whose Restart was overflowed). Overflow an always-available action instead. Current
+overflow pages: tower-defense (Range, Stats); needle-awn, carrot-pull, shadow-loom,
+loop-jail, sudoku-mist (Leaderboard). `verify-topbar-overflow-model` pins this list,
+and `verify-topbar-overflow` asserts that starting a run moves no existing control.
 
 `render-topbar.js` generates canonical buttons and command proxies, including the
 seven topbar trophies formerly inserted by `scoreboard-dialog.js`. The scoreboard
