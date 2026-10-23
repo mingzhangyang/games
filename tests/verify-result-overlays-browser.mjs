@@ -41,7 +41,7 @@ try {
             });
             assert.equal(response?.status(), 200, 'scaffold CSS fixture must load');
             await scaffoldPage.evaluate(html => {
-                const emitted = new DOMParser().parseFromString(html, 'text/html');
+                const emitted = new window.DOMParser().parseFromString(html, 'text/html');
                 document.documentElement.className = emitted.documentElement.className;
                 document.documentElement.lang = emitted.documentElement.lang;
                 document.body.innerHTML = emitted.body.innerHTML;
