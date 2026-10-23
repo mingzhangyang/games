@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// Registry-wide theme/viewport coverage can exceed the generic 180s CI budget.
+// Keep the full matrix and its assertions; only this verifier gets more headroom.
+// verify-all: timeout=300000
 // verify-theme.mjs — 主题契约校验（docs/contracts/theme.md §4）
 //
 //   ① 夹具页：theme-boot.js + src/platform/theme.js 的行为本身
