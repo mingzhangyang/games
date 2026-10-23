@@ -239,6 +239,25 @@ try {
     assert.equal(requests.length, 1);
     assert.equal(pendingScoreCount(), 0);
 
+    // An older startup retry snapshots the queue before a new result is queued.
+    // Refresh must explicitly retry the current snapshot, not just join that old batch.
+    reset();
+    const oldEntry = { ...base, score: 99 };
+    enqueuePendingScore(oldEntry);
+    const startupGate = deferred();
+    respond = request => request.method === 'POST' && request.entry.score === 99
+        ? startupGate.promise : response(request.method === 'POST' ? 500 : 200);
+    const startupRetry = retryScoreResults();
+    const late = session([]);
+    await late.publish(base);
+    assert.equal(late.getState().submission, 'queued');
+    let lateAttempts = requests.filter(request => request.method === 'POST' && request.entry.score === 17).length;
+    const onlineRefresh = late.refresh();
+    startupGate.resolve(response(500));
+    await Promise.all([startupRetry, onlineRefresh]);
+    assert.ok(requests.filter(request => request.method === 'POST' && request.entry.score === 17).length > lateAttempts,
+        'online refresh retries a result queued after startup retry snapshot');
+
     // Unsaved is honest; an explicit later refresh can recover the still-open result.
     reset();
     blockWrites = true;

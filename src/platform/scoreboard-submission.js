@@ -191,7 +191,7 @@ export function createScoreboardResultSession({ onChange }) {
     async function refresh() {
         const result = current;
         if (!active || !result) return;
-        if (submissionState(result) === 'notSaved' || result.retry) {
+        if (['queued', 'notSaved'].includes(submissionState(result)) || result.retry) {
             if (!result.retry) {
                 result.submission = 'submitting';
                 notify();
