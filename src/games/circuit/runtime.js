@@ -36,7 +36,8 @@ import { storageGet, storageSet } from '../../platform/safe-storage.js';
 import { CIRCUIT_STORAGE, CIRCUIT_STORAGE_SLOTS } from './storage.js';
 import { track } from '../../platform/analytics.js';
 import { todayKey, todayKeyDisplay } from '../../platform/daily.js';
-import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
+import { createScoreboardResultSession, retryScoreResults } from '../../platform/scoreboard-submission.js';
+import { renderEmbeddedScoreResult, resetEmbeddedScoreResult } from '../../platform/scoreboard-result-view.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
 import { bindPalette } from '../../platform/theme.js';
 import { LANGUAGES } from './i18n.js';
@@ -226,6 +227,12 @@ export class CircuitGame {
         this.baseStates = [];   // 初态（Reset 用）
         this.sol = null;        // solveCircuit 结果 { short, lit }
         this.daily = null;      // 每日谜题 { id, par, elements }
+        this.dailyDateKey = '';
+        this.scoreRunId = 0;
+        this.resultSession = createScoreboardResultSession({
+            onChange: result => this.renderScoreResult(result),
+        });
+        this.el['lb-status']?.setAttribute('role', 'status');
 
         // 视觉
         this.time = 0;
@@ -251,6 +258,7 @@ export class CircuitGame {
 
         this.loadLevel(0);   // 菜单背景展示第 1 关的电路
         this.startLoop();
+        void retryScoreResults();
     }
 
     get TEXT() { return LANGUAGES[this.lang]; }
@@ -267,6 +275,7 @@ export class CircuitGame {
         this.updateDailyBest();
         this.updateSideRecords();
         this.updateHud();
+        this.renderScoreResult();
         updateMoreGames(this.lang);
     }
 
@@ -344,6 +353,8 @@ export class CircuitGame {
 
     /** 关卡模式启动点（AUGMENT 启动参数 [0]） */
     startLevel(idx) {
+        resetEmbeddedScoreResult(this.resultSession, this.el);
+        this.scoreRunId++;
         clearTimeout(this.solveTimer);
         this.loadLevel(idx);
         this.state = 'playing'; this.contextualRestart?.sync();
@@ -355,8 +366,11 @@ export class CircuitGame {
     }
 
     startDaily() {
+        resetEmbeddedScoreResult(this.resultSession, this.el);
+        this.scoreRunId++;
         clearTimeout(this.solveTimer);
-        const d = dailyLevel(todayKey());
+        this.dailyDateKey = todayKey();
+        const d = dailyLevel(this.dailyDateKey);
         this.mode = 'daily';
         this.daily = d;
         this.levelIdx = 0;
@@ -390,6 +404,7 @@ export class CircuitGame {
     }
 
     showMenu() {
+        resetEmbeddedScoreResult(this.resultSession, this.el);
         this.pauseOwnership?.invalidate();
         clearTimeout(this.solveTimer);
         this.state = 'menu'; this.contextualRestart?.sync();
@@ -546,8 +561,9 @@ export class CircuitGame {
     /* ── 结算：每日 ── */
 
     finishDaily() {
+        if (this.mode !== 'daily' || this.state !== 'playing') return;
         const t = this.TEXT;
-        const date = todayKey();
+        const date = this.dailyDateKey;
         const score = Math.min(this.moves, 99);
         this.state = 'won-daily'; this.contextualRestart?.sync();
         const prev = Number(storageGet('cc_daily_' + date)) || 0;
@@ -567,46 +583,53 @@ export class CircuitGame {
         this.updateSideRecords();
         track('circuit', 'finish');
 
-        const game = `circuit-d${date}`;
-        // 网络层收敛到 src/platform/leaderboard.js（false=未进全球榜，走本地兜底）
-        submitScore({ game, name: ensurePlayerName() || 'Anonymous', score }).then(ok => {
-            if (ok) return this.fetchDailyBoard(game);
-            this.pushLocalScore(date, score);
-            this.renderLocalBoard();
-            if (this.el['lb-status']) this.el['lb-status'].textContent = t.lbOffline;
+        const entry = {
+            runId: this.scoreRunId, date, game: `circuit-d${date}`,
+            name: ensurePlayerName() || 'Anonymous', score,
+        };
+        void this.resultSession.publish(entry).then(receipt => {
+            // Keep the historical cc_local_ fallback, not a second upload queue.
+            // Only the immutable failed result is written, never a later nickname.
+            if (receipt.status === 'sent') return;
+            this.pushLocalScore(date, score, entry.name);
+            if (this.resultSession.getState()?.entry.runId === entry.runId) this.renderScoreResult();
         });
     }
 
-    localBoardKey() {
-        return `cc_local_${todayKey()}`;
-    }
-
-    pushLocalScore(date, score) {
-        let local = [];
-        try {
-            local = JSON.parse(storageGet(`cc_local_${date}`)) || [];
-        } catch (e) { local = []; }
-        local.push({ name: ensurePlayerName() || 'Anonymous', score });
+    pushLocalScore(date, score, name) {
+        const local = this.readLocalBoard('circuit-d' + date);
+        local.push({ name, score });
         local.sort((a, b) => a.score - b.score);
-        storageSet(`cc_local_${date}`, JSON.stringify(local.slice(0, 10)));
+        storageSet('cc_local_' + date, JSON.stringify(local.slice(0, 10)));
     }
 
-    renderLocalBoard() {
+    readLocalBoard(game) {
+        try {
+            const rows = JSON.parse(storageGet('cc_local_' + game.slice(-8)));
+            return Array.isArray(rows) ? rows : [];
+        } catch (e) { return []; }
+    }
+
+    renderScoreResult(result = this.resultSession.getState()) {
+        renderEmbeddedScoreResult({
+            result, el: this.el, text: key => this.TEXT[key],
+            renderBoard: rows => this.renderBoard(rows.length ? rows : this.readLocalBoard(result.entry.game)),
+            readLocalBoard: game => this.readLocalBoard(game),
+        });
+    }
+
+    renderBoard(rows) {
         const list = this.el['lb-list'];
         if (!list) return;
-        list.textContent = '';
-        let local = [];
-        try {
-            local = JSON.parse(storageGet(this.localBoardKey())) || [];
-        } catch (e) { local = []; }
-        if (!Array.isArray(local) || local.length === 0) {
+        list.replaceChildren();
+        if (!rows.length) {
             const empty = document.createElement('div');
             empty.className = 'cc-lb-empty game-lb-empty';
             empty.textContent = this.TEXT.noScores;
             list.appendChild(empty);
             return;
         }
-        local.slice(0, 10).forEach((s, i) => list.appendChild(this.buildLbRow(i, s)));
+        rows.slice(0, 10).forEach((row, i) => list.appendChild(this.buildLbRow(i, row)));
     }
 
     buildLbRow(rank, entry) {
@@ -625,25 +648,6 @@ export class CircuitGame {
         return row;
     }
 
-    async fetchDailyBoard(game) {
-        const list = this.el['lb-list'];
-        const statusEl = this.el['lb-status'];
-        if (!list) return;
-        try {
-            const data = await fetchBoard(game);
-            if (this.state !== 'won-daily' || !this.el.over || this.el.over.classList.contains('hidden')) return;
-            list.textContent = '';
-            if (!Array.isArray(data) || data.length === 0) {
-                this.renderLocalBoard();
-                return;
-            }
-            data.slice(0, 10).forEach((entry, i) => list.appendChild(this.buildLbRow(i, entry)));
-            if (statusEl) statusEl.textContent = '';
-        } catch (e) {
-            this.renderLocalBoard();
-            if (statusEl) statusEl.textContent = this.TEXT.lbOffline;
-        }
-    }
 
     async copyResult() {
         const t = this.TEXT;
@@ -801,6 +805,10 @@ export class CircuitGame {
         }
         // 全站语言/静音设置变化（site-settings.js 派发）→ 本页重刷
         window.addEventListener('site-settings:changed', () => this.applyLanguage());
+        window.addEventListener('online', () => {
+            if (this.resultSession.getState()) void this.resultSession.refresh();
+            else void retryScoreResults();
+        });
     }
 
     /* ── 粒子 ── */

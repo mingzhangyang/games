@@ -10,7 +10,7 @@
  *   systems/records           星级与每日协议键的持久化（本页唯一碰存储处）
  *   render/                   geometry 坐标 / pieces 元件画法 / effects 瞬态特效 / board 每帧合成
  *   input/pointer             画布点击 → 格
- *   ui/                       view（DOM 文案、HUD、面板）/ daily-board（每日榜单）
+ *   ui/                       view（DOM 文案、HUD、结算面板、共享排行榜结果展示）
  *   runtime（本文件）          状态机 menu | playing | won-level | won-daily + isPaused，把上面各层接起来
  *   index                     组合根：共享运行时（frame / drawer / chrome / 暂停归属）
  *
@@ -28,11 +28,11 @@ import { LANGUAGES } from './i18n.js';
 import { Sfx } from './audio.js';
 import { LUMEN_LEVELS, dailyLevel } from './model/levels.js';
 import { PlaySession, starsFor } from './model/session.js';
-import { loadStars, recordDailyScore, saveStars, todayBest } from './systems/records.js';
+import { loadStars, recordDailyScore, saveStars, todayBest, pushLocalScore } from './systems/records.js';
+import { createScoreboardResultSession, retryScoreResults } from '../../platform/scoreboard-submission.js';
 import { BoardRenderer } from './render/board.js';
 import { bindBoardPointer } from './input/pointer.js';
 import { LumenView, copyToClipboard } from './ui/view.js';
-import { createDailyBoard } from './ui/daily-board.js';
 
 /** 通关后让光束动画走一小段再弹结算，点亮感更完整 */
 const SOLVE_DELAY_MS = 650;
@@ -47,12 +47,11 @@ export class LumenGame {
     constructor() {
         this.view = new LumenView(document);
         this.board = new BoardRenderer(this.view.canvas);
-        this.dailyBoard = createDailyBoard({
-            list: this.view.el['lb-list'],
-            status: this.view.el['lb-status'],
-            getText: () => this.TEXT,
-            isOpen: () => this.state === 'won-daily' && this.view.isDailyResultOpen(),
+        this.scoreRunId = 0;
+        this.resultSession = createScoreboardResultSession({
+            onChange: result => this.view.renderScoreResult(result),
         });
+        this.view.el['lb-status']?.setAttribute('role', 'status');
 
         this.lang = getLang();
         this.stars = loadStars();
@@ -80,7 +79,12 @@ export class LumenGame {
         window.addEventListener('game-frame:changed', () => this.board.resize());
         // 全站语言/静音设置变化（site-settings.js 派发）→ 本页重刷
         window.addEventListener('site-settings:changed', () => this.applyLanguage());
+        window.addEventListener('online', () => {
+            if (this.resultSession.getState()) void this.resultSession.refresh();
+            else void retryScoreResults();
+        });
         this.startLoop();
+        void retryScoreResults();
     }
 
     get TEXT() { return LANGUAGES[this.lang]; }
@@ -99,6 +103,7 @@ export class LumenGame {
         this.view.renderLevelGrid(this.stars);
         this.refreshRecords();
         this.updateHud();
+        this.view.renderScoreResult(this.resultSession.getState());
         updateMoreGames(this.lang);
     }
 
@@ -133,6 +138,8 @@ export class LumenGame {
 
     /** 关卡模式启动点（AUGMENT 启动参数 [0]） */
     startLevel(idx) {
+        this.view.resetScoreResult(this.resultSession);
+        this.scoreRunId++;
         clearTimeout(this.solveTimer);
         this.loadLevel(idx);
         this.state = 'playing'; this.contextualRestart?.sync();
@@ -146,6 +153,8 @@ export class LumenGame {
     }
 
     startDaily() {
+        this.view.resetScoreResult(this.resultSession);
+        this.scoreRunId++;
         clearTimeout(this.solveTimer);
         this.daily = dailyLevel(todayKey());
         this.mode = 'daily';
@@ -169,6 +178,7 @@ export class LumenGame {
     }
 
     showMenu() {
+        this.view.resetScoreResult(this.resultSession);
         this.pauseOwnership?.invalidate();
         clearTimeout(this.solveTimer);
         this.state = 'menu'; this.contextualRestart?.sync();
@@ -237,14 +247,25 @@ export class LumenGame {
     }
 
     finishDaily() {
-        const date = todayKey();
+        if (this.mode !== 'daily' || this.state !== 'playing') return;
+        const date = this.daily.dateKey;
         const score = this.flips;
         this.state = 'won-daily'; this.contextualRestart?.sync();
         const record = recordDailyScore(date, score);
         this.view.showDailyResult({ score, ...record, playerName: ensurePlayerName() || '' });
         this.refreshRecords();
         track('lumen', 'finish');
-        this.dailyBoard.publish({ game: `lumen-d${date}`, date, name: ensurePlayerName() || 'Anonymous', score });
+        void this.resultSession.publish({
+            runId: this.scoreRunId, game: `lumen-d${date}`, date,
+            name: ensurePlayerName() || 'Anonymous', score,
+        }).then(receipt => {
+            if (receipt.status === 'sent') return;
+            // lm_local_<date> remains a local display fallback, never a retry queue.
+            pushLocalScore(receipt.entry.date, { name: receipt.entry.name, score: receipt.entry.score });
+            if (this.resultSession.getState()?.entry.runId === receipt.entry.runId) {
+                this.view.renderScoreResult(this.resultSession.getState());
+            }
+        });
     }
 
     async copyResult() {

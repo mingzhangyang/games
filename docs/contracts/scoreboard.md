@@ -2,6 +2,7 @@
 
 6c-1 将共享 dialog 与 Echo Cave / Maxwell Demon 的提交语义接到同一服务。
 6c-2a 将 Silk Dew、Crystal Bloom、Flame Verse、Ripple Duet 的内嵌榜单也接入共享服务。
+6c-2b 将 Gravity Slingshot、Circuit、Lumen、Bond Forge 的每日结果接入共享服务，并删除四页独立的 POST / GET 请求编排。
 其他页面仍待后续迁移，不能把本批当作全站已统一。
 
 ## 责任边界
@@ -80,12 +81,44 @@ Silk Dew / Crystal Bloom / Flame Verse / Ripple Duet 继续使用各自的计分
 `sd_lb_*`、`cb_lb_*`、`fv_lb_*`、`rd_lb_*` 本地旧榜单只在读榜失败时显示，
 不是持久提交队列，也不构成上传成功回执。
 
+### 6c-2b：每日挑战的不可变身份与共享提交范式
+
+四页都在开局固定 UTC+8 日期，完成时向 `createScoreboardResultSession` 发布唯一的
+`{ runId, date, game, name, score }` 快照；通过 `renderEmbeddedScoreResult`
+独立显示 POST 回执与 GET 榜单状态，通过 `resetEmbeddedScoreResult` 在切换
+模式、开始下一局或退出结算视图时隔离过期异步响应。页面启动时调用
+`retryScoreResults()`，重新联网时刷新当前 Session，或在无结果视图时
+单独恢复历史队列。**没有新协议、网络客户端、专有重试队列或游戏配置层。**
+
+- **Gravity Slingshot**：开始五洞赛程时固定日期和 `gravity-dYYYYMMDD`，
+  保留最少总发射次数、`gd_daily_` 与 `gs_daily_` 记录、旧
+  `gd_local_` 读榜回退和前十名。最终洞多次触发不重复总计与提交。
+- **Circuit**：开始每日谜题时固定日期，保留 99 步封顶的评分、
+  `circuit-dYYYYMMDD`、`cc_daily_`、`cc_local_` 和前十名；
+  失败时本地显示条目写入完成瞬间冻结的原名、原分数和日期，不会进入第二个提交队列。
+- **Lumen**：沿用 `daily.dateKey`（开局就由每日谜题生成），保留翻转次数、
+  `lumen-dYYYYMMDD`、`lm_daily_`、`lm_local_`、星级与前十名。
+  删除 `ui/daily-board.js` 的独立网络与状态管理；`runtime.js` 编排共享
+  Session，`ui/view.js` 使用共享展示适配器，保留 Lumen 原有排名行样式。
+  静态分层测试改为禁止包内第二个榜单网络客户端。
+- **Bond Forge**：五关在开局确定的 `dailyStartedAt` 生成，
+  `bond-forge-dYYYYMMDD` 按全程总拖拽计分；`bf_daily_` 是原有完成标记，
+  **不是**离线排行榜或成功回执。保留前二十名和沙盒不上传的资格条件。
+
+游戏各自持有计分、存档、资格、Analytics、结算布局、DOM 排行行样式和翻译；
+共享层持有网络、回执、持久重试、请求过期隔离和通用状态呈现。
+重连、跨日与刷新后只能用旧队列或 Session 中原始身份，不能从当前日期、昵称或分数
+重建旧 POST。GET 成功不表示 POST 成功；只有队列真正持久化才可显示 `queued`。
+
 ## 回归门禁
 
 - `verify-scoreboard-submission`：远端确认、精确 receipt、队列清理失败、容量与过期、
   存储失败后的内存恢复、重复 publish、并发重试、关闭后确认、旧 GET 与 unsupported。
 - `verify-scoreboard-embedded-batch`：本批四页的 HTTP 500、存储失败、联网重试、
   冻结成绩、跨日与旧 GET、开局恢复及 Silk Dew 三星资格门槛；在源码和 dist 中运行。
+- `verify-scoreboard-daily-batch`：6c-2b 四页的 HTTP 500、网络失败、存储拒绝、
+  GET 成功但 POST 失败、跨 UTC+8 午夜、原始昵称/分数、重复结算、旧 GET、
+  部分成功和并发在线恢复、开局恢复与非每日模式；source 和 dist 都运行。
 - `verify-scoreboard-results`：真实 Echo / Maxwell 页面注入 HTTP 500、网络错误与存储失败；
   校验每日 / 战役可见提示、联网事件新增 POST、冻结原结果、重复结算、旧响应和启动重试。
   已接逐页过滤并进入 `DIST_SUITE`。

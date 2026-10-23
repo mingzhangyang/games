@@ -3,6 +3,8 @@
  * 只接收数据、只回调意图（bind 的 handlers），不读写对局状态、不碰存储与网络。
  */
 import { renderSideRecords } from '../../../platform/side-records.js';
+import { renderEmbeddedScoreResult, resetEmbeddedScoreResult } from '../../../platform/scoreboard-result-view.js';
+import { readLocalBoard } from '../systems/records.js';
 import { ICONS } from '../../../platform/icons.js';
 import { CHAPTERS, LEVELS_PER_CHAPTER, LUMEN_LEVELS } from '../model/levels.js';
 
@@ -190,8 +192,47 @@ export class LumenView {
         this.el.over?.classList.remove('hidden');
     }
 
-    isDailyResultOpen() {
-        return !!this.el.over && !this.el.over.classList.contains('hidden');
+    /** Only the shared adapter interprets POST / GET states; Lumen owns row layout. */
+    resetScoreResult(session) {
+        resetEmbeddedScoreResult(session, this.el);
+    }
+
+    renderScoreResult(result) {
+        renderEmbeddedScoreResult({
+            result, el: this.el, text: key => this.t[key],
+            renderBoard: rows => this.renderLeaderboardRows(
+                rows.length ? rows : readLocalBoard(result.entry.date),
+            ),
+            readLocalBoard: game => readLocalBoard(game.slice(-8)),
+        });
+    }
+
+    renderLeaderboardRows(entries) {
+        const list = this.el['lb-list'];
+        if (!list) return;
+        list.replaceChildren();
+        if (!entries.length) {
+            const empty = document.createElement('div');
+            empty.className = 'lm-lb-empty game-lb-empty';
+            empty.textContent = this.t.noScores;
+            list.appendChild(empty);
+            return;
+        }
+        entries.slice(0, 10).forEach((entry, i) => {
+            const row = document.createElement('div');
+            row.className = 'lm-lb-row game-lb-row' + (i < 3 ? ` lm-lb-top${i + 1}` : '');
+            const rank = document.createElement('span');
+            rank.className = 'lm-lb-rank game-lb-rank';
+            rank.textContent = `${i + 1}.`;
+            const name = document.createElement('span');
+            name.className = 'lm-lb-name game-lb-name';
+            name.textContent = entry.name;
+            const score = document.createElement('span');
+            score.className = 'lm-lb-score game-lb-score';
+            score.textContent = String(entry.score);
+            row.append(rank, name, score);
+            list.appendChild(row);
+        });
     }
 
     renderMute(muted) {

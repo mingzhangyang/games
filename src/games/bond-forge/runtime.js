@@ -28,7 +28,8 @@ import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
 import { storageSet } from '../../platform/safe-storage.js';
 import { track } from '../../platform/analytics.js';
 import { todayKey, todayKeyDisplay, dailyKey, hashStringFNV, mulberry32 } from '../../platform/daily.js';
-import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
+import { createScoreboardResultSession, retryScoreResults } from '../../platform/scoreboard-submission.js';
+import { renderEmbeddedScoreResult, resetEmbeddedScoreResult } from '../../platform/scoreboard-result-view.js';
 import { ICONS } from '../../platform/icons.js';
 import { LANGUAGES } from './i18n.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
@@ -239,6 +240,10 @@ class BondForgeGame {
         this.dailyTotalDrags = 0;
         this.dailyStartedAt = 0;
         this.dailyDateKey = '';
+        this.scoreRunId = 0;
+        this.resultSession = createScoreboardResultSession({
+            onChange: result => this.renderScoreResult(result),
+        });
 
         this.time = 0;
         this.lastFrame = 0;
@@ -246,6 +251,7 @@ class BondForgeGame {
         this.clearTimer = 0;
 
         this.bindElements();
+        this.el['lb-status']?.setAttribute('role', 'status');
         this.initUI();
         this.applyLanguage();
 
@@ -257,11 +263,16 @@ class BondForgeGame {
             this.lang = getLang();
             this.applyLanguage();
         });
+        window.addEventListener('online', () => {
+            if (this.resultSession.getState()) void this.resultSession.refresh();
+            else void retryScoreResults();
+        });
 
         this.resize();
         this.bindPointer();
         this.loop = this.loop.bind(this);
         this.rafId = requestAnimationFrame(this.loop);
+        void retryScoreResults();
     }
 
     /* ---------------------- 文案访问 ---------------------- */
@@ -509,6 +520,7 @@ class BondForgeGame {
         this.renderCheatSheet();
         this.renderSideRecords();
         this.updateHud();
+        this.renderScoreResult();
         document.documentElement.lang = this.lang === 'zh' ? 'zh-CN' : 'en';
     }
 
@@ -698,6 +710,8 @@ class BondForgeGame {
      *    守的是不同的路径（前者守正常成键，后者守任何其他入口的误调用）。
      */
     startSandbox() {
+        resetEmbeddedScoreResult(this.resultSession, this.el);
+        this.scoreRunId++;
         this.mode = 'sandbox';
         this.level = null;
         this.levelIndex = -1;
@@ -729,6 +743,8 @@ class BondForgeGame {
             this.toast(this.t('levelSelect'));
             return;
         }
+        resetEmbeddedScoreResult(this.resultSession, this.el);
+        this.scoreRunId++;
         let index = 0;
         if (typeof ref === 'number') {
             index = clamp(ref, 0, LEVELS.length - 1);
@@ -833,6 +849,7 @@ class BondForgeGame {
     }
 
     toMenu() {
+        resetEmbeddedScoreResult(this.resultSession, this.el);
         this.pauseOwnership?.invalidate();
         this.state = 'menu'; this.contextualRestart?.sync();
         this.isPaused = false; this.contextualRestart?.sync();
@@ -851,7 +868,7 @@ class BondForgeGame {
     }
 
     finishDaily() {
-        if (this.state === 'over') return;
+        if (this.mode !== 'daily' || this.state === 'over') return;
         this.cancelClearPreview();
         if (this.el['clear']) this.el['clear'].classList.add('hidden');
         this.state = 'over'; this.contextualRestart?.sync();
@@ -867,7 +884,11 @@ class BondForgeGame {
         if (this.el['over-score']) this.el['over-score'].textContent = String(total);
         if (this.el['over-sub']) this.el['over-sub'].textContent = `${this.t('drags')}: ${total}`;
         if (this.el['over']) this.el['over'].classList.remove('hidden');
-        this.submitDailyScore();
+        void this.resultSession.publish({
+            runId: this.scoreRunId, date,
+            game: dailyKey(DAILY_LEADERBOARD_KEY_PREFIX, this.dailyStartedAt),
+            name: ensurePlayerName(), score: total,
+        });
     }
 
     /**
@@ -959,58 +980,40 @@ class BondForgeGame {
         return 1;
     }
 
-    submitDailyScore() {
-        if (this.mode !== 'daily') return;
-        const total = this.dailyCourse.length ? this.dailyTotalDrags : 0;
-        const startedAt = this.dailyStartedAt || Date.now();
-        submitScore({
-            game: dailyKey(DAILY_LEADERBOARD_KEY_PREFIX, startedAt),
-            name: ensurePlayerName(),
-            score: total,
-        }).then(ok => {
-            if (ok) this.refreshLeaderboard(startedAt);
-            else this.setLbStatus(this.t('lbOffline'));
-        }).catch(() => this.setLbStatus(this.t('lbOffline')));
+    renderScoreResult(result = this.resultSession.getState()) {
+        renderEmbeddedScoreResult({
+            result, el: this.el, text: key => this.t(key),
+            renderBoard: rows => this.renderBoard(rows),
+            readLocalBoard: () => [], // bf_daily_ is a completion marker, not a local ranking.
+        });
     }
 
-    refreshLeaderboard(startedAt = this.dailyStartedAt || Date.now()) {
+    renderBoard(rows) {
         const list = this.el['lb-list'];
         if (!list) return;
-        fetchBoard(dailyKey(DAILY_LEADERBOARD_KEY_PREFIX, startedAt))
-            .then(rows => {
-                list.innerHTML = '';
-                if (!Array.isArray(rows) || !rows.length) {
-                    this.setLbStatus('');
-                    const empty = document.createElement('div');
-                    empty.className = 'bf-lb-empty game-lb-empty';
-                    empty.textContent = this.t('noScores');
-                    list.appendChild(empty);
-                    return;
-                }
-                this.setLbStatus('');
-                rows.slice(0, 20).forEach((r, i) => {
-                    const div = document.createElement('div');
-                    div.className = 'bf-lb-row game-lb-row';
-                    const rank = document.createElement('span');
-                    rank.className = 'bf-lb-rank game-lb-rank';
-                    rank.textContent = String(i + 1);
-                    const name = document.createElement('span');
-                    name.className = 'bf-lb-name game-lb-name';
-                    name.textContent = r.name;
-                    const score = document.createElement('span');
-                    score.className = 'bf-lb-score game-lb-score';
-                    score.textContent = String(r.score);
-                    div.appendChild(rank);
-                    div.appendChild(name);
-                    div.appendChild(score);
-                    list.appendChild(div);
-                });
-            })
-            .catch(() => this.setLbStatus(this.t('lbOffline')));
-    }
-
-    setLbStatus(text) {
-        if (this.el['lb-status']) this.el['lb-status'].textContent = text;
+        list.replaceChildren();
+        if (!rows.length) {
+            const empty = document.createElement('div');
+            empty.className = 'bf-lb-empty game-lb-empty';
+            empty.textContent = this.t('noScores');
+            list.appendChild(empty);
+            return;
+        }
+        rows.slice(0, 20).forEach((entry, i) => {
+            const row = document.createElement('div');
+            row.className = 'bf-lb-row game-lb-row';
+            const rank = document.createElement('span');
+            rank.className = 'bf-lb-rank game-lb-rank';
+            rank.textContent = String(i + 1);
+            const name = document.createElement('span');
+            name.className = 'bf-lb-name game-lb-name';
+            name.textContent = entry.name;
+            const score = document.createElement('span');
+            score.className = 'bf-lb-score game-lb-score';
+            score.textContent = String(entry.score);
+            row.append(rank, name, score);
+            list.appendChild(row);
+        });
     }
 
     copyResult() {

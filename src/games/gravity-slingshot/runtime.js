@@ -19,7 +19,8 @@ import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
 import { storageGet, storageSet } from '../../platform/safe-storage.js';
 import { track } from '../../platform/analytics.js';
 import { todayKey as todayCompact } from '../../platform/daily.js';
-import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
+import { createScoreboardResultSession, retryScoreResults } from '../../platform/scoreboard-submission.js';
+import { renderEmbeddedScoreResult, resetEmbeddedScoreResult } from '../../platform/scoreboard-result-view.js';
 import { ICONS } from '../../platform/icons.js';
 import { updateMoreGames } from '../../platform/more-games.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
@@ -121,6 +122,12 @@ class GravityGame {
         this.dailyBest = Number(storageGet('gd_daily_' + todayCompact())) || 0;
         this.dailyStartedAt = 0;
         this.dailyDateKey = '';
+        this.scoreRunId = 0;
+        this.dailyResultPublished = false;
+        this.resultSession = createScoreboardResultSession({
+            onChange: result => this.renderScoreResult(result),
+        });
+        this.el['lb-status']?.setAttribute('role', 'status');
 
         // 飞行状态
         this.phase = 'menu'; this.contextualRestart?.sync();      // menu | aiming | flying | resolved | holed
@@ -165,6 +172,7 @@ class GravityGame {
 
         this.loadLevelIntoView(LEVELS[0]);
         this.startLoop();
+        void retryScoreResults();
     }
 
     readLang() {
@@ -197,6 +205,7 @@ class GravityGame {
         this.updateSideRecords();
         this.renderLevelGrid();
         this.updateDailyBest();
+        this.renderScoreResult();
         updateMoreGames(this.lang);
     }
 
@@ -249,6 +258,7 @@ class GravityGame {
     /* ── 模式与洞口 ── */
 
     startLevelMode(idx) {
+        this.scoreRunId++;
         this.mode = 'levels';
         this.course = LEVELS;
         this.holeIdx = clamp(idx, 0, LEVELS.length - 1);
@@ -259,6 +269,8 @@ class GravityGame {
     }
 
     startDailyMode() {
+        this.scoreRunId++;
+        this.dailyResultPublished = false;
         this.mode = 'daily';
         this.dailyStartedAt = Date.now();
         this.dailyDateKey = todayCompact(this.dailyStartedAt);
@@ -272,6 +284,7 @@ class GravityGame {
     }
 
     loadHole() {
+        resetEmbeddedScoreResult(this.resultSession, this.el);
         // An epoch invalidates pending automatic transitions from older holes.
         this.holeEpoch = (this.holeEpoch || 0) + 1;
         this.dailyAdvanceReady = null;
@@ -298,6 +311,7 @@ class GravityGame {
     }
 
     enterMenu(show = true) {
+        resetEmbeddedScoreResult(this.resultSession, this.el);
         this.dailyAdvanceReady = null;
         this.pauseOwnership?.invalidate();
         this.phase = 'menu'; this.contextualRestart?.sync();
@@ -414,6 +428,7 @@ class GravityGame {
     }
 
     onCapture() {
+        if (this.phase === 'holed') return;
         this.phase = 'holed'; this.contextualRestart?.sync();
         Sfx.capture();
         vibrate([25, 40, 70]);
@@ -488,7 +503,9 @@ class GravityGame {
     /* ── 每日赛程结算 ── */
 
     finishDaily() {
-        const date = this.dailyDateKey || todayCompact(this.dailyStartedAt || Date.now());
+        if (this.mode !== 'daily' || this.dailyResultPublished) return;
+        this.dailyResultPublished = true;
+        const date = this.dailyDateKey;
         const prev = Number(storageGet('gd_daily_' + date)) || 0;
         const isBest = !prev || this.totalLaunches < prev;
         if (isBest) storageSet('gd_daily_' + date, String(this.totalLaunches));
@@ -506,33 +523,41 @@ class GravityGame {
         if (this.el.over) this.el.over.classList.remove('hidden');
         track('gravity-slingshot', 'finish');
 
-        const game = `gravity-d${date}`;
-        // 网络层收敛到 src/platform/leaderboard.js（false=未进全球榜，走本地兜底）
-        submitScore({ game, name: ensurePlayerName() || 'Anonymous', score: this.totalLaunches }).then(ok => {
-            if (ok) return this.fetchDailyBoard(game, date);
-            this.renderLocalBoard(date);
-            if (this.el['lb-status']) this.el['lb-status'].textContent = this.TEXT.lbOffline;
+        void this.resultSession.publish({
+            runId: this.scoreRunId, date,
+            game: `gravity-d${date}`,
+            name: ensurePlayerName() || 'Anonymous', score: this.totalLaunches,
         });
     }
 
-    localBoardKey(date = this.dailyDateKey || todayCompact()) { return `gd_local_${date}`; }
+    readLocalBoard(game) {
+        const date = game.slice(-8);
+        try {
+            const rows = JSON.parse(storageGet('gd_local_' + date));
+            return Array.isArray(rows) ? rows : [];
+        } catch (e) { return []; }
+    }
 
-    renderLocalBoard(date = this.dailyDateKey || todayCompact()) {
+    renderScoreResult(result = this.resultSession.getState()) {
+        renderEmbeddedScoreResult({
+            result, el: this.el, text: key => this.TEXT[key],
+            renderBoard: rows => this.renderBoard(rows.length ? rows : this.readLocalBoard(result.entry.game)),
+            readLocalBoard: game => this.readLocalBoard(game),
+        });
+    }
+
+    renderBoard(rows) {
         const list = this.el['lb-list'];
         if (!list) return;
-        list.textContent = '';
-        let local = [];
-        try {
-            local = JSON.parse(storageGet(this.localBoardKey(date))) || [];
-        } catch (e) { local = []; }
-        if (!Array.isArray(local) || local.length === 0) {
+        list.replaceChildren();
+        if (!rows.length) {
             const empty = document.createElement('div');
             empty.className = 'gd-lb-empty game-lb-empty';
             empty.textContent = this.TEXT.noScores;
             list.appendChild(empty);
             return;
         }
-        local.slice(0, 10).forEach((s, i) => list.appendChild(this.buildLbRow(i, s)));
+        rows.slice(0, 10).forEach((row, i) => list.appendChild(this.buildLbRow(i, row)));
     }
 
     buildLbRow(rank, entry) {
@@ -551,25 +576,6 @@ class GravityGame {
         return row;
     }
 
-    async fetchDailyBoard(game, date = this.dailyDateKey || todayCompact()) {
-        const list = this.el['lb-list'];
-        const statusEl = this.el['lb-status'];
-        if (!list) return;
-        try {
-            const data = await fetchBoard(game);
-            if (this.phase !== 'holed' || !this.el.over || this.el.over.classList.contains('hidden')) return;
-            list.textContent = '';
-            if (!Array.isArray(data) || data.length === 0) {
-                this.renderLocalBoard(date);
-                return;
-            }
-            data.slice(0, 10).forEach((entry, i) => list.appendChild(this.buildLbRow(i, entry)));
-            if (statusEl) statusEl.textContent = '';
-        } catch (e) {
-            this.renderLocalBoard(date);
-            if (statusEl) statusEl.textContent = this.TEXT.lbOffline;
-        }
-    }
 
     /* ── 粒子 ── */
 
@@ -687,6 +693,10 @@ class GravityGame {
             this.lang = this.readLang();
             this.applyLanguage();
             this.updateHud();
+        });
+        window.addEventListener('online', () => {
+            if (this.resultSession.getState()) void this.resultSession.refresh();
+            else void retryScoreResults();
         });
     }
 
