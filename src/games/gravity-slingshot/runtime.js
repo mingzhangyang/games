@@ -530,10 +530,12 @@ class GravityGame {
         });
     }
 
+    localBoardKey(date) { return `gd_local_${date}`; }
+
     readLocalBoard(game) {
         const date = game.slice(-8);
         try {
-            const rows = JSON.parse(storageGet('gd_local_' + date));
+            const rows = JSON.parse(storageGet(this.localBoardKey(date)));
             return Array.isArray(rows) ? rows : [];
         } catch (e) { return []; }
     }

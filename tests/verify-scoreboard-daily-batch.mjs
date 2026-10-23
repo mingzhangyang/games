@@ -79,7 +79,7 @@ async function fixture(game, post = 'failure', seed = null) {
     });
     await page.evaluateOnNewDocument(({ key, initial }) => {
         localStorage.setItem('site_lang', 'en');
-        localStorage.setItem('player_name', 'Original daily player');
+        localStorage.setItem('player_name', 'Original player');
         if (initial) localStorage.setItem(key, JSON.stringify(initial));
     }, { key: PENDING, initial: seed });
     await page.goto(BASE + '/' + game.id + '.html', { waitUntil: 'load' });
@@ -150,7 +150,7 @@ try {
                 const saved = await queue(page);
                 check(result.date === '20261022' && saved.length === 1
                     && saved[0].game === game.keyPrefix + '-d20261022'
-                    && saved[0].name === 'Original daily player' && saved[0].score === 17,
+                    && saved[0].name === 'Original player' && saved[0].score === 17,
                 game.id + ': cross-midnight result identity and failed POST are durable');
                 check(await page.evaluate(key => localStorage.getItem(key), game.localKey + '20261022') === '17',
                     game.id + ': original local completion record keeps the start date');
@@ -191,9 +191,9 @@ try {
             const { context, page, net, errors } = await fixture(game);
             try {
                 await page.evaluate(key => {
-                    const original = Storage.prototype.setItem;
-                    window.__restoreScoreStorage = () => { Storage.prototype.setItem = original; };
-                    Storage.prototype.setItem = function (name, value) {
+                    const original = window.Storage.prototype.setItem;
+                    window.__restoreScoreStorage = () => { window.Storage.prototype.setItem = original; };
+                    window.Storage.prototype.setItem = function (name, value) {
                         if (name === key) throw new Error('Injected journal quota failure');
                         return original.call(this, name, value);
                     };
@@ -229,11 +229,12 @@ try {
                     g[game.finish]();
                 }, game);
                 check(net.posts.length === 1 && net.posts[0].game === original.game
-                    && net.posts[0].name === 'Original daily player' && net.posts[0].score === 31,
+                    && net.posts[0].name === 'Original player' && net.posts[0].score === 31,
                 game.id + ': repeated settlement cannot submit again or rewrite the POST');
                 net.post = 'success';
                 await net.heldPosts[0].respond({ status: 200, headers, body: '{}' });
                 await waitStatus(page, game, 'Score uploaded');
+                await settled(page, game); // Finish its GET before intercepting the next run.
 
                 net.get = 'hold';
                 await finish(page, game, 13);
