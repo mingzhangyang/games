@@ -163,7 +163,13 @@ function checkScaffoldCli() {
     ];
     const invalid = fresh('cli-custom-drawer', { shell: { drawer: { idBase: 'legacyStats' } } });
     const emptyFooter = fresh('cli-empty-footer', { ...plain,
-        shell: { footer: { key: null, text: ' \n ' } } });
+        shell: { footer: { key: null, touchKey: null, text: ' \n ' } } });
+    const touchOnlyFooters = [
+        fresh('cli-static-implicit-touch', { ...plain,
+            shell: { footer: { key: null, text: 'Static help.' } } }),
+        fresh('cli-static-explicit-touch', { ...plain,
+            shell: { footer: { key: null, touchKey: 'touchHelp', text: 'Static help.' } } }),
+    ];
     const invoke = game => execFileSync(process.execPath,
         [join(temp, 'tools/generators/new-game.mjs'), game.id], { stdio: 'pipe', timeout: 10000 });
     try {
@@ -173,7 +179,8 @@ function checkScaffoldCli() {
             copyFileSync(join(ROOT, name), join(temp, name));
         }
         writeFileSync(join(temp, 'package.json'), '{"type":"module"}');
-        writeFileSync(join(temp, 'games.config.json'), JSON.stringify({ games: [...cases, invalid, emptyFooter] }));
+        writeFileSync(join(temp, 'games.config.json'),
+            JSON.stringify({ games: [...cases, invalid, emptyFooter, ...touchOnlyFooters] }));
         for (const game of cases) {
             invoke(game);
             const source = readFileSync(join(temp, game.entry), 'utf8');
@@ -234,7 +241,11 @@ function checkScaffoldCli() {
             'new games cannot silently choose IDs unsupported by the drawer adapter');
         assert.throws(() => invoke(emptyFooter), error => /non-empty static footer text/.test(String(error.stderr)),
             'new games cannot generate an empty footer without an i18n writer');
-        for (const game of [invalid, emptyFooter]) {
+        for (const game of touchOnlyFooters) {
+            assert.throws(() => invoke(game), error => /static footer requires touchKey: null/.test(String(error.stderr)),
+                game.id + ': a touch-only key has no shared i18n binding');
+        }
+        for (const game of [invalid, emptyFooter, ...touchOnlyFooters]) {
             for (const name of [game.href, game.entry, 'css/' + game.id + '.css']) {
                 assert(!existsSync(join(temp, name)), 'invalid scaffold is rejected before writing ' + name);
             }
@@ -258,6 +269,34 @@ assert.equal(count(installed, fonts), 1, 'font resources are neither lost nor du
 assert(installed.includes(customContent), 'game-owned markup survives installation byte for byte');
 assert.equal(transformShellRegions(installed, fixture).src, installed, 'generation is idempotent after marker installation');
 for (const name of Object.keys(RENDERERS)) region(installed, name, fixture);
+const stylesEnd = '    <!-- registry:end stylesheets -->';
+const swallowedFonts = withFonts.replace(stylesEnd + '\n' + fonts, fonts + '\n' + stylesEnd);
+assert.throws(() => transformShellRegions(swallowedFonts, fixture), /unrelated content/,
+    'moving a same-parent closing marker past external resources must not consume them');
+for (const [name, extra] of [
+    ['footer', '<p>Page-owned keyboard notes.</p>'],
+    ['stats-drawer', '<section>Page-owned drawer notes.</section>'],
+    ['tail-scripts', '<script src="/page-owned.js" defer></script>'],
+]) {
+    const end = '<!-- registry:end ' + name + ' -->';
+    const offset = scaffold.indexOf(end);
+    const indent = scaffold.slice(scaffold.lastIndexOf('\n', offset) + 1, offset);
+    const corrupted = scaffold.replace(indent + end, indent + extra + '\n' + indent + end);
+    assert.throws(() => transformShellRegions(corrupted, fixture), /unrelated content/,
+        'marked ' + name + ' cannot consume a page-owned sibling without an ID');
+}
+const updatedFixture = { ...fixture, entry: 'src/games/shell-fixture/new-entry.js',
+    scores: { ui: 'dialog' }, shell: {
+        styles: { page: 'css/renamed-shell.css', scienceShowcase: true, stageStatus: false },
+        footer: { text: 'Updated instructions.' },
+    } };
+const updated = transformShellRegions(installed, updatedFixture).src;
+for (const name of Object.keys(RENDERERS)) region(updated, name, updatedFixture);
+assert(updated.includes(fonts), 'valid registry updates preserve adjacent external resources');
+assert(updated.includes(customContent), 'valid registry updates preserve game-owned markup');
+assert(!updated.includes('src="' + fixture.entry + '"'), 'registry updates replace the previous module entry');
+assert.equal(transformShellRegions(updated, updatedFixture).src, updated,
+    'supported registry updates remain generation-stable');
 for (const name of Object.keys(RENDERERS)) {
     const begin = '<!-- registry:begin ' + name + ' -->';
     const end = '<!-- registry:end ' + name + ' -->';

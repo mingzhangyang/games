@@ -95,7 +95,24 @@ function markerRange(source, nodes, name, label) {
     const line = lineIndent(source, begin.startOffset, label);
     const closing = lineIndent(source, end.startOffset, label);
     if (closing.indent !== line.indent) throw new Error(`${label}: region marker indentation differs`);
-    return { ...line, end: end.endOffset, innerStart: begin.endOffset, innerEnd: end.startOffset };
+    const siblings = begins[0].parentNode.childNodes;
+    return { ...line, end: end.endOffset, innerStart: begin.endOffset, innerEnd: end.startOffset,
+        nodes: siblings.slice(siblings.indexOf(begins[0]) + 1, siblings.indexOf(ends[0])) };
+}
+
+function validateMarkedOwnership(marker, targets, name, label) {
+    const content = marker.nodes.filter(node => node.nodeName !== '#comment'
+        && !(node.nodeName === '#text' && !node.value.trim()));
+    // A moved boundary must not claim unrelated, ID-less page resources. An
+    // existing entry may have a different URL from the new registry value, so
+    // recognize its stable three-script structure instead of the new URL.
+    const owned = name === 'tail-scripts'
+        ? content.length === 3 && content.every(node => node.tagName === 'script')
+            && attr(content[0], 'type') === 'module' && !!attr(content[0], 'src')?.trim()
+            && attr(content[1], 'src') === '/analytics.js'
+            && attr(content[2], 'src') === '/sw-register.js'
+        : content.every(node => targets.includes(node));
+    if (!owned) throw new Error(`${label}: unrelated content interrupts the shell region`);
 }
 
 function legacyRange(source, targets, name, label) {
@@ -139,6 +156,7 @@ export function transformShellRegions(source, game) {
             const loc = node.sourceCodeLocation;
             return !loc || loc.startOffset < marker.innerStart || loc.endOffset > marker.innerEnd;
         })) throw new Error(`${label}: shell content exists outside its generated region`);
+        if (marker) validateMarkedOwnership(marker, targets, name, label);
         const range = marker || legacyRange(source, targets, name, label);
         const content = render(game, range.indent).replace(/\r?\n/g, newline);
         if (!marker) {

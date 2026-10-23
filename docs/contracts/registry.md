@@ -164,10 +164,11 @@ caps 是校验器与迁移脚本的唯一判据：
 
 `shell.drawer.idBase` 用于保留既有页面的历史 ID；这些页面沿用自己的运行时适配器。
 新游戏 CLI `tools/generators/new-game.mjs` 使用共享运行时的 `<prefix>Stats` 约定，因此拒绝与此不同的 `idBase` 覆盖，避免生成一个无法绑定的统计入口；这不影响现有 tetris 的特殊 ID。
-CLI 按声明的页脚 `key` / `touchKey` 生成默认双语提示词，并保留已有的标题等基本词条；`key: null` 时必须提供非空静态 `text`，因为新脚手架没有游戏自有的文案写入者。
+CLI 按声明的页脚 `key` / `touchKey` 生成默认双语提示词，并保留已有的标题等基本词条；`key: null` 时必须显式设置 `touchKey: null` 并提供非空静态 `text`。共享 binder 只把 `data-i18n-touch` 用作 `data-i18n` 的替代文案，不支持单独的触屏绑定；CLI 不会改变省略 `touchKey` 时默认使用 `hintTouch` 的 registry 语义。
 
 维护时修改 registry 或共享模板后运行 `npm run gen`，不要手改区域内产物。
 首次安装哨兵与后续替换都只接管完整连续节点，不把手写内容夹在拆开的起止标签之间。
+已有标记也必须逐个检查区间内顶层节点的归属；结束标记误包外部字体、preconnect 或其他页面自有节点时，生成器拒绝替换。页尾按“模块入口、analytics、sw-register”三个脚本的结构识别原入口，允许 registry 正常变更 `entry`，但不吞并额外脚本。
 写盘前先完成所有页面的渲染和保护检查：原 id 保留、最终 id 唯一、ARIA 引用能定位实际节点；
 任一页失败都停止本次产物写入。页脚仍是 shell 的直接子节点，固定定位的抽屉仍在 shell 外，
 运行时的面板搬移、暂停和焦点所有权不变。

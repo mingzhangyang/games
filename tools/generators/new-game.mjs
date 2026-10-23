@@ -46,6 +46,11 @@ const footerTouchKey = footer.touchKey === undefined ? 'hintTouch' : footer.touc
 if (footerKey === null && (typeof footer.text !== 'string' || !footer.text.trim())) {
     throw new Error('new-game requires non-empty static footer text when its i18n key is null');
 }
+// Touch copy is an alternative for a bound i18n key, never a standalone binding.
+// Preserve the registry default by requiring static footers to opt out explicitly.
+if (footerKey === null && footerTouchKey !== null) {
+    throw new Error('new-game static footer requires touchKey: null');
+}
 const textTables = {
     en: { title: game.name.en, titleZh: game.name.zh, stats: 'Stats', close: 'Close' },
     zh: { title: game.name.zh, titleZh: game.name.en, stats: '统计', close: '关闭' },
