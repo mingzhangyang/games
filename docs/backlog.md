@@ -48,8 +48,8 @@ display:contents 透传 + sr-only h1，横屏掌机形态保持覆盖式 HUD 不
   加了 `hintTouch`，`(pointer: coarse)` 时由共享 binder 的 `data-i18n-touch` 或 `touchCopy()` 切换；
   `tests/verify-touch-hints.mjs` 对全部页面断言触屏提示不含键鼠字样。仍有：loop-jail 英文触屏提示在 ≤390px
   被省略号截断（原有文案，未改）。
-- **Sword Flight 顶栏印章「九天问道」英文下不翻译**：可能是有意的品牌印章，需产品确认后再定。
-- **Tower Defense 竖屏顶栏 HUD 三行堆叠**：竖屏本就由旋转提示接管，仅视觉。
+- ✅ 已修（2026-10-13，局内状态归舞台，#140）：**Sword Flight「九天问道」印章英文下不翻译**。印章移到舞台状态行 `#sf-mode-badge`，按当前玩法与语言显示（`render/hud.js` `refreshModeBadge`）。
+- ✅ 已修（2026-10-22，顶栏第 2 步 B 批 + 第 5 步 b）：**Tower Defense 竖屏顶栏 HUD 三行堆叠**。HUD 并进底部战术条，竖屏顶栏单行显示游戏名、Speed / Pause / 「⋯」/ Sound。
 
 ---
 

@@ -181,7 +181,9 @@ Stats/Pause participate in the mobile two-action budget.
 ```
 
 This optional object belongs under `chrome`. Shared defaults cover other pages;
-only real priority exceptions are declared. `maxVisibleActions` defaults to 2,
+only real priority exceptions are declared. Keep the contextual `restart` visible
+(it appears only during play, so overflowing it makes More pop in mid-run and shift
+its neighbours) and overflow an always-available action such as `leaderboard`. `maxVisibleActions` defaults to 2,
 with allowed integer values 0..2. Unknown/unused roles, Sound priorities, and
 invalid priorities fail generation. The serializer emits both representations;
 CSS switches at 480px and the shared controller mirrors availability, never game

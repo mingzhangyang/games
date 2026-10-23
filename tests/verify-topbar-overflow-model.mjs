@@ -7,10 +7,12 @@ import { planMobileTopbar, renderTopbar, expandTopbarChrome } from '../src/platf
 const expected = {
     'tower-defense': ['range', 'stats'],
     'needle-awn': ['leaderboard'],
-    'carrot-pull': ['restart'],
-    'shadow-loom': ['restart'],
-    'loop-jail': ['restart'],
-    'sudoku-mist': ['restart'],
+    // Restart stays in the row: it appears only once a run starts, so putting it
+    // behind More would make More appear mid-game and shift its neighbours.
+    'carrot-pull': ['leaderboard'],
+    'shadow-loom': ['leaderboard'],
+    'loop-jail': ['leaderboard'],
+    'sudoku-mist': ['leaderboard'],
 };
 const games = registry.withCap('topbar');
 assert.deepEqual(games.filter(g => planMobileTopbar(g).overflow.length).map(g => g.id).sort(),

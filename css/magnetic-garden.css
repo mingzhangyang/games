@@ -176,14 +176,15 @@
  }
 
  /* Short portrait phones: tighten the chrome around the board so six-row gardens and their
-    controls share one screen (375×553, 320×568) instead of scrolling for every confirmation. */
+    controls share one screen (375×553, 320×568) instead of scrolling for every confirmation.
+    The 52px topbar (chrome step 3) left a six-row board at its 44px floor 4–6px short. */
  @media (width <600px) and (height <=720px) {
-  .mg-play { padding:8px 12px 6px; gap:8px; }
+  .mg-play { padding:6px 12px 4px; gap:6px; }
   .mg-hud { padding:6px 10px; }
   #mg-level-title { font-size:19px; margin-top:2px; }
   .mg-move-counter { padding:4px 10px; }
   #mg-moves { font-size:22px; }
-  .mg-tools { padding:8px; }
+  .mg-tools { padding:6px; }
   .mg-instruction { min-height:0; padding:5px 0 6px; }
   .mg-inventory-magnet { width:44px; height:44px; padding:3px; }
  }
