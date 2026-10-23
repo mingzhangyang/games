@@ -21,6 +21,7 @@ const TEXT = {
         reload: 'Refresh', board: 'Leaderboard',
         pendingWorker: 'Rankings for this game are not live yet.',
         queued: 'Score saved on this device; upload will retry when rankings are available.',
+        otherQueued: 'Other saved scores are still waiting to upload.',
         notSaved: 'Score was not uploaded or saved on this device.',
     },
     zh: {
@@ -33,6 +34,7 @@ const TEXT = {
         reload: '刷新', board: '榜单',
         pendingWorker: '本游戏排行榜尚未上线。',
         queued: '成绩已暂存在本设备；排行榜可用后将重试上传。',
+        otherQueued: '仍有其他已暂存的成绩等待上传。',
         notSaved: '成绩未能上传，也未能保存在本设备。',
     },
 };
@@ -115,27 +117,41 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
     let requestId = 0;
     let readState = 'idle';
     const notices = new Map();
+    const receipts = new Map();
     const boardFor = id => boards.find(board => board.id === id);
     const resolvedKey = board => typeof board.key === 'function' ? board.key() : board.key;
     const setStatus = message => { status.textContent = message; };
 
+    function rememberReceipt(entry) {
+        // Keep the latest acknowledgement and any whose local cleanup failed.
+        // Historical retries must not become this page's current result notice.
+        const previous = receipts.get(entry.game) || [];
+        receipts.set(entry.game, [...previous.filter(item =>
+            hasPendingScore(item) && !sameScoreEntry(item, entry)), entry]);
+    }
+
     function renderStatus() {
         const key = resolvedKey(boardFor(select.value));
         const notice = notices.get(key);
+        const accepted = receipts.get(key) || [];
+        const queued = Math.max(0, pendingScoreCount(key) - accepted.filter(hasPendingScore).length);
         const state = notice?.status === 'queued' && !hasPendingScore(notice.entry) ? 'notSaved' : notice?.status;
-        const submission = notice ? text(state) : (pendingScoreCount(key) ? text('queued') : '');
+        const ownsQueued = notice && hasPendingScore(notice.entry)
+            && !accepted.some(entry => sameScoreEntry(entry, notice.entry));
+        const submission = notice ? text(state) : (queued ? text('queued') : accepted.length ? text('sent') : '');
+        const remaining = notice && queued > Number(ownsQueued) ? text('otherQueued') : '';
         const reading = readState === 'loading' ? text('loading')
             : readState === 'unsupported' ? text('pendingWorker')
                 : readState === 'offline' ? text('offline') : '';
-        setStatus([submission, reading].filter(Boolean).join(' '));
+        setStatus([submission, remaining, reading].filter(Boolean).join(' '));
     }
 
     // Keep the latest result's notice separate from old entries on the same board.
     // This also observes startup/online retries initiated outside this dialog.
     const stopUploads = subscribePendingScoreUploads(entry => {
+        rememberReceipt(entry);
         const notice = notices.get(entry.game);
-        if (notice && !sameScoreEntry(notice.entry, entry)) return;
-        notices.set(entry.game, { entry, status: 'sent' });
+        if (notice && sameScoreEntry(notice.entry, entry)) notice.status = 'sent';
         if (dialog.open) renderStatus();
     });
 
@@ -298,14 +314,18 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
         const resolved = key || resolvedKey(board);
         const name = getPlayerName() || ensurePlayerName();
         const entry = Object.freeze({ game: resolved, name, score });
-        const notice = { entry, status: 'submitting' };
+        const alreadySent = receipts.get(resolved)?.some(item => sameScoreEntry(item, entry));
+        const notice = { entry, status: alreadySent ? 'sent' : 'submitting' };
         notices.set(resolved, notice);
         if (dialog.open) renderStatus();
         const receipt = await submitScoreResult(entry, { journal });
+        if (receipt.status === 'sent') rememberReceipt(entry);
         const current = notices.get(resolved);
         if (current === notice || (current?.status === 'sent' && sameScoreEntry(current.entry, entry))) {
             if (current.status !== 'sent') current.status = receipt.status;
             if (dialog.open && resolvedKey(boardFor(select.value)) === resolved) void refresh();
+        } else if (dialog.open) {
+            renderStatus();
         }
         return receipt.status === 'sent'; // Only remote acknowledgement counts as success.
     }

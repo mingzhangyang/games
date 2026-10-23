@@ -48,6 +48,7 @@ const DIST_SUITE = new Set([
     'verify-chrome', 'verify-theme', 'verify-desktop-frame', 'verify-stats-drawer', 'verify-immersive',
     'verify-start-menus', 'smoke-index', 'smoke-carrot-pull', 'smoke-needle-awn', 'smoke-tower-defense',
     'smoke-sword-flight', 'verify-topbar-overflow', 'verify-contextual-restart', 'verify-scoreboard-results',
+    'smoke-scoreboard-dialog',
 ]);
 // Approximate CI seconds of the slowest browser steps. Only used to balance --shard; a stale or
 // missing entry costs balance, never coverage. Unlisted browser steps count as DEFAULT_WEIGHT.

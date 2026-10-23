@@ -44,6 +44,148 @@ async function heldMovementReleased(page, gameId) {
     }, gameId);
 }
 
+// Shadow Loom exposes the same shipped controller in source and built pages.
+// Reloads deliberately discard its in-memory notices: recovery must be based on
+// exact POST receipts, without allowing one success to hide another saved score.
+async function checkPendingReceipts(page, network, errors) {
+    const pendingKey = 'scoreboard:pending:v1';
+    const boardId = await page.$eval('.scoreboard-select', select => select.options[0].value);
+    const key = 'shadow-loom-' + boardId;
+    const name = 'Receipt tester';
+    const originalPostStatus = network.postStatus;
+    const check = (condition, message, detail) => {
+        if (!condition) errors.push('shadow-loom: ' + message + ' — ' + JSON.stringify(detail));
+    };
+    const entry = score => ({ game: key, name, score });
+    const reload = async scores => {
+        await page.evaluate(({ pendingKey, name, entries }) => {
+            localStorage.setItem('player_name', name);
+            localStorage.setItem(pendingKey, JSON.stringify(entries.map(item => ({ ...item, at: Date.now() }))));
+        }, { pendingKey, name, entries: scores.map(entry) });
+        await page.reload({ waitUntil: 'domcontentloaded', timeout: 45000 });
+        await page.waitForFunction(() => !!window.slGame?.scoreboard, { timeout: 18000 });
+    };
+    const refresh = async () => {
+        await page.evaluate(async id => {
+            const controller = window.slGame.scoreboard;
+            controller.open(id);
+            // Supersede open()'s automatic read with a public, awaitable refresh.
+            // Its POST retries finish before assertions; no source imports or sleeps.
+            await controller.refresh();
+        }, boardId);
+        await page.waitForFunction(() =>
+            document.querySelector('dialog[data-scoreboard-dialog] .game-lb-name')?.textContent === 'Test Player',
+        { timeout: 6000 });
+    };
+    const read = () => page.evaluate(pendingKey => {
+        const dialog = document.querySelector('dialog[data-scoreboard-dialog]');
+        const status = dialog.querySelector('.scoreboard-status');
+        return { open: dialog.open, visible: status.checkVisibility(), text: status.textContent,
+            queue: JSON.parse(localStorage.getItem(pendingKey) || '[]') };
+    }, pendingKey);
+    const queued = state => state.visible && /saved on this device.*retry|Other saved scores are still waiting to upload\./i.test(state.text);
+    const sent = state => state.visible && state.text.includes('Score submitted.');
+    const uploaded = score => network.posts.some(item => item.status === 200
+        && item.entry.game === key && item.entry.name === name && item.entry.score === score);
+
+    try {
+        // Both entries survive a real reload, so there is no live submit notice.
+        // A receipt for the first one must not hide the second one's failed POST.
+        network.postStatus = item => item.score === 101 ? 200 : 500;
+        await reload([101, 102]);
+        await refresh();
+        const partial = await read();
+        check(uploaded(101) && network.posts.some(item => item.status === 500 && item.entry.score === 102)
+            && partial.queue.length === 1 && partial.queue[0].score === 102,
+        'reloaded two-score fixture did not retain exactly the failed score', partial);
+        check(partial.open && queued(partial),
+            'one recovered receipt hid another pending score on the same board', partial);
+
+        network.postStatus = () => 200;
+        await reload([201, 202]);
+        await refresh();
+        const complete = await read();
+        check(uploaded(201) && uploaded(202) && complete.queue.length === 0
+            && !queued(complete) && !complete.text.includes('not uploaded'),
+        'fully recovered board still claims an upload is pending', complete);
+
+        // No live submit notice survives this reload. The retry's exact receipt
+        // must still count as success when local cleanup throws and leaves the
+        // acknowledged score in storage.
+        network.postStatus = () => 200;
+        await reload([301]);
+        await page.evaluate(pendingKey => {
+            window.__scoreboardOriginalSetItem = window.Storage.prototype.setItem;
+            window.Storage.prototype.setItem = function (key, value) {
+                if (key === pendingKey) throw new window.DOMException('Test quota', 'QuotaExceededError');
+                return window.__scoreboardOriginalSetItem.call(this, key, value);
+            };
+        }, pendingKey);
+        try {
+            network.postStatus = () => 200;
+            await refresh();
+            const acknowledged = await read();
+            check(uploaded(301) && acknowledged.queue.length === 1 && acknowledged.queue[0].score === 301
+                && sent(acknowledged) && !queued(acknowledged) && !acknowledged.text.includes('not uploaded'),
+            'failed local cleanup overrode an exact successful receipt', acknowledged);
+        } finally {
+            await page.evaluate(() => { window.Storage.prototype.setItem = window.__scoreboardOriginalSetItem; });
+        }
+
+        network.postStatus = item => item.score === 402 ? 200 : 500;
+        await reload([401]);
+        const current = await page.evaluate(({ boardId, score }) =>
+            window.slGame.scoreboard.submit({ boardId, score }), { boardId, score: 402 });
+        await refresh();
+        const mixed = await read();
+        check(current === true && uploaded(402) && mixed.queue.length === 1 && mixed.queue[0].score === 401
+            && sent(mixed) && queued(mixed),
+        'current success and another pending score were not both visible', mixed);
+        const postsBeforeLanguageChange = network.posts.length;
+        await page.evaluate(() => {
+            localStorage.setItem('site_lang', 'zh');
+            window.dispatchEvent(new Event('site-settings:changed'));
+        });
+        const chinese = await read();
+        check(chinese.visible && chinese.text.includes('成绩已提交')
+            && chinese.text.includes('仍有其他已暂存的成绩等待上传。')
+            && JSON.stringify(chinese.queue) === JSON.stringify(mixed.queue),
+        'mixed receipt and pending state did not survive Chinese translation', chinese);
+        await page.evaluate(() => {
+            localStorage.setItem('site_lang', 'en');
+            window.dispatchEvent(new Event('site-settings:changed'));
+        });
+        const restored = await read();
+        check(sent(restored) && queued(restored) && network.posts.length === postsBeforeLanguageChange,
+            'language-only change resubmitted a score or lost mixed upload feedback', restored);
+
+        // A genuinely new POST for the same acknowledged identity can fail.
+        // Its return value describes that attempt; the known receipt still owns
+        // the visible result and must not regress to queued/notSaved.
+        network.postStatus = () => 500;
+        const postsBeforeRepeat = network.posts.length;
+        const repeated = await page.evaluate(({ boardId, score }) =>
+            window.slGame.scoreboard.submit({ boardId, score }), { boardId, score: 402 });
+        await refresh();
+        const repeatedState = await read();
+        const repeatedPosts = network.posts.slice(postsBeforeRepeat);
+        check(repeated === false && repeatedPosts.some(item => item.entry.game === key
+            && item.entry.name === name && item.entry.score === 402 && item.status === 500)
+            && repeatedPosts.every(item => item.status === 500),
+        'same-score repeat did not exercise a new failed POST without another success', repeatedPosts);
+        check(sent(repeatedState) && queued(repeatedState) && !repeatedState.text.includes('not uploaded'),
+            'a failed same-score repeat replaced its previously acknowledged receipt', repeatedState);
+    } finally {
+        network.postStatus = originalPostStatus;
+        await page.evaluate(pendingKey => {
+            if (window.__scoreboardOriginalSetItem) window.Storage.prototype.setItem = window.__scoreboardOriginalSetItem;
+            localStorage.removeItem(pendingKey);
+            document.querySelector('dialog[data-scoreboard-dialog]')?.close();
+        }, pendingKey);
+        await page.waitForFunction(() => !window.slGame.pauseOwnership.isHeld('ranking'), { timeout: 6000 });
+    }
+}
+
 const BASE = process.argv.find(arg => arg.startsWith('http')) || 'http://127.0.0.1:8899';
 const games = registry.withCap('leaderboard').filter(g => g.scores?.ui === 'dialog')
     .filter(game => keepPage(game.href));
@@ -66,17 +208,35 @@ try {
         const pageErrors = [];
         const requests = [];
         let scoreWorkerReady = true;
+        const network = { posts: [], postStatus: () => scoreWorkerReady ? 200 : 400 };
+        const cors = {
+            'access-control-allow-origin': '*',
+            'access-control-allow-methods': 'GET, POST, OPTIONS',
+            'access-control-allow-headers': 'content-type',
+        };
         page.on('pageerror', err => pageErrors.push(String(err.message || err)));
         await page.setRequestInterception(true);
         page.on('request', request => {
             const url = request.url();
             if (url.startsWith('https://game-scores.orangely.workers.dev/scores')) {
+                if (request.method() === 'OPTIONS') {
+                    void request.respond({ status: 204, headers: cors });
+                    return;
+                }
+                if (request.method() === 'POST') {
+                    const entry = JSON.parse(request.postData());
+                    const status = network.postStatus(entry);
+                    network.posts.push({ entry, status });
+                    requests.push({ method: 'POST', key: entry.game });
+                    void request.respond({ status, headers: cors, contentType: 'application/json', body: '{}' });
+                    return;
+                }
                 const parsed = new URL(url);
                 requests.push({ method: request.method(), key: parsed.searchParams.get('game') });
                 void request.respond({
                     status: scoreWorkerReady ? 200 : 400,
                     contentType: scoreWorkerReady ? 'application/json' : 'text/plain',
-                    headers: { 'access-control-allow-origin': '*' },
+                    headers: cors,
                     body: scoreWorkerReady ? JSON.stringify([{ name: 'Test Player', score: 1234 }]) : 'Invalid',
                 });
                 return;
@@ -331,6 +491,8 @@ try {
                             || document.querySelector('[data-topbar-proxy="' + button.id + '"]')?.hidden === false);
                 }, { timeout: 6000 }, game.id);
             }
+
+            if (game.id === 'shadow-loom') await checkPendingReceipts(page, network, errors);
 
             // Simulate a Cloudflare auto-published site outrunning the manually
             // deployed scoring Worker. Old Worker rejects the new board key.
