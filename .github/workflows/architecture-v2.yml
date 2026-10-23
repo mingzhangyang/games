@@ -108,11 +108,44 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Simplified Chinese browser font
+      # The apt index refresh has occasionally blocked a shard until its 20-minute
+      # timeout. Use the same Noble .deb, independently pinned to Ubuntu's
+      # published SHA-256, without apt repositories or system-wide index updates.
+      # dpkg installs the fontconfig rules as well as the font, matching the old
+      # rendering baseline. Both mirrors and the step itself have finite timeouts.
+      - name: Install pinned Simplified Chinese browser font
+        timeout-minutes: 3
+        shell: bash
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq fonts-wqy-microhei
-          fc-match 'WenQuanYi Micro Hei'
+          set -euo pipefail
+          pkg='fonts-wqy-microhei_0.2.0-beta-3.1_all.deb'
+          sha256='58d0a29af79ce1fc5c63b4276065f0fce27decf6839835f3f9c2e68d9f84ca20'
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          downloaded=0
+          for base in \
+            'https://archive.ubuntu.com/ubuntu/pool/universe/f/fonts-wqy-microhei' \
+            'https://mirrors.edge.kernel.org/ubuntu/pool/universe/f/fonts-wqy-microhei'; do
+            echo "Downloading pinned WQY package from $base"
+            if curl --fail --location --silent --show-error \
+              --connect-timeout 8 --max-time 35 --retry 1 --retry-delay 2 \
+              --output "$tmp/$pkg" "$base/$pkg"; then
+              downloaded=1
+              break
+            fi
+          done
+          if [ "$downloaded" -ne 1 ]; then
+            echo '::error::Could not download the pinned WQY font from either mirror'
+            exit 1
+          fi
+          printf '%s  %s\n' "$sha256" "$tmp/$pkg" | sha256sum --check
+          sudo dpkg -i "$tmp/$pkg"
+          actual="$(fc-match -f '%{family}\n' 'WenQuanYi Micro Hei')"
+          echo "Selected Chinese browser font: $actual"
+          if [[ "$actual" != *'WenQuanYi Micro Hei'* ]]; then
+            echo '::error::WenQuanYi Micro Hei is not available to Chromium'
+            exit 1
+          fi
 
       # dist:* steps re-run the shared layout/theme/chrome gates and art smokes on the real build.
       - name: Production build

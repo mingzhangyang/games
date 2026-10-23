@@ -7,7 +7,8 @@
  */
 
 import { ensurePlayerName, setPlayerName } from '../../platform/player.js';
-import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
+import { createScoreboardResultSession, retryScoreResults } from '../../platform/scoreboard-submission.js';
+import { renderEmbeddedScoreResult, resetEmbeddedScoreResult } from '../../platform/scoreboard-result-view.js';
 import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
 import { touchCopy } from '../../platform/i18n/touch-copy.js';
 import { ICONS } from '../../platform/icons.js';
@@ -57,6 +58,11 @@ const LANGUAGES = makeText({
         loadingScores: 'Loading…',
         noScores: 'No clears yet',
         lbOffline: 'Leaderboard offline',
+        lbSubmitting: 'Uploading score…',
+        lbSent: 'Score uploaded.',
+        lbQueued: 'Saved on this device; upload will retry.',
+        lbNotSaved: 'Score was not uploaded or saved on this device.',
+        lbLoading: 'Loading rankings…',
         again: 'Play Again',
         copyResult: 'Copy',
         hintDefault: 'Right-click / long-press to flag · tap a number to chord',
@@ -96,6 +102,11 @@ const LANGUAGES = makeText({
         loadingScores: '加载中…',
         noScores: '暂无成绩',
         lbOffline: '榜单离线',
+        lbSubmitting: '正在上传成绩…',
+        lbSent: '成绩已上传。',
+        lbQueued: '成绩已暂存在本设备，稍后重试上传。',
+        lbNotSaved: '成绩未上传，也未保存在本设备。',
+        lbLoading: '正在加载排名…',
         again: '再来一局',
         copyResult: '复制',
         hintDefault: '右键 / 长按插旗 · 点数字快开',
@@ -185,6 +196,11 @@ class MinesweeperGame {
             if (el) this.el[id.replace(/^ms-/, '')] = el;
         });
 
+        this.scoreRunId = 0;
+        this.resultSession = createScoreboardResultSession({
+            onChange: result => this.renderScoreResult(result),
+        });
+        this.el['lb-status']?.setAttribute('role', 'status');
         this.diff = this.readSavedDiff();
         this.flagMode = false;
         this.lang = this.readLang();
@@ -193,6 +209,11 @@ class MinesweeperGame {
         this.bindUI();
         this.newGame();
         this.showStart();
+        window.addEventListener('online', () => {
+            if (this.resultSession.getState()) void this.resultSession.refresh();
+            else void retryScoreResults();
+        });
+        void retryScoreResults();
     }
 
     /* ── 基础状态 ── */
@@ -243,6 +264,7 @@ class MinesweeperGame {
         this.updateFlagModeButton();
         this.updateHint();
         this.renderBestChips();
+        this.renderScoreResult();
         updateMoreGames(this.lang);
     }
 
@@ -259,6 +281,8 @@ class MinesweeperGame {
     /* ── 新局 ── */
 
     newGame() {
+        resetEmbeddedScoreResult(this.resultSession, this.el);
+        this.scoreRunId++;
         this.invalidateCopyFeedback();
         const cfg = DIFFICULTIES[this.diff];
         this.cols = cfg.cols;
@@ -488,6 +512,9 @@ class MinesweeperGame {
     }
 
     async finishGame(won) {
+        // The gameplay state may already be 'won' on the first callback.
+        if (this.finishedRunId === this.scoreRunId) return;
+        this.finishedRunId = this.scoreRunId;
         const seconds = Math.max(1, Math.round((performance.now() - this.startTs) / 1000));
         this.elapsed = seconds;
 
@@ -503,7 +530,13 @@ class MinesweeperGame {
         }
         this.showResult(won, seconds, isBest);
         if (won) {
-            await this.submitScore(seconds);
+            this.recordLocalScore(seconds);
+            this.renderLocalScores();
+            void this.resultSession.publish({
+                runId: this.scoreRunId, date: null,
+                game: DIFFICULTIES[this.diff].lb,
+                name: ensurePlayerName() || 'Anonymous', score: seconds,
+            });
         }
         this.renderBestChips();
     }
@@ -634,7 +667,6 @@ class MinesweeperGame {
         if (won) {
             this.lbTabGame = DIFFICULTIES[this.diff].lb;
             this.renderLocalScores();
-            this.fetchLeaderboard();
         } else if (this.el['lb-list']) {
             this.el['lb-list'].textContent = '';
             if (this.el['lb-status']) this.el['lb-status'].textContent = '';
@@ -642,6 +674,7 @@ class MinesweeperGame {
     }
 
     hideResult() {
+        resetEmbeddedScoreResult(this.resultSession, this.el);
         this.invalidateCopyFeedback();
         if (this.el.result) this.el.result.classList.add('hidden');
         Sfx.click();
@@ -661,18 +694,29 @@ class MinesweeperGame {
     }
 
     renderLocalScores() {
+        this.renderBoard(this.localScores().slice(0, 10));
+    }
+
+    renderBoard(rows) {
         const list = this.el['lb-list'];
         if (!list) return;
-        list.textContent = '';
-        const filtered = this.localScores().slice(0, 10);
-        if (filtered.length === 0) {
+        list.replaceChildren();
+        if (!rows.length) {
             const empty = document.createElement('div');
             empty.className = 'ms-lb-empty game-lb-empty';
             empty.textContent = this.TEXT.noScores;
             list.appendChild(empty);
             return;
         }
-        filtered.forEach((s, i) => list.appendChild(this.buildLbRow(i, s)));
+        rows.slice(0, 10).forEach((entry, i) => list.appendChild(this.buildLbRow(i, entry)));
+    }
+
+    renderScoreResult(result = this.resultSession?.getState()) {
+        renderEmbeddedScoreResult({
+            result, el: this.el, text: key => this.TEXT[key],
+            renderBoard: rows => this.renderBoard(rows),
+            readLocalBoard: () => this.localScores().slice(0, 10),
+        });
     }
 
     buildLbRow(rank, entry) {
@@ -691,42 +735,7 @@ class MinesweeperGame {
         return row;
     }
 
-    async submitScore(seconds) {
-        this.recordLocalScore(seconds);
-        const game = DIFFICULTIES[this.diff].lb;
-        // 网络层收敛到 src/platform/leaderboard.js（超时/cors/ok 判定统一；false=未进全球榜）
-        const ok = await submitScore({ game, name: ensurePlayerName() || 'Anonymous', score: seconds });
-        if (ok) {
-            await this.fetchLeaderboard();
-        } else {
-            // Worker 未部署：保留本地榜，并在结算面板提示未进全球榜
-            if (this.el['lb-status']) this.el['lb-status'].textContent = this.TEXT.submitFail;
-        }
-    }
 
-    async fetchLeaderboard() {
-        const list = this.el['lb-list'];
-        const statusEl = this.el['lb-status'];
-        const game = DIFFICULTIES[this.diff].lb;
-        const atStart = this.lbTabGame === game;
-        if (!list) return;
-        try {
-            const data = await fetchBoard(game);
-            if (!atStart || !Array.isArray(data)) return;
-            list.textContent = '';
-            if (data.length === 0) {
-                const empty = document.createElement('div');
-                empty.className = 'ms-lb-empty game-lb-empty';
-                empty.textContent = this.TEXT.noScores;
-                list.appendChild(empty);
-            } else {
-                data.slice(0, 10).forEach((entry, i) => list.appendChild(this.buildLbRow(i, entry)));
-            }
-            if (statusEl) statusEl.textContent = '';
-        } catch (e) {
-            if (atStart && statusEl) statusEl.textContent = this.TEXT.lbOffline;
-        }
-    }
 
     /* ── 开始界面 ── */
 

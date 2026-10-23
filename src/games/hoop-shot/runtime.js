@@ -10,7 +10,9 @@
 
 import { renderSideRecords } from '../../platform/side-records.js';
 import { ensurePlayerName, setPlayerName } from '../../platform/player.js';
-import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
+import { createScoreboardResultSession, retryScoreResults } from '../../platform/scoreboard-submission.js';
+import { renderEmbeddedScoreResult, resetEmbeddedScoreResult } from '../../platform/scoreboard-result-view.js';
+import { fetchBoard } from '../../platform/leaderboard.js';
 import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
 import { ICONS } from '../../platform/icons.js';
 import { updateMoreGames } from '../../platform/more-games.js';
@@ -174,6 +176,13 @@ export class HoopShotGame {
         this.animationId = null;
         this.lastFrameTime = 0;
         this.leaderboardTab = 'alltime';
+        this.scoreRunId = 0;
+        this.readOnlyBoardRequestId = 0;
+        this.readOnlyBoardState = null;
+        this.resultSession = createScoreboardResultSession({
+            onChange: result => this.renderScoreResult(result),
+        });
+        this.el['lb-status']?.setAttribute('role', 'status');
 
         this.starfield = null;
 
@@ -189,6 +198,11 @@ export class HoopShotGame {
         this.updateHud();
         this.showStartScreen();
         this.startLoop();
+        window.addEventListener('online', () => {
+            if (this.resultSession.getState()) void this.resultSession.refresh();
+            else void retryScoreResults();
+        });
+        void retryScoreResults();
     }
 
     gatherElements() {
@@ -228,7 +242,11 @@ export class HoopShotGame {
         if (this.el['btn-again']) this.el['btn-again'].innerHTML = `${ICONS.retry}<span>${t.again}</span>`;
         if (this.el['btn-home']) this.el['btn-home'].innerHTML = `${ICONS.home}<span>${t.home}</span>`;
         if (this.el['lb-title']) this.el['lb-title'].textContent = `🏆 ${t.leaderboard}`;
-        if (this.el['lb-status']) this.el['lb-status'].textContent = '';
+        if (this.resultSession?.getState()) this.renderScoreResult();
+        else if (this.state === 'gameover' && this.score <= 0 && this.el['lb-status']) {
+            this.el['lb-status'].textContent = this.readOnlyBoardState === 'loading'
+                ? this.TEXT.lbLoading : this.readOnlyBoardState === 'offline' ? this.TEXT.lbOffline : '';
+        }
         this.updateMuteButtons();
         this.updateStartStats();
         // 桌面侧栏（≥1024px 可见）
@@ -277,6 +295,10 @@ export class HoopShotGame {
     /* ── 流程 ── */
 
     startGame() {
+        this.readOnlyBoardRequestId++;
+        this.readOnlyBoardState = null;
+        resetEmbeddedScoreResult(this.resultSession, this.el);
+        this.scoreRunId++;
         this.state = 'playing';
         this.score = 0;
         this.streak = 0;
@@ -337,6 +359,9 @@ export class HoopShotGame {
     }
 
     goHome() {
+        this.readOnlyBoardRequestId++;
+        this.readOnlyBoardState = null;
+        resetEmbeddedScoreResult(this.resultSession, this.el);
         this.pauseOwnership?.invalidate();
         this.state = 'menu';
         this.ball = null;
@@ -683,7 +708,15 @@ export class HoopShotGame {
         this.recordLocalScore();
         this.showOverlay('hs-over');
         this.renderLocalScores();
-        this.submitScore();
+        if (this.score > 0) {
+            void this.resultSession.publish({
+                runId: this.scoreRunId, date: null, game: LB_GAME,
+                name: this.getUsername(), score: this.score,
+            });
+        } else {
+            // A missed first shot is ineligible for POST, not for browsing rankings.
+            void this.fetchReadOnlyLeaderboard();
+        }
         this.updateHud();
     }
 
@@ -801,18 +834,29 @@ export class HoopShotGame {
     }
 
     renderLocalScores() {
+        this.renderBoard(this.localScores().slice(0, 10));
+    }
+
+    renderBoard(rows) {
         const list = this.el['lb-list'];
         if (!list) return;
-        list.textContent = '';
-        const filtered = this.localScores().slice(0, 10);
-        if (filtered.length === 0) {
+        list.replaceChildren();
+        if (!rows.length) {
             const empty = document.createElement('div');
             empty.className = 'hs-lb-empty game-lb-empty';
             empty.textContent = this.TEXT.noScores;
             list.appendChild(empty);
             return;
         }
-        filtered.forEach((s, i) => list.appendChild(this.buildLbRow(i, s)));
+        rows.slice(0, 10).forEach((entry, i) => list.appendChild(this.buildLbRow(i, entry)));
+    }
+
+    renderScoreResult(result = this.resultSession.getState()) {
+        renderEmbeddedScoreResult({
+            result, el: this.el, text: key => this.TEXT[key],
+            renderBoard: rows => this.renderBoard(rows),
+            readLocalBoard: () => this.localScores().slice(0, 10),
+        });
     }
 
     buildLbRow(rank, entry) {
@@ -831,38 +875,27 @@ export class HoopShotGame {
         return row;
     }
 
-    async submitScore() {
-        if (this.score <= 0) return;
-        // 网络层收敛到 src/platform/leaderboard.js（超时/cors/ok 判定统一；false=未进全球榜）
-        const ok = await submitScore({ game: LB_GAME, name: this.getUsername(), score: this.score });
-        if (ok) {
-            await this.fetchLeaderboard();
-        } else {
-            // Worker 未部署：保留本地榜，并在结算面板提示未进全球榜
-            const statusEl = this.el['lb-status'];
-            if (statusEl) statusEl.textContent = this.TEXT.submitFail;
-        }
-    }
 
-    async fetchLeaderboard() {
-        const list = this.el['lb-list'];
-        const statusEl = this.el['lb-status'];
-        if (!list) return;
+
+    async fetchReadOnlyLeaderboard() {
+        const requestId = ++this.readOnlyBoardRequestId;
+        const runId = this.scoreRunId;
+        const current = () => this.readOnlyBoardRequestId === requestId
+            && this.scoreRunId === runId && this.state === 'gameover' && this.score <= 0;
+        this.readOnlyBoardState = 'loading';
+        if (this.el['lb-status']) this.el['lb-status'].textContent = this.TEXT.lbLoading;
         try {
-            const data = await fetchBoard(LB_GAME);
-            if (this.state !== 'gameover') return;
-            list.textContent = '';
-            if (!Array.isArray(data) || data.length === 0) {
-                const empty = document.createElement('div');
-                empty.className = 'hs-lb-empty game-lb-empty';
-                empty.textContent = this.TEXT.noScores;
-                list.appendChild(empty);
-            } else {
-                data.slice(0, 10).forEach((entry, i) => list.appendChild(this.buildLbRow(i, entry)));
-            }
-            if (statusEl) statusEl.textContent = '';
-        } catch (e) {
-            if (statusEl) statusEl.textContent = this.TEXT.lbOffline;
+            const rows = await fetchBoard(LB_GAME);
+            if (!current()) return;
+            if (!Array.isArray(rows)) throw new TypeError('Invalid scoreboard response');
+            this.readOnlyBoardState = 'ready';
+            this.renderBoard(rows);
+            if (this.el['lb-status']) this.el['lb-status'].textContent = '';
+        } catch (error) {
+            if (!current()) return;
+            this.readOnlyBoardState = 'offline';
+            this.renderLocalScores();
+            if (this.el['lb-status']) this.el['lb-status'].textContent = this.TEXT.lbOffline;
         }
     }
 

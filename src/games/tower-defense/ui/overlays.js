@@ -118,6 +118,7 @@ export function applyLanguage(game) {
     game.renderWaveButton();
     game.updateSkillButtons();
     game.renderLevelCards();
+    game.renderScoreResult();
     updateMoreGames(game.lang);
 }
 

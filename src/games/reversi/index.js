@@ -24,7 +24,9 @@ import {
     loadReversiStreak,
 } from './storage.js';
 import { track } from '../../platform/analytics.js';
-import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
+import { fetchBoard } from '../../platform/leaderboard.js';
+import { createScoreboardResultSession, retryScoreResults } from '../../platform/scoreboard-submission.js';
+import { renderEmbeddedScoreResult, resetEmbeddedScoreResult } from '../../platform/scoreboard-result-view.js';
 import { makeText } from '../../platform/i18n.js';
 import { createI18nBinder } from '../../platform/i18n/bindings.js';
 import { onReady } from '../../platform/boot.js';
@@ -68,6 +70,11 @@ const LANGUAGES = makeText({
         loadingScores: 'Loading…',
         noScores: 'No games yet',
         lbOffline: 'Leaderboard offline',
+        lbSubmitting: 'Uploading score…',
+        lbSent: 'Score uploaded.',
+        lbQueued: 'Saved on this device; upload will retry.',
+        lbNotSaved: 'Score was not uploaded or saved on this device.',
+        lbLoading: 'Loading rankings…',
         again: 'Play Again',
         copyResult: 'Copy Result',
         home: 'Home',
@@ -104,6 +111,11 @@ const LANGUAGES = makeText({
         loadingScores: '加载中…',
         noScores: '暂无对局',
         lbOffline: '榜单离线',
+        lbSubmitting: '正在上传成绩…',
+        lbSent: '成绩已上传。',
+        lbQueued: '成绩已暂存在本设备，稍后重试上传。',
+        lbNotSaved: '成绩未上传，也未保存在本设备。',
+        lbLoading: '正在加载排名…',
         again: '再来一局',
         copyResult: '复制成绩',
         home: '返回主页',
@@ -168,6 +180,12 @@ class ReversiGame {
         this.lang = this.readLang();
 
         this.gameId = 0;      // 递增令牌，用于作废过期的 AI 回调
+        this.lbReadId = 0;
+        this.lbOpen = false;
+        this.resultSession = createScoreboardResultSession({
+            onChange: result => this.renderScoreResult(result),
+        });
+        this.el['lb-status']?.setAttribute('role', 'status');
         this.timeouts = [];
         this.state = 'menu';
 
@@ -178,6 +196,11 @@ class ReversiGame {
         this.updateMuteButtons();
         this.updateStreakLine();
         this.showStart();
+        window.addEventListener('online', () => {
+            if (this.resultSession.getState()) void this.resultSession.refresh();
+            else void retryScoreResults();
+        });
+        void retryScoreResults();
     }
 
     readLang() {
@@ -208,6 +231,10 @@ class ReversiGame {
             this.setStatus(t.gameOver, false);
         }
 
+        if (this.resultSession?.getState()) this.renderScoreResult();
+        else if (this.readOnlyBoardStatus === 'offline' && this.lbOpen && this.el['lb-status']) {
+            this.el['lb-status'].textContent = this.TEXT.lbOffline;
+        }
         updateMoreGames(this.lang);
     }
 
@@ -285,6 +312,10 @@ class ReversiGame {
     /* ── 对局流程 ── */
 
     newGame() {
+        resetEmbeddedScoreResult(this.resultSession, this.el);
+        this.lbReadId++;
+        this.lbOpen = false;
+        this.readOnlyBoardStatus = null;
         this.gameId++;
         this.clearTimeouts();
         this.board = new Int8Array(64);
@@ -419,6 +450,7 @@ class ReversiGame {
     }
 
     gameOver() {
+        if (this.state !== 'playing') return;
         this.state = 'over';
         for (let i = 0; i < 64; i++) this.cellEls[i].classList.remove('legal');
         if (this.el['box-black']) this.el['box-black'].classList.remove('active');
@@ -448,7 +480,12 @@ class ReversiGame {
                 this.streak = (this.streak || 0) + 1;
                 const best = loadReversiBestStreak();
                 if (this.streak > best) saveReversiBestStreak(this.streak);
-                this.submitScore(this.streak);
+                const entry = {
+                    runId: this.gameId, date: null, game: 'reversi',
+                    name: ensurePlayerName() || 'Anonymous', score: this.streak,
+                };
+                this.recordLocalScore(entry);
+                void this.resultSession.publish(entry);
                 streakNote = `${t.winStreak} ${this.streak}`;
             } else if (b < w) {
                 this.streak = 0;
@@ -463,7 +500,8 @@ class ReversiGame {
         if (this.el.over) this.el.over.classList.remove('hidden');
         if (this.mode === 'ai') {
             this.lbOpen = true;
-            this.fetchLeaderboard();
+            if (this.resultSession.getState()) this.renderScoreResult();
+            else void this.fetchLeaderboard(); // Read-only after AI draw/loss; no score eligible.
         }
     }
 
@@ -482,18 +520,37 @@ class ReversiGame {
     }
 
     renderLocalScores() {
+        this.renderBoard(this.localScores().slice(0, 10));
+    }
+
+    renderBoard(rows) {
         const list = this.el['lb-list'];
         if (!list) return;
-        list.textContent = '';
-        const filtered = this.localScores().slice(0, 10);
-        if (filtered.length === 0) {
+        list.replaceChildren();
+        if (!rows.length) {
             const empty = document.createElement('div');
             empty.className = 'rv-lb-empty game-lb-empty';
             empty.textContent = this.TEXT.noScores;
             list.appendChild(empty);
             return;
         }
-        filtered.forEach((s, i) => list.appendChild(this.buildLbRow(i, s)));
+        rows.slice(0, 10).forEach((entry, i) => list.appendChild(this.buildLbRow(i, entry)));
+    }
+
+    recordLocalScore(entry) {
+        const local = this.localScores();
+        local.push({ name: entry.name, score: entry.score });
+        local.sort((a, b) => b.score - a.score);
+        saveReversiLocalScores(local.slice(0, 30));
+    }
+
+    renderScoreResult(result = this.resultSession.getState()) {
+        if (!this.lbOpen || this.mode !== 'ai' || this.state !== 'over') return;
+        renderEmbeddedScoreResult({
+            result, el: this.el, text: key => this.TEXT[key],
+            renderBoard: rows => this.renderBoard(rows.length ? rows : this.localScores().slice(0, 10)),
+            readLocalBoard: () => this.localScores().slice(0, 10),
+        });
     }
 
     buildLbRow(rank, entry) {
@@ -512,44 +569,37 @@ class ReversiGame {
         return row;
     }
 
-    async submitScore(streak) {
-        if (streak <= 0) return;
-        const local = this.localScores();
-        local.push({ name: ensurePlayerName() || 'Anonymous', score: streak });
-        local.sort((a, b) => b.score - a.score);
-        saveReversiLocalScores(local.slice(0, 30));
-        // 网络层收敛到 src/platform/leaderboard.js（false=未进全球榜）
-        const ok = await submitScore({ game: 'reversi', name: ensurePlayerName() || 'Anonymous', score: streak });
-        if (!ok) {
-            // Worker 未部署：保留本地榜，但要提示玩家未进全球榜
-            this.showToast(this.TEXT.submitFail);
-        }
-    }
 
+
+    // AI defeat/draw is read-only; never manufacture an upload or a retry entry.
     async fetchLeaderboard() {
-        const list = this.el['lb-list'];
-        const statusEl = this.el['lb-status'];
-        if (!list) return;
+        const seq = ++this.lbReadId;
+        const gameId = this.gameId;
+        const stillOpen = () => seq === this.lbReadId && gameId === this.gameId
+            && this.state === 'over' && this.mode === 'ai' && this.lbOpen;
+        this.readOnlyBoardStatus = 'loading';
         try {
-            const data = await fetchBoard('reversi');
-            if (!this.lbOpen) return;
-            list.textContent = '';
-            if (!Array.isArray(data) || data.length === 0) {
-                this.renderLocalScores();
-                if (statusEl) statusEl.textContent = this.localScores().length ? '' : this.TEXT.noScores;
-                return;
-            }
-            data.slice(0, 10).forEach((entry, i) => list.appendChild(this.buildLbRow(i, entry)));
-            if (statusEl) statusEl.textContent = '';
-        } catch (e) {
+            const rows = await fetchBoard('reversi');
+            if (!stillOpen()) return;
+            if (!Array.isArray(rows)) throw new Error('Invalid leaderboard');
+            this.readOnlyBoardStatus = 'ready';
+            this.renderBoard(rows.length ? rows : this.localScores().slice(0, 10));
+            if (this.el['lb-status']) this.el['lb-status'].textContent = '';
+        } catch (error) {
+            if (!stillOpen()) return;
+            this.readOnlyBoardStatus = 'offline';
             this.renderLocalScores();
-            if (statusEl) statusEl.textContent = this.TEXT.lbOffline;
+            if (this.el['lb-status']) this.el['lb-status'].textContent = this.TEXT.lbOffline;
         }
     }
 
     /* ── 开始 / 菜单 ── */
 
     showStart() {
+        resetEmbeddedScoreResult(this.resultSession, this.el);
+        this.lbReadId++;
+        this.lbOpen = false;
+        this.readOnlyBoardStatus = null;
         this.gameId++;
         this.clearTimeouts();
         this.state = 'menu';
