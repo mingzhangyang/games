@@ -61,7 +61,7 @@ function renderResultOverlay(game,kind,indent='            '){
     const title=science?'':'Daily complete!';
     const scoreCommon=bond?'':' game-over-score';
     const subCommon=bond?'':' game-over-sub';
-    const boardLabel=science?'':CLASSIC_TITLES[id];
+    const boardLabel=science?'':(CLASSIC_TITLES[id] ?? '🏆 Global · Today\'s Puzzle');
     const boardKey=science||id==='silk-dew'||bond?' data-i18n="leaderboard"':'';
     const labelText=science?'':'Username';
     const labelKey= id==='ripple-duet'?'playerName':['gravity-slingshot','lumen','circuit'].includes(id)?'usernameLabel':null;

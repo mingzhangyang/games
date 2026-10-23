@@ -162,7 +162,18 @@ Gravity Slingshot 不含 clear，Bond Forge 的 clear 多出专用说明节点�
   `render-game-shell.js` 和 `gen` 共用相同 renderer。事件、焦点、计分和提交仍由游戏负责。
 
 **唯一有意的行为修复（不计作 DOM 零差异）：** Silk Dew、Echo Cave、Maxwell Demon、
-Crystal Bloom、Flame Verse、Ripple Duet 六页过去在 Clipboard API 或
+Crystal Bloom、Flame Verse、Ripple Duet **真正同构的小型展示逻辑：** `Silk Dew`、`Echo Cave`、`Maxwell Demon`、
+`Crystal Bloom`、`Flame Verse`、`Ripple Duet` 的十名列表由
+`scoreboard-result-view.js` 中唯一的 `renderEmbeddedScoreRows` 渲染。
+调用方只传既有 CSS 前缀、空榜文案以及是否有前三名高亮，仍使用
+`li > span(rank) + span(name) + span(score)` 及原有各页 class。
+不存在新的榜单协议或视图控制器；游戏决定排行顺序和得分。
+Gravity Slingshot / Circuit 使用自己的 `buildLbRow`，
+Lumen 的 UI 模块负责行样式，Bond Forge 保留 `div` 行结构与前 20 名，
+这些特殊展示继续游戏所有权。浏览器回归显式验证空榜、前十排序、
+前三名高亮、行标签及昵称安全文本。
+
+六页过去在 Clipboard API 或
 `document.execCommand('copy')` 失败时仍提示成功，现复用极小的
 `src/platform/result-clipboard.js` 返回真实成功布尔值，失败显示 ✕。
 分享文本、按钮、游戏状态、榜单接口和本地存储均未更改。

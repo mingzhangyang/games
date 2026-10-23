@@ -163,3 +163,10 @@ Bond Forge 自定义 clear 仍由游戏负责。
 `src/platform/result-clipboard.js` 只封装单次文字复制与 legacy fallback
 的真实成功布尔值。六页共享复制反馈会在失败时显示 ✕，不会再误显示 ✓；
 分享文本、时序及各自业务逻辑保持游戏所有权。
+
+此外，六款科学/解谜内嵌榜单的 `renderBoard` 完全同构部分已统一到
+`scoreboard-result-view.js` 的 `renderEmbeddedScoreRows`。这只是行 DOM
+展示，不涉及抓取、排名规则、计分或提交；保留各游戏前十名、空状态、
+命名 CSS 类及其是否装饰前三名。非同构行样式和前二十名的 Bond Forge
+榜单不迁移。真实浏览器回归对六游戏检查节点类型、按钮旁排名、文本安全、
+列顺序、前三名高亮、空状态和源码/dist 一致性。

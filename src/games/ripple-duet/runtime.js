@@ -50,7 +50,7 @@ import { RIPPLE_DUET_STORAGE, RIPPLE_DUET_STORAGE_SLOTS } from './storage.js';
 import { track } from '../../platform/analytics.js';
 import { todayKey, todayKeyDisplay } from '../../platform/daily.js';
 import { createScoreboardResultSession, retryScoreResults } from '../../platform/scoreboard-submission.js';
-import { renderEmbeddedScoreResult, resetEmbeddedScoreResult } from '../../platform/scoreboard-result-view.js';
+import { renderEmbeddedScoreResult, resetEmbeddedScoreResult, renderEmbeddedScoreRows } from '../../platform/scoreboard-result-view.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
 import { bindPalette } from '../../platform/theme.js';
 
@@ -544,35 +544,9 @@ export class RippleDuetGame {
     }
 
     renderBoard(rows) {
-        const el = this.el;
-        const list = el['lb-list'];
+        const list = this.el['lb-list'];
         if (!list) return;
-        list.innerHTML = '';
-        if (!rows || !rows.length) {
-            const empty = document.createElement('div');
-            empty.className = 'rd-lb-empty game-lb-empty';
-            empty.textContent = this.t('noScores');
-            list.appendChild(empty);
-            return;
-        }
-        rows.slice(0, 10).forEach((row, i) => {
-            const li = document.createElement('li');
-            li.className = 'rd-lb-row game-lb-row';
-            if (i < 3) li.classList.add(`rd-lb-top${i + 1}`);
-            const rank = document.createElement('span');
-            rank.className = 'rd-lb-rank game-lb-rank';
-            rank.textContent = String(i + 1);
-            const nm = document.createElement('span');
-            nm.className = 'rd-lb-name game-lb-name';
-            nm.textContent = row.name || '—';
-            const sc = document.createElement('span');
-            sc.className = 'rd-lb-score game-lb-score';
-            sc.textContent = String(row.score);
-            li.appendChild(rank);
-            li.appendChild(nm);
-            li.appendChild(sc);
-            list.appendChild(li);
-        });
+        renderEmbeddedScoreRows(list, rows, 'rd', this.t('noScores'), true);
     }
 
     copyResult() {

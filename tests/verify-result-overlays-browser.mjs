@@ -21,6 +21,8 @@ const settings = [
     { width: 1280, height: 900, lang: 'zh', theme: 'dark' },
 ];
 let checks = 0;
+const prefixClass = (prefix, kind) => prefix + '-lb-' + kind + ' game-lb-' + kind;
+
 try {
     for (const game of cases) {
         for (const setting of settings) {
@@ -37,6 +39,55 @@ try {
                 }, setting);
                 await page.goto(BASE + '/' + game.href, { waitUntil: 'load', timeout: 30000 });
                 await page.waitForFunction(prefix => !!window[prefix + 'Game'], { timeout: 20000 }, game.prefix);
+                if (['sd', 'ec', 'md', 'cb', 'fv', 'rd'].includes(game.prefix)) {
+                    const board = await page.evaluate(prefix => {
+                        const runtime = window[prefix + 'Game'];
+                        const list = document.getElementById(prefix + '-lb-list');
+                        const input = Array.from({ length: 12 }, (_, index) => ({
+                            name: index === 1 ? '<img src=x>' : 'Player ' + index,
+                            score: 100 - index,
+                        }));
+                        runtime.renderBoard(input);
+                        const items = [...list.children];
+                        const before = {
+                            count: items.length,
+                            tags: items.map(item => item.tagName),
+                            names: items.map(item => item.children[1].textContent),
+                            scores: items.map(item => item.children[2].textContent),
+                            order: items.map(item => [...item.children].map(child => child.className)),
+                            top: items.slice(0, 4).map(item =>
+                                [...item.classList].filter(name => name.startsWith(prefix + '-lb-top'))),
+                            injected: list.querySelector('img') !== null,
+                        };
+                        runtime.renderBoard([]);
+                        before.empty = {
+                            count: list.children.length,
+                            tag: list.firstElementChild?.tagName,
+                            klass: list.firstElementChild?.className,
+                        };
+                        return before;
+                    }, game.prefix);
+                    const label = game.id + '/' + setting.lang + '/' + setting.width;
+                    assert.equal(board.count, 10, label + ': top-ten view limit');
+                    assert(board.tags.every(tag => tag === 'LI'), label + ': existing row type');
+                    assert.deepEqual(board.names.slice(0, 3), ['Player 0', '<img src=x>', 'Player 2'],
+                        label + ': rows use safe text, preserve ranking order');
+                    assert.equal(board.injected, false, label + ': names must never become HTML');
+                    assert.deepEqual(board.scores.slice(0, 3), ['100', '99', '98'], label + ': score order');
+                    for (const row of board.order) {
+                        assert.deepEqual(row, [prefixClass(game.prefix, 'rank'), prefixClass(game.prefix, 'name'),
+                            prefixClass(game.prefix, 'score')], label + ': legacy row classes');
+                    }
+                    const top3 = !['sd', 'ec'].includes(game.prefix);
+                    assert.deepEqual(board.top, top3
+                        ? [[game.prefix + '-lb-top1'], [game.prefix + '-lb-top2'], [game.prefix + '-lb-top3'], []]
+                        : [[], [], [], []], label + ': per-game podium semantics');
+                    assert.equal(board.empty.count, 1, label + ': empty board leaves only placeholder');
+                    assert.equal(board.empty.tag, 'DIV', label + ': empty placeholder type');
+                    assert.equal(board.empty.klass, game.prefix + '-lb-empty game-lb-empty',
+                        label + ': empty placeholder CSS');
+                    checks += 10;
+                }
                 for (const kind of resultRoles(game)) {
                     const geometry = await page.evaluate(({ prefix, kind }) => {
                         const target = document.getElementById(prefix + '-' + kind);
