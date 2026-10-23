@@ -13,6 +13,7 @@ import { registry } from './lib/registry.mjs';
 import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
 import { makeText } from '../src/platform/i18n.js';
 import { renderGameShell } from '../src/platform/shell/render-game-shell.js';
+import { resultRoles } from '../src/platform/shell/render-result-overlays.js';
 import { sidebarCards } from '../src/platform/shell/render-sidebar.js';
 import {
     renderStylesheets, renderFooter, renderStatsDrawer, renderTailScripts,
@@ -168,6 +169,7 @@ function checkScaffoldCli() {
             records: { titleKey: 'resultsTitle' },
         } }),
         fresh('cli-manual-sidebar', { sidebar: false }),
+        fresh('cli-results', { ...plain, shell: { results: 'both' } }),
     ];
     const invalid = fresh('cli-custom-drawer', { shell: { drawer: { idBase: 'legacyStats' } } });
     const emptyFooter = fresh('cli-empty-footer', { ...plain,
@@ -190,7 +192,7 @@ function checkScaffoldCli() {
         for (const name of ['tools/generators/new-game.mjs', 'src/platform/icons.js',
             'tests/verify-i18n.mjs', 'tests/lib/registry.mjs', 'tools/lib/registry.mjs',
             'tests/lib/static-module-graph.mjs', 'src/platform/i18n.js', 'src/platform/site-settings.js',
-            ...['render-game-shell', 'render-shell-parts', 'render-topbar', 'render-sidebar'].map(n => 'src/platform/shell/' + n + '.js')]) {
+            ...['render-game-shell', 'render-shell-parts', 'render-topbar', 'render-sidebar', 'render-result-overlays'].map(n => 'src/platform/shell/' + n + '.js')]) {
             mkdirSync(dirname(join(temp, name)), { recursive: true });
             copyFileSync(join(ROOT, name), join(temp, name));
         }
@@ -214,12 +216,22 @@ function checkScaffoldCli() {
             assert.equal(html, renderGameShell(game), game.id + ': CLI uses the shared shell');
             checkStructure(html, game, true);
             const nodes = elements(html);
+            assert.equal(hasClass(nodes.find(node => node.tagName === 'html'), 'game-hidden-contract'),
+                !!game.shell?.results, game.id + ': results opt into the shared hidden contract');
             const hasDrawer = game.caps.includes('drawer');
             const hasSidebar = game.caps.includes('sidebar');
             assert.equal(!!runtime.drawer, hasDrawer, game.id + ': drawer runtime follows capability');
             assert.equal(!!runtime.more, hasSidebar, game.id + ': More runtime follows capability');
             assert.equal(nodes.some(n => hasClass(n, 'game-sidebar')), hasSidebar, game.id + ': sidebar capability');
             if (hasSidebar) assert(nodes.some(n => '#' + attr(n, 'id') === runtime.more), game.id + ': More target exists');
+            if (game.shell?.results) {
+                for (const kind of resultRoles(game)) {
+                    assert(nodes.some(n => attr(n, 'id') === game.prefix + '-' + kind),
+                        game.id + ': scaffold includes result-' + kind + ' overlay');
+                    assert(html.includes('registry:begin result-' + kind),
+                        game.id + ': result ownership shares the renderer');
+                }
+            }
             const cards = sidebarCards(game);
             for (const card of cards) {
                 assert(nodes.some(n => attr(n, 'id') === card.targetId), game.id + ': scaffold includes declared ' + card.kind + ' target');

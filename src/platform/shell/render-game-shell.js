@@ -1,6 +1,7 @@
 import { renderTopbar } from './render-topbar.js';
 import { renderStylesheets, renderFooter, renderStatsDrawer, renderTailScripts } from './render-shell-parts.js';
 import { sidebarCards, renderSidebarCard } from './render-sidebar.js';
+import { resultRoles, renderResultOverlay } from './render-result-overlays.js';
 
 function esc(value) {
     return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -52,10 +53,13 @@ export function renderGameShell(game, {
         + desktopCards
         + (cards.some(card => card.kind === 'more') ? '' : `                <div class="game-side-card" id="${esc(prefix)}SideMore"></div>\n`)
         + '            </aside>\n' : '';
+    const resultKinds = resultRoles(game);
+    const resultsHtml = resultKinds.map(kind => '\n' + region('result-' + kind,
+        renderResultOverlay(game, kind, '                '), '                ')).join('');
     const drawer = hasDrawer
         ? region('stats-drawer', renderStatsDrawer(game, '    '), '    ') + '\n' : '';
     return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en"${resultKinds.length ? ' class="game-hidden-contract"' : ''}>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -73,7 +77,7 @@ ${topbarHtml}
         <main class="game-main">
 ${heading}            <section class="game-stage${immersive ? ' game-stage--immersive' : ''}" id="${esc(prefix)}Stage">
                 ${stageHtml}
-                ${startHtml}
+                ${startHtml}${resultsHtml}
             </section>
 ${sidebar}        </main>
 ${region('footer', renderFooter(game, '        '), '        ')}

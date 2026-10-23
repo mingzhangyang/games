@@ -1283,7 +1283,8 @@
         "footer": {
           "key": null,
           "touchKey": null
-        }
+        },
+        "results": "over"
       },
       "sidebar": {
         "headingIcons": true
@@ -1604,7 +1605,8 @@
       "shell": {
         "footer": {
           "touchKey": null
-        }
+        },
+        "results": "both"
       },
       "sidebar": {
         "panels": [
@@ -1690,7 +1692,8 @@
         },
         "drawer": {
           "i18n": true
-        }
+        },
+        "results": "both"
       },
       "sidebar": {
         "headingIcons": true,
@@ -1775,7 +1778,8 @@
       "shell": {
         "footer": {
           "touchKey": null
-        }
+        },
+        "results": "both"
       }
     },
     {
@@ -1851,7 +1855,8 @@
       "shell": {
         "footer": {
           "touchKey": null
-        }
+        },
+        "results": "over"
       }
     },
     {
@@ -1928,7 +1933,8 @@
         },
         "footer": {
           "touchKey": null
-        }
+        },
+        "results": "both"
       },
       "sidebar": {
         "desktopOnly": [
@@ -2007,7 +2013,8 @@
       "shell": {
         "styles": {
           "scienceShowcase": true
-        }
+        },
+        "results": "both"
       }
     },
     {
@@ -2083,7 +2090,8 @@
       "shell": {
         "styles": {
           "scienceShowcase": true
-        }
+        },
+        "results": "both"
       },
       "sidebar": {
         "desktopOnly": [
@@ -2167,7 +2175,8 @@
       "shell": {
         "styles": {
           "scienceShowcase": true
-        }
+        },
+        "results": "both"
       },
       "sidebar": {
         "desktopOnly": [
@@ -2253,7 +2262,8 @@
       "shell": {
         "styles": {
           "scienceShowcase": true
-        }
+        },
+        "results": "both"
       },
       "sidebar": {
         "desktopOnly": [

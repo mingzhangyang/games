@@ -1,3 +1,5 @@
+import { renderEmbeddedScoreRows } from '../../platform/scoreboard-result-view.js';
+import { copyResultText } from '../../platform/result-clipboard.js';
 /**
  * Maxwell's Demon 麦克斯韦妖 — 热与熵分拣解谜
  * ==========================================
@@ -662,55 +664,18 @@ export class MaxwellDemonGame {
     }
 
     renderBoard(rows) {
-        const el = this.el;
-        const list = el['lb-list'];
+        const list = this.el['lb-list'];
         if (!list) return;
-        list.innerHTML = '';
-        if (!rows || !rows.length) {
-            const empty = document.createElement('div');
-            empty.className = 'md-lb-empty game-lb-empty';
-            empty.textContent = this.t('noScores');
-            list.appendChild(empty);
-            return;
-        }
-        rows.slice(0, 10).forEach((row, i) => {
-            const li = document.createElement('li');
-            li.className = 'md-lb-row game-lb-row';
-            if (i < 3) li.classList.add(`md-lb-top${i + 1}`);
-            const rank = document.createElement('span');
-            rank.className = 'md-lb-rank game-lb-rank';
-            rank.textContent = String(i + 1);
-            const nm = document.createElement('span');
-            nm.className = 'md-lb-name game-lb-name';
-            nm.textContent = row.name || '—';
-            const sc = document.createElement('span');
-            sc.className = 'md-lb-score game-lb-score';
-            sc.textContent = String(row.score);
-            li.appendChild(rank);
-            li.appendChild(nm);
-            li.appendChild(sc);
-            list.appendChild(li);
-        });
+        renderEmbeddedScoreRows(list, rows, 'md', this.t('noScores'), true);
     }
 
     copyResult() {
         const text = this.mode === 'daily' && this.daily
             ? `${this.t('title')} · ${this.daily.display} · ${this.t('spent')} ${this.daily.totalSpent} · ★${this.daily.stars}`
             : `${this.t('title')} · ${this.t('vessel')} ${this.levelIdx + 1} · ${this.t('spent')} ${this.world ? this.world.spent : 0}`;
-        const done = () => this.showToast(this.t('copyResult') + ' ✓');
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text).then(done).catch(done);
-        } else {
-            try {
-                const ta = document.createElement('textarea');
-                ta.value = text;
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                document.body.removeChild(ta);
-            } catch (e) { /* 忽略 */ }
-            done();
-        }
+        void copyResultText(text).then(ok => {
+            this.showToast(this.t('copyResult') + (ok ? ' ✓' : ' ✕'));
+        });
     }
 
     saveProgress() {

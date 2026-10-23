@@ -19,8 +19,11 @@ function object(value, allowed, label) {
 }
 
 function options(game) {
-    const shell = object(game.shell, ['styles', 'footer', 'drawer'], 'shell');
+    const shell = object(game.shell, ['styles', 'footer', 'drawer', 'results'], 'shell');
     const styles = object(shell.styles, ['page', 'scienceShowcase', 'stageStatus'], 'shell.styles');
+    if (shell.results !== undefined && !['over', 'both'].includes(shell.results)) {
+        throw new Error('shell.results must be over or both');
+    }
     const footer = object(shell.footer,
         ['classPrefix', 'hintClass', 'id', 'key', 'touchKey', 'text'], 'shell.footer');
     const drawer = object(shell.drawer, ['idBase', 'i18n'], 'shell.drawer');

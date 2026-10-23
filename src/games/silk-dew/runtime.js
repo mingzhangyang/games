@@ -1,3 +1,4 @@
+import { copyResultText } from '../../platform/result-clipboard.js';
 /**
  * Silkfall 垂丝引露 — 绳索牵拉物理解谜
  * =====================================
@@ -40,7 +41,7 @@ import { storageGet } from '../../platform/safe-storage.js';
 import { track } from '../../platform/analytics.js';
 import { todayKey, todayKeyDisplay } from '../../platform/daily.js';
 import { createScoreboardResultSession, retryScoreResults } from '../../platform/scoreboard-submission.js';
-import { renderEmbeddedScoreResult, resetEmbeddedScoreResult } from '../../platform/scoreboard-result-view.js';
+import { renderEmbeddedScoreResult, resetEmbeddedScoreResult, renderEmbeddedScoreRows } from '../../platform/scoreboard-result-view.js';
 import { LANGUAGES } from './i18n.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
 import { createSilkDewScene } from './render/scene.js';
@@ -644,34 +645,9 @@ export class SilkfallGame {
     }
 
     renderBoard(rows) {
-        const el = this.el;
-        const list = el['lb-list'];
+        const list = this.el['lb-list'];
         if (!list) return;
-        list.innerHTML = '';
-        if (!rows || !rows.length) {
-            const empty = document.createElement('div');
-            empty.className = 'sd-lb-empty game-lb-empty';
-            empty.textContent = this.t('noScores');
-            list.appendChild(empty);
-            return;
-        }
-        rows.slice(0, 10).forEach((row, i) => {
-            const li = document.createElement('li');
-            li.className = 'sd-lb-row game-lb-row';
-            const rank = document.createElement('span');
-            rank.className = 'sd-lb-rank game-lb-rank';
-            rank.textContent = String(i + 1);
-            const nm = document.createElement('span');
-            nm.className = 'sd-lb-name game-lb-name';
-            nm.textContent = row.name || '—';
-            const sc = document.createElement('span');
-            sc.className = 'sd-lb-score game-lb-score';
-            sc.textContent = String(row.score);
-            li.appendChild(rank);
-            li.appendChild(nm);
-            li.appendChild(sc);
-            list.appendChild(li);
-        });
+        renderEmbeddedScoreRows(list, rows, 'sd', this.t('noScores'));
     }
 
     copyResult() {
@@ -681,20 +657,9 @@ export class SilkfallGame {
         const text = this.mode === 'daily' && this.daily
             ? `${this.t('title')} · ${this.daily.display} · ${this.t('drags')} ${this.daily.totalDrags} · ★${this.daily.stars}`
             : `${this.t('title')} · ${this.t('level')} ${this.levelIdx + 1} · ${this.t('drags')} ${this.drags} · ` + '★'.repeat(levelStars);
-        const done = () => this.showToast(this.t('copyResult') + ' ✓');
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text).then(done).catch(done);
-        } else {
-            try {
-                const ta = document.createElement('textarea');
-                ta.value = text;
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                document.body.removeChild(ta);
-            } catch (e) { /* 忽略 */ }
-            done();
-        }
+        void copyResultText(text).then(ok => {
+            this.showToast(this.t('copyResult') + (ok ? ' ✓' : ' ✕'));
+        });
     }
 
     saveProgress() {

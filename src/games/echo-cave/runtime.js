@@ -1,3 +1,5 @@
+import { renderEmbeddedScoreRows } from '../../platform/scoreboard-result-view.js';
+import { copyResultText } from '../../platform/result-clipboard.js';
 /**
  * Echo Cave 回声洞窟 — 声呐洞窟解谜
  * =====================================
@@ -633,54 +635,18 @@ export class EchoCaveGame {
     }
 
     renderBoard(rows) {
-        const el = this.el;
-        const list = el['lb-list'];
+        const list = this.el['lb-list'];
         if (!list) return;
-        list.innerHTML = '';
-        if (!rows || !rows.length) {
-            const empty = document.createElement('div');
-            empty.className = 'ec-lb-empty game-lb-empty';
-            empty.textContent = this.t('noScores');
-            list.appendChild(empty);
-            return;
-        }
-        rows.slice(0, 10).forEach((row, i) => {
-            const li = document.createElement('li');
-            li.className = 'ec-lb-row game-lb-row';
-            const rank = document.createElement('span');
-            rank.className = 'ec-lb-rank game-lb-rank';
-            rank.textContent = String(i + 1);
-            const nm = document.createElement('span');
-            nm.className = 'ec-lb-name game-lb-name';
-            nm.textContent = row.name || '—';
-            const sc = document.createElement('span');
-            sc.className = 'ec-lb-score game-lb-score';
-            sc.textContent = String(row.score);
-            li.appendChild(rank);
-            li.appendChild(nm);
-            li.appendChild(sc);
-            list.appendChild(li);
-        });
+        renderEmbeddedScoreRows(list, rows, 'ec', this.t('noScores'));
     }
 
     copyResult() {
         const text = this.mode === 'daily' && this.daily
             ? `${this.t('title')} · ${this.daily.display} · ${this.t('pulses')} ${this.daily.totalPulses} · ★${this.daily.stars}`
             : `${this.t('title')} · ${this.t('level')} ${this.levelIdx + 1} · ${this.t('pulses')} ${this.pulseUsed} · ` + '★'.repeat(this.starsForLevel(this.pulseUsed, this.par, this.world && this.world.got === this.world.total && this.world.total > 0));
-        const done = () => this.showToast(this.t('copyResult') + ' ✓');
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text).then(done).catch(done);
-        } else {
-            try {
-                const ta = document.createElement('textarea');
-                ta.value = text;
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                document.body.removeChild(ta);
-            } catch (e) { /* 忽略 */ }
-            done();
-        }
+        void copyResultText(text).then(ok => {
+            this.showToast(this.t('copyResult') + (ok ? ' ✓' : ' ✕'));
+        });
     }
 
     saveProgress() {

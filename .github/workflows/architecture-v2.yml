@@ -68,6 +68,12 @@ jobs:
           git fetch --no-tags --depth=1 origin 46f2aad08beb0a6221b012473e69efa1f903bdea
           node tools/checks/compare-topbar-html.mjs 46f2aad08beb0a6221b012473e69efa1f903bdea
 
+      - name: Step 6c-3 baseline HTML byte parity
+        if: github.head_ref == 'refactor/result-overlays-6c3'
+        run: |
+          git fetch --no-tags --depth=1 origin fa99eb6e64a45a2af7d8cbe6a483329b97dfe15e
+          node tools/checks/compare-result-html.mjs fa99eb6e64a45a2af7d8cbe6a483329b97dfe15e
+
       # Prove a fresh checkout works without dist before generating build output.
       # Browser shards below still verify the real stamped build after build.
       - name: Service Worker source-only regression
@@ -153,6 +159,19 @@ jobs:
 
       - name: Browser verification (shard ${{ matrix.shard }})
         run: node tests/verify-all.mjs --browser --with-dist --shard=${{ matrix.shard }}/${SHARDS} --jobs=2
+
+      - name: Step 6c-3 pixel-identical result overlays
+        if: github.head_ref == 'refactor/result-overlays-6c3' && matrix.shard == 1
+        run: |
+          git fetch --no-tags --depth=1 origin fa99eb6e64a45a2af7d8cbe6a483329b97dfe15e
+          git worktree add --detach /tmp/result6c3-before fa99eb6e64a45a2af7d8cbe6a483329b97dfe15e
+          (cd /tmp/result6c3-before && node tests/lib/serve-static.mjs 8898) > /tmp/result6c3-before.log 2>&1 &
+          BEFORE_PID=$!
+          node tests/lib/serve-static.mjs 8899 > /tmp/result6c3-after.log 2>&1 &
+          AFTER_PID=$!
+          trap 'kill "$BEFORE_PID" "$AFTER_PID" || true' EXIT
+          sleep 2
+          node tools/checks/compare-result-screenshots.mjs http://127.0.0.1:8898 http://127.0.0.1:8899
 
       # Static full-page screenshot audit against the exact pre-migration commit.
       # Both servers disable page JavaScript to exclude nondeterministic game physics;

@@ -1,3 +1,4 @@
+import { copyResultText } from '../../platform/result-clipboard.js';
 /**
  * Crystal Bloom 晶绽 — 降温曲线结晶解谜
  * ==================================================================
@@ -50,7 +51,7 @@ import { CRYSTAL_BLOOM_STORAGE, CRYSTAL_BLOOM_STORAGE_SLOTS } from './storage.js
 import { track } from '../../platform/analytics.js';
 import { todayKey, todayKeyDisplay } from '../../platform/daily.js';
 import { createScoreboardResultSession, retryScoreResults } from '../../platform/scoreboard-submission.js';
-import { renderEmbeddedScoreResult, resetEmbeddedScoreResult } from '../../platform/scoreboard-result-view.js';
+import { renderEmbeddedScoreResult, resetEmbeddedScoreResult, renderEmbeddedScoreRows } from '../../platform/scoreboard-result-view.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
 import { bindPalette } from '../../platform/theme.js';
 
@@ -719,55 +720,18 @@ export class CrystalBloomGame {
     }
 
     renderBoard(rows) {
-        const el = this.el;
-        const list = el['lb-list'];
+        const list = this.el['lb-list'];
         if (!list) return;
-        list.innerHTML = '';
-        if (!rows || !rows.length) {
-            const empty = document.createElement('div');
-            empty.className = 'cb-lb-empty game-lb-empty';
-            empty.textContent = this.t('noScores');
-            list.appendChild(empty);
-            return;
-        }
-        rows.slice(0, 10).forEach((row, i) => {
-            const li = document.createElement('li');
-            li.className = 'cb-lb-row game-lb-row';
-            if (i < 3) li.classList.add(`cb-lb-top${i + 1}`);
-            const rank = document.createElement('span');
-            rank.className = 'cb-lb-rank game-lb-rank';
-            rank.textContent = String(i + 1);
-            const nm = document.createElement('span');
-            nm.className = 'cb-lb-name game-lb-name';
-            nm.textContent = row.name || '—';
-            const sc = document.createElement('span');
-            sc.className = 'cb-lb-score game-lb-score';
-            sc.textContent = String(row.score);
-            li.appendChild(rank);
-            li.appendChild(nm);
-            li.appendChild(sc);
-            list.appendChild(li);
-        });
+        renderEmbeddedScoreRows(list, rows, 'cb', this.t('noScores'), true);
     }
 
     copyResult() {
         const text = this.mode === 'daily' && this.daily
             ? `${this.t('title')} · ${this.daily.display} · ${this.t('cost')} ${this.daily.totalCost} · ★${this.daily.stars}`
             : `${this.t('title')} · ${this.t('vessel')} ${this.levelIdx + 1} · ${this.t('cost')} ${costOf(this.anchors, this.stirs)}`;
-        const done = () => this.showToast(this.t('copyResult') + ' ✓');
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text).then(done).catch(done);
-        } else {
-            try {
-                const ta = document.createElement('textarea');
-                ta.value = text;
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                document.body.removeChild(ta);
-            } catch (e) { /* 忽略 */ }
-            done();
-        }
+        void copyResultText(text).then(ok => {
+            this.showToast(this.t('copyResult') + (ok ? ' ✓' : ' ✕'));
+        });
     }
 
     saveProgress() {
