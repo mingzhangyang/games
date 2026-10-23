@@ -11,6 +11,7 @@ import { parse as parseJavaScript } from 'acorn';
 import { parse } from 'parse5';
 import { registry } from './lib/registry.mjs';
 import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
+import { makeText } from '../src/platform/i18n.js';
 import { renderGameShell } from '../src/platform/shell/render-game-shell.js';
 import {
     renderStylesheets, renderFooter, renderStatsDrawer, renderTailScripts,
@@ -148,7 +149,7 @@ assert(literalFooter.includes('&lt;img&gt; &amp;copy; &quot;hint&quot;'), 'liter
 // generated entry parses or that the runtime binds the matching capabilities.
 function checkScaffoldCli() {
     const temp = mkdtempSync(join(tmpdir(), 'games-shell-cli-'));
-    const fresh = (id, options = {}) => ({ ...fixture, id, href: id + '.html',
+    const fresh = (id, options = {}) => ({ ...fixture, id, href: id + '.html', i18nVar: 'TEXT',
         entry: 'src/games/' + id + '/index.js', ...options });
     const plain = { caps: ['topbar'], chrome: { actions: ['sound'] } };
     const cases = [
@@ -174,6 +175,8 @@ function checkScaffoldCli() {
         [join(temp, 'tools/generators/new-game.mjs'), game.id], { stdio: 'pipe', timeout: 10000 });
     try {
         for (const name of ['tools/generators/new-game.mjs', 'src/platform/icons.js',
+            'tests/verify-i18n.mjs', 'tests/lib/registry.mjs', 'tools/lib/registry.mjs',
+            'tests/lib/static-module-graph.mjs', 'src/platform/i18n.js', 'src/platform/site-settings.js',
             ...['render-game-shell', 'render-shell-parts', 'render-topbar'].map(n => 'src/platform/shell/' + n + '.js')]) {
             mkdirSync(dirname(join(temp, name)), { recursive: true });
             copyFileSync(join(ROOT, name), join(temp, name));
@@ -189,7 +192,7 @@ function checkScaffoldCli() {
             const body = ast.body.filter(node => node.type !== 'ImportDeclaration')
                 .map(node => source.slice(node.start, node.end)).join('\n');
             runInNewContext(body, {
-                ICONS: {}, makeText: value => value, onReady: fn => fn(), getLang: () => 'en',
+                ICONS: {}, makeText, onReady: fn => fn(), getLang: () => 'en',
                 createI18nBinder: options => { tables = options.tables; return { apply() {} }; },
                 mountGameRuntime: options => { assert(!runtime, game.id + ': single runtime'); runtime = options; },
                 window: { addEventListener() {} },
@@ -207,6 +210,8 @@ function checkScaffoldCli() {
             if (hasDrawer) {
                 assert.equal(tables.en.close, 'Close', game.id + ': drawer has an English close label');
                 assert.equal(tables.zh.close, '关闭', game.id + ': drawer has a Chinese close label');
+                assert(!Object.hasOwn(tables.en, 'close') && !Object.hasOwn(tables.zh, 'close'),
+                    game.id + ': drawer inherits the shared close labels');
                 for (const suffix of ['Toggle', 'Drawer', 'DrawerBody', 'Close', 'Panels', 'DrawerTitle']) {
                     assert(nodes.some(n => attr(n, 'id') === runtime.drawer.idPrefix + 'Stats' + suffix),
                         game.id + ': shared drawer adapter target ' + suffix);
@@ -250,6 +255,11 @@ function checkScaffoldCli() {
                 assert(!existsSync(join(temp, name)), 'invalid scaffold is rejected before writing ' + name);
             }
         }
+        // A parsed JS object alone cannot prove compatibility with the repo's
+        // binding-key checker. Run its unchanged implementation on every output.
+        writeFileSync(join(temp, 'games.config.json'), JSON.stringify({ games: cases }));
+        execFileSync(process.execPath, [join(temp, 'tests/verify-i18n.mjs')],
+            { stdio: 'pipe', timeout: 10000 });
     } finally {
         rmSync(temp, { recursive: true, force: true });
     }

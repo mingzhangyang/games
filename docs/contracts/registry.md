@@ -165,6 +165,7 @@ caps 是校验器与迁移脚本的唯一判据：
 `shell.drawer.idBase` 用于保留既有页面的历史 ID；这些页面沿用自己的运行时适配器。
 新游戏 CLI `tools/generators/new-game.mjs` 使用共享运行时的 `<prefix>Stats` 约定，因此拒绝与此不同的 `idBase` 覆盖，避免生成一个无法绑定的统计入口；这不影响现有 tetris 的特殊 ID。
 CLI 按声明的页脚 `key` / `touchKey` 生成默认双语提示词，并保留已有的标题等基本词条；`key: null` 时必须显式设置 `touchKey: null` 并提供非空静态 `text`。共享 binder 只把 `data-i18n-touch` 用作 `data-i18n` 的替代文案，不支持单独的触屏绑定；CLI 不会改变省略 `touchKey` 时默认使用 `hintTouch` 的 registry 语义。
+脚手架语言表保留 i18n 校验器识别的 `en:` / `zh:` 外层声明，内层键名和文案通过 JSON 序列化转义；`close` 等公共文案经真实 `makeText()` 原型链继承。CLI 回归在六类实际输出上运行原有 `verify-i18n.mjs`，同时验证绑定键、首次应用和语言切换路径。
 
 维护时修改 registry 或共享模板后运行 `npm run gen`，不要手改区域内产物。
 首次安装哨兵与后续替换都只接管完整连续节点，不把手写内容夹在拆开的起止标签之间。

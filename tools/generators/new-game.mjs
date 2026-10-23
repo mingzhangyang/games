@@ -52,8 +52,8 @@ if (footerKey === null && footerTouchKey !== null) {
     throw new Error('new-game static footer requires touchKey: null');
 }
 const textTables = {
-    en: { title: game.name.en, titleZh: game.name.zh, stats: 'Stats', close: 'Close' },
-    zh: { title: game.name.zh, titleZh: game.name.en, stats: '统计', close: '关闭' },
+    en: { title: game.name.en, titleZh: game.name.zh, stats: 'Stats' },
+    zh: { title: game.name.zh, titleZh: game.name.en, stats: '统计' },
 };
 const defaultHints = {
     en: { desktop: 'Tap or use the keyboard to play.', touch: 'Tap to play.' },
@@ -82,7 +82,10 @@ import { mountGameRuntime } from '../../platform/runtime/game-runtime.js';
 import { createI18nBinder } from '../../platform/i18n/bindings.js';
 import { getLang } from '../../platform/site-settings.js';
 
-const TEXT = makeText(${JSON.stringify(textTables, null, 4)});
+const TEXT = makeText({
+    en: ${JSON.stringify(textTables.en, null, 4).replaceAll('\n', '\n    ')},
+    zh: ${JSON.stringify(textTables.zh, null, 4).replaceAll('\n', '\n    ')},
+});
 
 class Game {
     pauseQuiet() {}
