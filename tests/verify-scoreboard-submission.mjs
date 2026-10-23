@@ -251,7 +251,7 @@ try {
     const late = session([]);
     // publish() waits for loadBoard(), which joins the blocked startup batch.
     // Start it without awaiting that batch, then wait only for its failed POST.
-    const publishing = late.publish(base);
+    const latePublishing = late.publish(base);
     for (let i = 0; i < 20 && late.getState()?.submission !== 'queued'; i++) {
         await Promise.resolve();
     }
@@ -259,7 +259,7 @@ try {
     const lateAttempts = requests.filter(request => request.method === 'POST' && request.entry.score === 17).length;
     const onlineRefresh = late.refresh();
     startupGate.resolve(response(500));
-    await Promise.all([publishing, startupRetry, onlineRefresh]);
+    await Promise.all([latePublishing, startupRetry, onlineRefresh]);
     assert.ok(requests.filter(request => request.method === 'POST' && request.entry.score === 17).length > lateAttempts,
         'online refresh retries a result queued after startup retry snapshot');
 
