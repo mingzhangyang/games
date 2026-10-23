@@ -33,9 +33,19 @@ try {
         const scaffoldPage = await browser.newPage();
         try {
             await scaffoldPage.setJavaScriptEnabled(false);
-            const html = renderGameShell(scaffoldGame)
-                .replace('<head>', '<head>\n<base href="' + BASE + '/">');
-            await scaffoldPage.setContent(html, { waitUntil: 'load', timeout: 30000 });
+            // Load the *actual* source or bundled dist stylesheets, then replace
+            // only the DOM with the newly emitted scaffold. A raw scaffold HTML
+            // document references source CSS paths which are bundled away in dist.
+            const response = await scaffoldPage.goto(BASE + '/' + scaffoldGame.href, {
+                waitUntil: 'load', timeout: 30000,
+            });
+            assert.equal(response?.status(), 200, 'scaffold CSS fixture must load');
+            await scaffoldPage.evaluate(html => {
+                const emitted = new DOMParser().parseFromString(html, 'text/html');
+                document.documentElement.className = emitted.documentElement.className;
+                document.documentElement.lang = emitted.documentElement.lang;
+                document.body.innerHTML = emitted.body.innerHTML;
+            }, renderGameShell(scaffoldGame));
             const css = await scaffoldPage.evaluate(prefix => {
                 const root = document.documentElement;
                 const overlays = ['clear', 'over'].map(kind => {
