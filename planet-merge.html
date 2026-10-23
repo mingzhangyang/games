@@ -138,22 +138,28 @@
 
             <!-- 由 apply-stats-drawer.py 生成的搬迁节点：JS 在侧栏 / 底部抽屉之间搬移它 -->
             <div id="pmStatsPanels">
+                <!-- registry:begin sidebar-howto -->
                 <div class="pm-side-card game-side-card">
-                    <div class="pm-side-title game-side-title" id="pm-side-howto-title"></div>
+                    <div class="pm-side-title game-side-title" id="pm-side-howto-title">📖 <span data-i18n="sideHowTo"></span></div>
                     <p class="pm-side-text game-side-text" id="pm-side-howto" data-i18n="howto"></p>
                 </div>
+                <!-- registry:end sidebar-howto -->
+                <!-- registry:begin sidebar-records -->
                 <div class="pm-side-card game-side-card">
-                    <div class="pm-side-title game-side-title" id="pm-side-records-title"></div>
-                    <div class="pm-side-records" id="pm-side-records"></div>
+                    <div class="pm-side-title game-side-title" id="pm-side-records-title">🏅 <span data-i18n="sideRecords"></span></div>
+                    <div class="pm-side-records game-side-records" id="pm-side-records"></div>
                 </div>
+                <!-- registry:end sidebar-records -->
             </div>
 
             <!-- 桌面侧栏专属：必须放在 #pmStatsPanels 外面 —— 那个节点会被
                  src/platform/game-drawer.js 整体搬进移动端抽屉，放进去会与页脚「更多游戏」重复；
                  放在外面则只在桌面侧栏出现（窄屏 aside 本来就被 has-stats-drawer 隐藏） -->
+            <!-- registry:begin sidebar-more -->
             <div class="pm-side-card game-side-card">
                 <nav class="more-games" id="pmSideMore"></nav>
             </div>
+            <!-- registry:end sidebar-more -->
 
         </aside>
     </main>

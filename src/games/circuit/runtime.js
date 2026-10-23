@@ -13,6 +13,7 @@
  * i18n / safe-storage / analytics / game-sfx / boot。
  */
 
+import { renderSideRecords } from '../../platform/side-records.js';
 import { bindContextualRestart } from '../../platform/contextual-restart.js';
 import {
     GRID_COLS,
@@ -321,17 +322,7 @@ export class CircuitGame {
             [`📅 ${t.bestToday}`, best ? `${best} ${t.movesWord}` : '—'],
             [`⭐ ${t.stars}`, `${totalStars}/${LEVELS.length * 3}`],
         ];
-        box.textContent = '';
-        rows.forEach(([label, value]) => {
-            const row = document.createElement('div');
-            row.className = 'cc-side-row game-side-row';
-            const labelEl = document.createElement('span');
-            labelEl.textContent = label;
-            const valueEl = document.createElement('b');
-            valueEl.textContent = value;
-            row.append(labelEl, valueEl);
-            box.appendChild(row);
-        });
+        renderSideRecords(box, rows.map(([label, value]) => ({ label, value })), { rowClass: 'cc-side-row' });
     }
     /* ── 关卡装载与模式 ── */
 

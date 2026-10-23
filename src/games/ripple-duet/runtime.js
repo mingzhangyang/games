@@ -21,6 +21,7 @@
  * leaderboard / daily / i18n / safe-storage / analytics / game-sfx / boot。
  */
 
+import { renderSideRecords } from '../../platform/side-records.js';
 import { bindContextualRestart } from '../../platform/contextual-restart.js';
 import { shouldHandleGameShortcut } from '../../platform/runtime/game-shortcut-target.js';
 import {
@@ -632,13 +633,13 @@ export class RippleDuetGame {
             const p = this.progress[spec.id];
             if (p && p.stars > 0) { done++; sum += p.bestCost; }
         });
-        rows.push(`<div class="rd-rec game-side-row"><span>${this.t('stars')}</span><b>${this.totalStars()}/60</b></div>`);
-        rows.push(`<div class="rd-rec game-side-row"><span>${this.t('best')}</span><b>${done ? sum : '—'}</b></div>`);
+        rows.push({ label: this.t('stars'), value: `${this.totalStars()}/60` });
+        rows.push({ label: this.t('best'), value: done ? sum : '—' });
         const best = this.readLocalBoard('ripple-duet');
         if (best.length) {
-            rows.push(`<div class="rd-rec game-side-row"><span>${this.t('leaderboard')}</span><b>${best[0].score}</b></div>`);
+            rows.push({ label: this.t('leaderboard'), value: best[0].score });
         }
-        box.innerHTML = rows.join('');
+        renderSideRecords(box, rows, { rowClass: 'rd-rec' });
     }
 
     totalStars() {

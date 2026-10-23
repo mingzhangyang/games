@@ -23,6 +23,7 @@
  * leaderboard / daily / i18n / safe-storage / analytics / game-sfx / boot。
  */
 
+import { renderSideRecords } from '../../platform/side-records.js';
 import { bindContextualRestart } from '../../platform/contextual-restart.js';
 import { shouldHandleGameShortcut } from '../../platform/runtime/game-shortcut-target.js';
 import { LANGUAGES } from './i18n.js';
@@ -405,20 +406,9 @@ export class FlameVerseGame {
             [this.t('stars'), `${stars} / ${LEVELS.length * 3}`],
             [this.t('paid'), bestCount ? String(bestSum) : '—'],
         ];
-        box.innerHTML = '';
-        for (const [k, v] of rows) {
-            const row = document.createElement('div');
-            row.className = 'fv-side-row game-side-row';
-            const kk = document.createElement('span');
-            kk.className = 'fv-side-k';
-            kk.textContent = k;
-            const vv = document.createElement('b');
-            vv.className = 'fv-side-v';
-            vv.textContent = v;
-            row.appendChild(kk);
-            row.appendChild(vv);
-            box.appendChild(row);
-        }
+        renderSideRecords(box, rows.map(([label, value]) => ({ label, value })), {
+            rowClass: 'fv-side-row', labelClass: 'fv-side-k', valueClass: 'fv-side-v',
+        });
     }
 
     /**

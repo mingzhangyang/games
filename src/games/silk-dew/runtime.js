@@ -15,6 +15,7 @@
  * leaderboard / daily / i18n / safe-storage / analytics / game-sfx / boot。
  */
 
+import { renderSideRecords } from '../../platform/side-records.js';
 import { bindContextualRestart } from '../../platform/contextual-restart.js';
 import {
     STAGE,
@@ -402,20 +403,9 @@ export class SilkfallGame {
             [this.t('stars'), `${stars} / ${LEVELS.length * 3}`],
             [this.t('drags'), bestCount ? String(bestSum) : '—'],
         ];
-        box.innerHTML = '';
-        for (const [k, v] of rows) {
-            const row = document.createElement('div');
-            row.className = 'sd-side-row game-side-row';
-            const kk = document.createElement('span');
-            kk.className = 'sd-side-k';
-            kk.textContent = k;
-            const vv = document.createElement('b');
-            vv.className = 'sd-side-v';
-            vv.textContent = v;
-            row.appendChild(kk);
-            row.appendChild(vv);
-            box.appendChild(row);
-        }
+        renderSideRecords(box, rows.map(([label, value]) => ({ label, value })), {
+            rowClass: 'sd-side-row', labelClass: 'sd-side-k', valueClass: 'sd-side-v',
+        });
     }
 
     /* ---------------------- 模式与关卡流程 ---------------------- */

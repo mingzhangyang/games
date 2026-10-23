@@ -120,22 +120,28 @@
 
             <!-- 由 apply-stats-drawer.py 生成的搬迁节点：JS 在侧栏 / 底部抽屉之间搬移它 -->
             <div id="hsStatsPanels">
+                <!-- registry:begin sidebar-howto -->
                 <div class="hs-side-card game-side-card">
-                    <div class="hs-side-title game-side-title" id="hs-side-howto-title"></div>
+                    <div class="hs-side-title game-side-title" id="hs-side-howto-title">📖 <span data-i18n="sideHowTo"></span></div>
                     <p class="hs-side-text game-side-text" id="hs-side-howto" data-i18n="howto"></p>
                 </div>
+                <!-- registry:end sidebar-howto -->
+                <!-- registry:begin sidebar-records -->
                 <div class="hs-side-card game-side-card">
-                    <div class="hs-side-title game-side-title" id="hs-side-records-title"></div>
-                    <div class="hs-side-records" id="hs-side-records"></div>
+                    <div class="hs-side-title game-side-title" id="hs-side-records-title">🏅 <span data-i18n="sideRecords"></span></div>
+                    <div class="hs-side-records game-side-records" id="hs-side-records"></div>
                 </div>
+                <!-- registry:end sidebar-records -->
             </div>
 
             <!-- 桌面侧栏专属：必须放在 #hsStatsPanels 外面 —— 那个节点会被
                  src/platform/game-drawer.js 整体搬进移动端抽屉，放进去会与页脚「更多游戏」重复；
                  放在外面则只在桌面侧栏出现（窄屏 aside 本来就被 has-stats-drawer 隐藏） -->
+            <!-- registry:begin sidebar-more -->
             <div class="hs-side-card game-side-card">
                 <nav class="more-games" id="hsSideMore"></nav>
             </div>
+            <!-- registry:end sidebar-more -->
 
         </aside>
     </main>

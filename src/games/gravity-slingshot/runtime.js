@@ -12,6 +12,7 @@
  * Vanilla JS. No runtime dependencies.
  */
 
+import { renderSideRecords } from '../../platform/side-records.js';
 import { bindContextualRestart } from '../../platform/contextual-restart.js';
 import { ensurePlayerName, setPlayerName } from '../../platform/player.js';
 import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
@@ -193,8 +194,6 @@ class GravityGame {
         if (this.el['mute-btn']) {
         }
         // 桌面侧栏（≥1024px 可见）
-        if (this.el['side-howto-title']) this.el['side-howto-title'].textContent = `📖 ${t.sideHowTo}`;
-        if (this.el['side-records-title']) this.el['side-records-title'].textContent = `🏅 ${t.sideRecords}`;
         this.updateSideRecords();
         this.renderLevelGrid();
         this.updateDailyBest();
@@ -212,17 +211,7 @@ class GravityGame {
             [`📅 ${t.bestToday}`, todayBest ? `${todayBest} ${t.launchesWord}` : '—'],
             [`⭐ ${t.stars}`, `${totalStars}/${LEVELS.length * 3}`]
         ];
-        box.textContent = '';
-        rows.forEach(([label, value]) => {
-            const row = document.createElement('div');
-            row.className = 'gd-side-row game-side-row';
-            const labelEl = document.createElement('span');
-            labelEl.textContent = label;
-            const valueEl = document.createElement('b');
-            valueEl.textContent = value;
-            row.append(labelEl, valueEl);
-            box.appendChild(row);
-        });
+        renderSideRecords(box, rows.map(([label, value]) => ({ label, value })), { rowClass: 'gd-side-row' });
     }
 
     updateDailyBest(date = todayCompact()) {

@@ -8,7 +8,7 @@
 - 游戏顶栏 markup 由 registry 生成，按 `registry.md` §3.1 通过 `chrome.actions` 角色列表及稀疏 `chrome.overrides` 编辑并运行 `npm run gen`；i18n 与 `bindChrome` 行为仍按本文接入。
 - 页脚、本地样式表、页尾脚本与空统计抽屉由共享 `render-shell-parts.js` 生成，默认派生与 `shell` 稀疏覆盖见 `registry.md` §3.2；同样只改 registry / 模板后运行 `npm run gen`。
 - 校验工具：`tests/verify-chrome.mjs`（按文件名自动发现，verify-all 校验项 `verify-chrome`）
-- 后续（6b–6d，未实施）：侧栏信息卡片、结算弹层、共享榜单服务与同构关卡网格，见 `docs/proposal-shell-generation.md`；不属于本轮 6a。
+- 6b 的同构侧栏信息卡片按角色生成（`registry.md` §3.3）；它们与页脚、抽屉空壳复用静态生成工具，但抽屉搬移与暂停仍由现有运行时负责。结算弹层、共享榜单服务与同构关卡网格的后续边界见 `docs/proposal-shell-generation.md`。
 
 ---
 

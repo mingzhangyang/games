@@ -151,27 +151,35 @@
 
             <!-- 由 game-drawer.js 在侧栏 / 底部抽屉之间搬移的面板容器 -->
             <div id="ecStatsPanels">
+                <!-- registry:begin sidebar-howto -->
                 <div class="ec-side-card game-side-card">
                     <div class="ec-side-title game-side-title" id="ec-side-howto-title" data-i18n="sideHowTo"></div>
                     <p class="ec-side-text game-side-text" id="ec-side-howto" data-i18n="howto"></p>
                 </div>
+                <!-- registry:end sidebar-howto -->
+                <!-- registry:begin sidebar-records -->
                 <div class="ec-side-card game-side-card">
                     <div class="ec-side-title game-side-title" id="ec-side-records-title" data-i18n="sideRecords"></div>
                     <div class="ec-side-records game-side-records" id="ec-side-records"></div>
                 </div>
+                <!-- registry:end sidebar-records -->
             </div>
 
             <!-- 桌面侧栏专属：必须放在 #ecStatsPanels 外面 —— 那个节点会被
                  src/platform/game-drawer.js 整体搬进移动端抽屉，放进去会与页脚「更多游戏」重复；
                  放在外面则只在桌面侧栏出现（窄屏 aside 本来就被 has-stats-drawer 隐藏） -->
+            <!-- registry:begin sidebar-legend -->
             <div class="ec-side-card game-side-card">
                 <div class="ec-side-title game-side-title" id="ec-side-legend-title" data-i18n="legendTitle"></div>
                 <div class="ec-side-legend game-side-legend" id="ec-side-legend"></div>
             </div>
+            <!-- registry:end sidebar-legend -->
 
+            <!-- registry:begin sidebar-more -->
             <div class="ec-side-card game-side-card">
                 <nav class="more-games" id="ecSideMore"></nav>
             </div>
+            <!-- registry:end sidebar-more -->
 
         </aside>
     </main>

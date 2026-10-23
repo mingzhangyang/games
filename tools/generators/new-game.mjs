@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderGameShell } from '../../src/platform/shell/render-game-shell.js';
+import { sidebarOptions } from '../../src/platform/shell/render-sidebar.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const id = process.argv.find(arg => !arg.startsWith('--') && arg !== process.argv[0] && arg !== process.argv[1]);
@@ -66,6 +67,22 @@ for (const [lang, table] of Object.entries(textTables)) {
     if (footerTouchKey !== null && !Object.hasOwn(table, footerTouchKey)) {
         table[footerTouchKey] = defaultHints[lang].touch;
     }
+}
+const sidebar = sidebarOptions(game);
+if (sidebar) {
+    const addCopy = (key, en, zh) => {
+        if (!key) return;
+        if (!Object.hasOwn(textTables.en, key)) textTables.en[key] = en;
+        if (!Object.hasOwn(textTables.zh, key)) textTables.zh[key] = zh;
+    };
+    if (sidebar.panels.includes('howto')) {
+        addCopy(sidebar.howto.titleKey || 'sideHowTo', 'How to play', '玩法说明');
+        addCopy(sidebar.howto.textKey || 'howto', 'Tap or use the keyboard to play.', '点击或使用键盘开始游戏。');
+        addCopy(sidebar.howto.touchKey, 'Tap to play.', '轻触开始游戏。');
+        addCopy(sidebar.howto.scienceKey, 'Explore the rules by playing.', '在游戏中探索规律。');
+    }
+    if (sidebar.panels.includes('records')) addCopy(sidebar.records.titleKey || 'sideRecords', 'Records', '战绩');
+    if (sidebar.desktopOnly.includes('legend')) addCopy('legendTitle', 'Legend', '图例');
 }
 const drawerOptions = hasDrawer ? `        drawer: {
             ICONS,

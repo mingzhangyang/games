@@ -45,6 +45,7 @@ const QUICK_BROWSER = new Set(['smoke-index', 'verify-chrome', 'verify-theme', '
 // Re-run against the production build: every page's chrome/theme, the shared layout contracts
 // whose cascade depends on Vite's CSS chunk order, and the smokes that load production art.
 const DIST_SUITE = new Set([
+    'verify-sidebar-family',
     'verify-chrome', 'verify-theme', 'verify-desktop-frame', 'verify-stats-drawer', 'verify-immersive',
     'verify-start-menus', 'smoke-index', 'smoke-carrot-pull', 'smoke-needle-awn', 'smoke-tower-defense',
     'smoke-sword-flight', 'verify-topbar-overflow', 'verify-contextual-restart', 'verify-scoreboard-results',

@@ -21,6 +21,7 @@
  * leaderboard / daily / i18n / safe-storage / analytics / game-sfx / boot。
  */
 
+import { renderSideRecords } from '../../platform/side-records.js';
 import { bindContextualRestart } from '../../platform/contextual-restart.js';
 import { ensurePlayerName, setPlayerName } from '../../platform/player.js';
 import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
@@ -591,23 +592,12 @@ class BondForgeGame {
     renderSideRecords() {
         const box = this.el['side-records'];
         if (!box) return;
-        box.innerHTML = '';
         const rows = [
             [this.t('level'), LEVELS.length ? `${Math.min(this.levelIndex + 1, LEVELS.length)} / ${LEVELS.length}` : '—'],
             [this.t('drags'), String(this.drags)],
             [this.t('stars'), String(this.totalStars())],
         ];
-        rows.forEach(([k, v]) => {
-            const div = document.createElement('div');
-            div.className = 'bf-side-row game-side-row';
-            const label = document.createElement('span');
-            label.textContent = k;
-            const value = document.createElement('b');
-            value.textContent = v;
-            div.appendChild(label);
-            div.appendChild(value);
-            box.appendChild(div);
-        });
+        renderSideRecords(box, rows.map(([label, value]) => ({ label, value })), { rowClass: 'bf-side-row' });
     }
 
     totalStars() {

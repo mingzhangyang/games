@@ -14,6 +14,7 @@
  * leaderboard / daily / i18n / safe-storage / analytics / game-sfx / boot。
  */
 
+import { renderSideRecords } from '../../platform/side-records.js';
 import { bindContextualRestart } from '../../platform/contextual-restart.js';
 import { LANGUAGES } from './i18n.js';
 
@@ -375,20 +376,9 @@ export class EchoCaveGame {
             [this.t('stars'), `${stars} / ${LEVELS.length * 3}`],
             [this.t('pulses'), bestCount ? String(bestSum) : '—'],
         ];
-        box.innerHTML = '';
-        for (const [k, v] of rows) {
-            const row = document.createElement('div');
-            row.className = 'ec-side-row game-side-row';
-            const kk = document.createElement('span');
-            kk.className = 'ec-side-k';
-            kk.textContent = k;
-            const vv = document.createElement('b');
-            vv.className = 'ec-side-v';
-            vv.textContent = v;
-            row.appendChild(kk);
-            row.appendChild(vv);
-            box.appendChild(row);
-        }
+        renderSideRecords(box, rows.map(([label, value]) => ({ label, value })), {
+            rowClass: 'ec-side-row', labelClass: 'ec-side-k', valueClass: 'ec-side-v',
+        });
     }
 
     renderLegend() {
