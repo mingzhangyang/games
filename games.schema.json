@@ -773,6 +773,10 @@
       "additionalProperties": false,
       "description": "Static shell component choices. Defaults are derived; only existing differences are declared.",
       "properties": {
+        "results": {
+          "enum": ["over", "both"],
+          "description": "Opt-in result roles: daily over only, or daily over plus level clear. Game-owned specials remain outside regions."
+        },
         "styles": {
           "type": "object",
           "minProperties": 1,

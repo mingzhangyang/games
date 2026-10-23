@@ -1,3 +1,4 @@
+import { copyResultText } from '../../platform/result-clipboard.js';
 /**
  * Silkfall 垂丝引露 — 绳索牵拉物理解谜
  * =====================================
@@ -681,20 +682,9 @@ export class SilkfallGame {
         const text = this.mode === 'daily' && this.daily
             ? `${this.t('title')} · ${this.daily.display} · ${this.t('drags')} ${this.daily.totalDrags} · ★${this.daily.stars}`
             : `${this.t('title')} · ${this.t('level')} ${this.levelIdx + 1} · ${this.t('drags')} ${this.drags} · ` + '★'.repeat(levelStars);
-        const done = () => this.showToast(this.t('copyResult') + ' ✓');
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text).then(done).catch(done);
-        } else {
-            try {
-                const ta = document.createElement('textarea');
-                ta.value = text;
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                document.body.removeChild(ta);
-            } catch (e) { /* 忽略 */ }
-            done();
-        }
+        void copyResultText(text).then(ok => {
+            this.showToast(this.t('copyResult') + (ok ? ' ✓' : ' ✕'));
+        });
     }
 
     saveProgress() {

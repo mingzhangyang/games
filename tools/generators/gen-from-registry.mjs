@@ -16,6 +16,7 @@ import { registry } from '../lib/registry.mjs';
 import { renderTopbar } from '../../src/platform/shell/render-topbar.js';
 import { transformShellRegions, validatePageBindings } from '../lib/shell-regions.mjs';
 import { transformSidebarRegions } from '../lib/sidebar-regions.mjs';
+import { transformResultRegions } from '../lib/result-regions.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const CHECK = process.argv.includes('--check');
@@ -546,6 +547,7 @@ for (const g of GAMES) {
         ...((g.caps || []).includes('topbar') ? [topbarTransform(g)] : []),
         s => transformShellRegions(s, g),
         s => transformSidebarRegions(s, g),
+        s => transformResultRegions(s, g),
     ], (g.caps || []).includes('topbar') ? validatePageBindings : null);
 }
 processFile('index.html', [homeNewTransform, homeFilterTransform, homeCardsTransform]);

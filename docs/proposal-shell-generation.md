@@ -1,6 +1,6 @@
 # 页面骨架与信息卡片的 registry 生成方案（Chrome 第 6 步）
 
-> 状态：6a #179、6b #181、6c-1 #180、6c-2a #182 已合并；6c-2b #183 已合并；6c-2c 迁移最后五个内嵌榜单；6c-3 / 6d 为后续计划 · 原始盘点：2026-10-23 · 基线 main `fa2ad7d`
+> 状态：6a #179、6b #181、6c-1 #180、6c-2a #182 已合并；6c-2b #183 已合并；6c-2c #184 已合并；6c-3 结算弹层共享化；6d 为后续计划 · 原始盘点：2026-10-23 · 基线 main `fa2ad7d`
 > Repository: `mingzhangyang/games`
 > 范围：26 个 `topbar` 游戏页的样式表链接、页尾脚本、页脚、统计抽屉、侧栏信息卡片、结算 / 过关弹层与页内排行榜，以及关卡解谜十页 runtime 里的重复代码
 > 不在范围：舞台内部（画布、状态行内容）、各游戏自有的开始菜单内容、`index.html`、`math-rain` / `tank-battle`（豁免页）
@@ -142,6 +142,40 @@ D1 已选择保留两种视图、共用一套服务。后续若要把内嵌榜�
 
 6c-2 再将同一服务扩到其余内嵌榜单，逐页保留提交资格、计分、旧存储协议与视图生命周期；6c-3 才生成同构 clear / over 节点及提取剪贴板等小型展示函数。6c-1 不改变这些页面的业务逻辑，也不提前生成结算模板。
 
+#### Step 6c-3：静态结算模板迁移（独立于网络状态）
+
+基线为 `fa99eb6e64a45a2af7d8cbe6a483329b97dfe15e`（#184 合并后 main）。
+逐页审计确认十款关卡解谜游戏共有 **10 个 over** 和 **9 个 clear**，其中
+Gravity Slingshot 不含 clear，Bond Forge 的 clear 多出专用说明节点且缺少一组共享样式类，
+属于 C 类，继续由游戏维护；因此静态生成范围为 **10 个 over + 8 个 clear**。
+
+结构分类：
+
+- **A/B：** 其余 18 个弹层共享 `src/platform/shell/render-result-overlays.js` 两个结构模板，
+  只声明 `shell.results: "over" | "both"`；默认 ID、按钮顺序、类名及 SVG 从
+  `prefix`、既有 `shell.styles.scienceShowcase` 和历史结构约定派生。
+  Circuit 的嵌套 i18n 占位、部分页面排行榜 role/status、昵称标签、星级占位均原样保留。
+- **C：** Bond Forge 的 clear 节点 `bf-clear-note` 和特殊 CSS 继续手写；不追加新的配置
+  DSL，也不删除它既有的 over 结构差异。Gravity 不生成不存在的 clear。
+- **所有权：** `tools/lib/result-regions.mjs` 用 parse5 定位整块节点，
+  `gen` 在现有 HTML 中写 `result-over` / `result-clear` 静态哨兵，
+  `render-game-shell.js` 和 `gen` 共用相同 renderer。事件、焦点、计分和提交仍由游戏负责。
+
+**唯一有意的行为修复（不计作 DOM 零差异）：** Silk Dew、Echo Cave、Maxwell Demon、
+Crystal Bloom、Flame Verse、Ripple Duet 六页过去在 Clipboard API 或
+`document.execCommand('copy')` 失败时仍提示成功，现复用极小的
+`src/platform/result-clipboard.js` 返回真实成功布尔值，失败显示 ✕。
+分享文本、按钮、游戏状态、榜单接口和本地存储均未更改。
+
+独立回归：`tools/checks/compare-result-html.mjs <baseline-sha>` 去掉新增哨兵后
+对十页 HTML 作完整字节比较，包含 DOM 与所有非目标区域；`verify-result-overlays`
+检查静态模板、约定 ID、ARIA / i18n、脚手架同源、负向修改保护；
+`verify-result-clipboard` 检查系统剪贴板成功、拒绝及 fallback 失败；
+`verify-result-overlays-browser` 在源码和 dist 检查实际布局与弹层显示/隐藏；
+一次性 `compare-result-screenshots` 用相同浏览器禁用脚本与动效、固定 4 种
+视口/语言/主题设置，对 18 个弹层做 72 对静态像素对比。
+真实的提交/回执/旧响应隔离沿用原 6c-1～6c-2c 浏览器套件。
+
 6c 的行为验收必须包括：POST 返回 false 但 GET 成功时仍保留未上传状态；关闭或重开后旧响应不得覆盖新结果；重复结算不重复提交；跨日仍用本局日期；本地保存失败不提示已保存；剪贴板失败不提示复制成功。
 
 ### 4.4 开始菜单与关卡网格
@@ -160,7 +194,7 @@ D1 已选择保留两种视图、共用一套服务。后续若要把内嵌榜�
 | --- | --- | --- | --- |
 | **6a（已合并 #179）** | 26 页本地样式表、页尾脚本、页脚及其中 16 页空抽屉骨架由 registry 生成；脚手架同源 | 是 | 逐页旧 / 新 DOM 相同、外部字体与区域外内容保留；静态截图像素比对并检查抽屉打开状态；生成区一致性及独立结构 / id / ARIA 检查；`gen --check`；全量 `npm run verify` 与 `--dist` |
 | **6b（侧栏卡片）** | 15 个通用抽屉页面的通用卡片声明与 `renderSideRecords`；特殊卡片保留 | 否（补齐共享类） | 先补齐校验器对迁移集合的覆盖，再验中英文 / 主题 / 手机抽屉 / 桌面布局；断言卡片归属与跨断点节点身份，并做反向验证 |
-| **6c（分批）** | 先共享榜单状态 / 请求生命周期，再迁移同构弹层；两种视图共用服务 | 否 | 现有榜单、按钮与各页 smoke；增加 POST false / GET success、过期响应、跨日、重复提交、存储和复制失败回归 |
+| **6c（6c-1～6c-3）** | 前序提交/回执已合并；6c-3 将 10 个 over + 8 个 clear 静态生成，Bond Forge 特殊 clear 保留；复制失败反馈作为显式独立修复 | 弹层 DOM 完全等价；复制失败行为修正 | 现有榜单、按钮与各页 smoke；增加 POST false / GET success、过期响应、跨日、重复提交、存储和复制失败回归 |
 | **6d（后续，可选）** | 同构子集的选关渲染或关卡按钮 | 是（行为） | `verify-start-menus`、各页选关 smoke；保留章节分组、星级、无障碍名称与事件次数 |
 
 每一步单独开 PR。新增的逐页浏览器校验器要接 `tests/lib/page-filter.mjs`（`keepPage` / `exitIfNoPages`），CI 上超过 30 秒的补进 `tests/verify-all.mjs` 的 `WEIGHTS`。

@@ -1,3 +1,4 @@
+import { copyResultText } from '../../platform/result-clipboard.js';
 /**
  * 焰语 Flame Verse — 焰色光谱解谜
  * ==================================================================
@@ -770,20 +771,9 @@ export class FlameVerseGame {
         const text = this.mode === 'daily' && this.daily
             ? `${this.t('title')} · ${this.daily.display} · ${this.t('cost')} ${this.daily.totalCost} · ★${this.daily.stars}`
             : `${this.t('title')} · ${this.t('sample')} ${this.levelIdx + 1} · ${this.t('cost')} ${this.cost()}`;
-        const done = () => this.showToast(this.t('copyResult') + ' ✓');
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text).then(done).catch(done);
-        } else {
-            try {
-                const ta = document.createElement('textarea');
-                ta.value = text;
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                document.body.removeChild(ta);
-            } catch (e) { /* 忽略 */ }
-            done();
-        }
+        void copyResultText(text).then(ok => {
+            this.showToast(this.t('copyResult') + (ok ? ' ✓' : ' ✕'));
+        });
     }
 
     saveProgress() {

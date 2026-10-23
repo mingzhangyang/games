@@ -1,3 +1,4 @@
+import { copyResultText } from '../../platform/result-clipboard.js';
 /**
  * Crystal Bloom 晶绽 — 降温曲线结晶解谜
  * ==================================================================
@@ -754,20 +755,9 @@ export class CrystalBloomGame {
         const text = this.mode === 'daily' && this.daily
             ? `${this.t('title')} · ${this.daily.display} · ${this.t('cost')} ${this.daily.totalCost} · ★${this.daily.stars}`
             : `${this.t('title')} · ${this.t('vessel')} ${this.levelIdx + 1} · ${this.t('cost')} ${costOf(this.anchors, this.stirs)}`;
-        const done = () => this.showToast(this.t('copyResult') + ' ✓');
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text).then(done).catch(done);
-        } else {
-            try {
-                const ta = document.createElement('textarea');
-                ta.value = text;
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                document.body.removeChild(ta);
-            } catch (e) { /* 忽略 */ }
-            done();
-        }
+        void copyResultText(text).then(ok => {
+            this.showToast(this.t('copyResult') + (ok ? ' ✓' : ' ✕'));
+        });
     }
 
     saveProgress() {

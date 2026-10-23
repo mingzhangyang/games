@@ -93,6 +93,7 @@ caps 是校验器与迁移脚本的唯一判据：
 | 26 个 `topbar` 页的操作提示 | `footer` | 默认页脚模板与 `shell.footer` 稀疏覆盖；原 id / class / i18n / 初始文案保持不变 |
 | 其中带 `drawer` cap 的 16 页 | `stats-drawer` | 空统计抽屉骨架，由 `prefix` 与 `shell.drawer` 派生；不生成或复制 `StatsPanels` |
 | 普通抽屉页的同构卡片（当前 13 页） | `sidebar-howto` / `sidebar-records` / `sidebar-legend` / `sidebar-more` | 由默认角色列表与 `game.sidebar` 稀疏选择派生；每区只含一张完整卡片，特殊卡片保留手写 |
+| 10 个关卡解谜页的静态结算 / 过关弹层 | `result-over` / `result-clear` | 由 `shell.results` 声明角色，同一个 `render-result-overlays.js` 负责生成 10 个 over / 8 个 clear；Bond Forge 的自定义 clear 保留游戏所有权 |
 | 26 个 `topbar` 页的入口及共享脚本 | `tail-scripts` | `game.entry` 模块入口 + `/analytics.js` + `/sw-register.js`，保留顺序和 defer 语义 |
 | 各游戏 SEO 脚本 | `seo-script` | canonical 纠正 + og:image/twitter:image + JSON-LD（VideoGame / BreadcrumbList）；分享图优先 `public/<ogImageDir>/og-<id>.jpg`（`tools/generators/game-covers.mjs` 用游戏美术生成），没有才用 `og-<id>.svg` |
 | `public/sitemap.xml` | `games` | 全部 `<url>` 条目 |
@@ -133,6 +134,29 @@ caps 是校验器与迁移脚本的唯一判据：
 `tests/verify-topbar-registry.mjs` 对 **全部带 topbar cap 的游戏** 检查登记字段、唯一哨兵、区域内容逐字匹配及 renderer 与脚手架同源。迁移时的一次性 `tools/checks/compare-topbar-html.mjs <baseline-sha>` 通过解析 HTML、移除纯格式空白与注释，逐元素比较原/新 header outerHTML（包含 SVG、初始 disabled/hidden），仅用于这次零变化证明；其结果记录在 PR。另须执行全站双语截图像素比对与 `npm run verify`。
 
 `index.html`、`math-rain.html`、`tank-battle.html` **明确排除**，不得生成 topbar 标记。此变更不移动 Header 节点位置，也不改绑定器与 CSS。
+
+### 3.2a 结果弹层结构（Step 6c-3）
+
+十个关卡解谜页面的 `shell.results` 仅用于声明拥有哪两类原有结果弹层：
+`"over"` 或 `"both"`，其他游戏无需此字段，也不得据此自动提交排行榜成绩。
+`game.prefix` 是 ID 与 class 的唯一约定前缀；Science Showcase 的纯文本按钮
+沿用已存在的 `shell.styles.scienceShowcase`，不添加一层配置。
+
+唯一渲染入口 `src/platform/shell/render-result-overlays.js` 的
+`resultRoles(game)` / `renderResultOverlay(game, kind, indent)` 同时供
+`tools/lib/result-regions.mjs`（经 `npm run gen` 静态写入）与
+`src/platform/shell/render-game-shell.js` 的脚手架使用。
+生成区必须是完整 overlay 节点，默认带 `hidden`，不在运行时二次建 DOM，
+保留 ID、节点位置、SVG、ARIA、i18n 与现有事件绑定。
+
+- 10 个 over 全部生成；除 Gravity Slingshot 没有 clear 外，八个同构 clear 生成。
+- Bond Forge 的 clear 包含 `bf-clear-note` 和专属 CSS 结构，保留原有手写；它的 over
+  属于生成范围，但历史 class 差异仍原样输出。不得为了清理形式上的例外更改 UI。
+- `verify-result-overlays` 和 `gen --check` 负责锁住生成区；
+  `compare-result-html.mjs` 以合并后的精确基线验证页面原字节未改变；
+  `verify-result-overlays-browser` 与现有比分回执回归覆盖源码及生产构建。
+- 页面仍持有 finishDaily、applyLanguage、动态 leaderboard 行、存档和 analytics。
+  `scoreboard-result-view.js` / `scoreboard-submission.js` 不复制。
 
 ### 3.2 页面骨架生成源（Chrome Step 6a）
 
