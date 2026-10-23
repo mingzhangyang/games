@@ -50,7 +50,7 @@ const DIST_SUITE = new Set([
     'verify-start-menus', 'smoke-index', 'smoke-carrot-pull', 'smoke-needle-awn', 'smoke-tower-defense',
     'smoke-sword-flight', 'verify-topbar-overflow', 'verify-contextual-restart', 'verify-scoreboard-results',
     'smoke-scoreboard-dialog', 'verify-scoreboard-embedded-batch', 'verify-scoreboard-daily-batch',
-    'verify-scoreboard-classic-batch', 'verify-result-overlays-browser',
+    'verify-scoreboard-classic-batch', 'verify-result-overlays-browser', 'verify-star-level-grid-browser',
 ]);
 // Approximate CI seconds of the slowest browser steps. Only used to balance --shard; a stale or
 // missing entry costs balance, never coverage. Unlisted browser steps count as DEFAULT_WEIGHT.
@@ -59,7 +59,7 @@ const WEIGHTS = {
     'verify-scoreboard-classic-batch': 175, 'verify-result-overlays-browser': 95,
     'verify-stats-drawer': 190, 'verify-theme': 145, 'verify-button-icons': 135, 'verify-chrome': 105,
     'verify-desktop-frame': 100, 'placeholder-leak-check': 95, 'verify-overlay-corners': 75,
-    'verify-start-menus': 70, 'fg-audit': 65, 'verify-immersive': 60, 'verify-touch-hints': 45, 'verify-topbar-row': 35, 'verify-topbar-states': 40,
+    'verify-start-menus': 70, 'verify-star-level-grid-browser': 45, 'fg-audit': 65, 'verify-immersive': 60, 'verify-touch-hints': 45, 'verify-topbar-row': 35, 'verify-topbar-states': 40,
     'verify-tetris-drawer': 35, 'verify-stage-status': 30, 'smoke-magnetic-garden': 30, 'verify-science-howto': 55,
     'verify-tetris-topbar-mobile': 30, 'smoke-silk-dew': 25, 'smoke-crystal-bloom': 25,
     'verify-mobile-viewport-fit': 25, 'verify-service-worker': 35, 'smoke-shadow-loom': 20, 'smoke-ripple-duet': 20,

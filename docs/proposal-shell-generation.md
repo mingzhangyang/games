@@ -1,6 +1,6 @@
 # 页面骨架与信息卡片的 registry 生成方案（Chrome 第 6 步）
 
-> 状态：6a #179、6b #181、6c-1 #180、6c-2a #182 已合并；6c-2b #183 已合并；6c-2c #184 已合并；6c-3 结算弹层共享化；6d 为后续计划 · 原始盘点：2026-10-23 · 基线 main `fa2ad7d`
+> 状态：6a #179、6b #181、6c-1 #180、6c-2a #182 已合并；6c-2b #183 已合并；6c-2c #184 已合并；6c-3 #185 已合并；6d 五款同构选关渲染（本 PR） · 原始盘点：2026-10-23 · 基线 main `fa2ad7d`
 > Repository: `mingzhangyang/games`
 > 范围：26 个 `topbar` 游戏页的样式表链接、页尾脚本、页脚、统计抽屉、侧栏信息卡片、结算 / 过关弹层与页内排行榜，以及关卡解谜十页 runtime 里的重复代码
 > 不在范围：舞台内部（画布、状态行内容）、各游戏自有的开始菜单内容、`index.html`、`math-rain` / `tank-battle`（豁免页）
@@ -195,6 +195,31 @@ Lumen 的 UI 模块负责行样式，Bond Forge 保留 `div` 行结构与前 20 
 
 实际差异包括 Circuit 的实验区分隔标题与 topic tooltip、Lumen 的章节标签与带星级的无障碍名称、不同页面的未完成星级显示、完成状态类和直接绑定 / 事件委托。先盘点这些可见行为，再提炼 Echo Cave / Maxwell Demon 等真正同构的子集，或只共享单个关卡按钮；章节分组和事件策略由游戏保留。不用仅有 `prefix` 与 `onPick` 的接口强行接管全部页面，也不为少量重复堆积配置开关。
 
+#### Step 6d：五款完全同构的选关按钮共享化
+
+以 #185 合并后的 main `8de41ca2ce0b8074d0abb07e80f8e6f73e2c8ae5` 为基线。
+Silk Dew / Echo Cave / Maxwell Demon / Crystal Bloom / Flame Verse 的原
+`renderLevelGrid()` 完全同构：每关一个按钮，使用原有 `progress[spec.id]`
+决定 `is-done`、数字及「★ / ☆」三颗星，通过游戏自己的 `Sfx.click()`
+然后调用 `startLevel(i)`。
+
+提取 `src/platform/star-level-grid.js` 的单个函数
+`renderStarLevelGrid(grid, levels, progress, prefix, onPick)`，只负责
+**清空旧子节点、创建一次 DOM、绑定一次选关事件**。
+各游戏继续负责进度、音效、进入关卡及游戏状态，不新增
+`games.config.json` 字段、HTML 生成器或配置 DSL，不修改存档。
+
+Circuit（实验区标题、topic 提示）、Lumen（章节与无障碍名称）、
+Gravity Slingshot（星级表示不同）、Ripple Duet（空星级样式不同）、
+Bond Forge（特殊星级和音效）及 Shadow Loom（文字章节卡片）仍由
+各游戏维护。暂停层继续按现有所有权保留，不为统一而堆叠配置。
+
+验证：`verify-star-level-grid` 对零/一/三星、DOM 类、重绘和单次选关作独立断言；
+`verify-star-level-grid-browser` 在源码和构建产物执行五页 390/1280px、
+中英文、真实运行时与旧 DOM `outerHTML` 一致、点击次数回归；
+沿用 `verify-start-menus` 全按钮可访问性和五款游戏的既有 smoke。
+不得改变关卡模型、CSS、计分规则、每日榜单和存档协议。
+
 ### 4.5 暂停层
 
 7–9 行、5 种写法、页数少，价值低。等 §4.3 的弹层模板落地后顺带处理。
@@ -206,7 +231,7 @@ Lumen 的 UI 模块负责行样式，Bond Forge 保留 `div` 行结构与前 20 
 | **6a（已合并 #179）** | 26 页本地样式表、页尾脚本、页脚及其中 16 页空抽屉骨架由 registry 生成；脚手架同源 | 是 | 逐页旧 / 新 DOM 相同、外部字体与区域外内容保留；静态截图像素比对并检查抽屉打开状态；生成区一致性及独立结构 / id / ARIA 检查；`gen --check`；全量 `npm run verify` 与 `--dist` |
 | **6b（侧栏卡片）** | 15 个通用抽屉页面的通用卡片声明与 `renderSideRecords`；特殊卡片保留 | 否（补齐共享类） | 先补齐校验器对迁移集合的覆盖，再验中英文 / 主题 / 手机抽屉 / 桌面布局；断言卡片归属与跨断点节点身份，并做反向验证 |
 | **6c（6c-1～6c-3）** | 前序提交/回执已合并；6c-3 将 10 个 over + 8 个 clear 静态生成，Bond Forge 特殊 clear 保留；复制失败反馈作为显式独立修复 | 弹层 DOM 完全等价；复制失败行为修正 | 现有榜单、按钮与各页 smoke；增加 POST false / GET success、过期响应、跨日、重复提交、存储和复制失败回归 |
-| **6d（后续，可选）** | 同构子集的选关渲染或关卡按钮 | 是（行为） | `verify-start-menus`、各页选关 smoke；保留章节分组、星级、无障碍名称与事件次数 |
+| **6d（本 PR）** | 五款完全同构游戏的选关 DOM / 事件共享；其他游戏保留原实现 | 是（DOM 与行为） | 零一三星、重绘及单次选关；源码 + dist 浏览器回归、`verify-start-menus` 与既有 smoke |
 
 每一步单独开 PR。新增的逐页浏览器校验器要接 `tests/lib/page-filter.mjs`（`keepPage` / `exitIfNoPages`），CI 上超过 30 秒的补进 `tests/verify-all.mjs` 的 `WEIGHTS`。
 
