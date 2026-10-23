@@ -2,7 +2,7 @@
 // Real network/journal modules with controlled transport and storage failures.
 import assert from 'node:assert/strict';
 import {
-    createScoreboardResultSession, retryScoreResults, submitScoreResult,
+    createScoreboardReceiptLedger, createScoreboardResultSession, retryScoreResults, submitScoreResult,
 } from '../src/platform/scoreboard-submission.js';
 import {
     enqueuePendingScore, hasPendingScore, pendingScoreCount, retryPendingScores, subscribePendingScoreUploads,
@@ -54,6 +54,42 @@ const reset = () => {
 };
 
 try {
+    // Exact acknowledgements outlive unrelated successes and journal cleanup.
+    // Retried POST failure must not write a redundant entry into the bounded queue.
+    reset();
+    const ledger = createScoreboardReceiptLedger();
+    const another = { ...base, score: 18 };
+    respond = () => response(200);
+    const sentA = await submitScoreResult(base);
+    assert.equal(sentA.status, 'sent');
+    ledger.acknowledge(sentA.entry);
+    const sentB = await submitScoreResult(another);
+    assert.equal(sentB.status, 'sent');
+    ledger.acknowledge(sentB.entry);
+    ledger.acknowledge(sentB.entry);
+    assert.equal(ledger.has(base), true, 'B acknowledgement must not evict A');
+    assert.equal(ledger.has(another), true);
+    assert.equal(ledger.forBoard(base.game).length, 2, 'duplicate receipts do not consume memory');
+    assert.equal(ledger.has({ ...base, score: 19 }), false, 'receipt matching is exact');
+
+    respond = () => response(500);
+    const resentA = await submitScoreResult(base, { previouslyConfirmed: ledger.has(base) });
+    assert.equal(resentA.status, 'notSaved', 'new failed POST still reports that attempt honestly');
+    assert.equal(ledger.has(base), true, 'new failure cannot revoke a prior remote receipt');
+    assert.equal(pendingScoreCount(base.game), 0, 'known-confirmed score must not enter retry queue');
+
+    enqueuePendingScore(base);
+    blockWrites = true;
+    await submitScoreResult(base, { previouslyConfirmed: ledger.has(base) });
+    assert.equal(ledger.has(base), true, 'failed local cleanup cannot revoke confirmation');
+    assert.equal(pendingScoreCount(base.game), 1, 'cleanup failure retains journal until next chance');
+    blockWrites = false;
+    await submitScoreResult(base, { previouslyConfirmed: ledger.has(base) });
+    assert.equal(pendingScoreCount(base.game), 0, 'later attempt removes stale acknowledged journal entry');
+    ledger.clear();
+    assert.equal(ledger.forBoard(base.game).length, 0, 'destroyed view releases its receipt history');
+    assert.equal(ledger.has(base), false);
+
     // Journal before the first byte is sent; caller mutations cannot retarget it.
     reset();
     const postGate = deferred();

@@ -159,22 +159,51 @@ async function checkPendingReceipts(page, network, errors) {
         check(sent(restored) && queued(restored) && network.posts.length === postsBeforeLanguageChange,
             'language-only change resubmitted a score or lost mixed upload feedback', restored);
 
-        // A genuinely new POST for the same acknowledged identity can fail.
-        // Its return value describes that attempt; the known receipt still owns
-        // the visible result and must not regress to queued/notSaved.
-        network.postStatus = () => 500;
-        const postsBeforeRepeat = network.posts.length;
-        const repeated = await page.evaluate(({ boardId, score }) =>
-            window.slGame.scoreboard.submit({ boardId, score }), { boardId, score: 402 });
+        // A successful B must not evict A's receipt just because A is no
+        // longer in the journal. Exercise both a new submit and a queue retry.
+        network.postStatus = item => item.score === 403 ? 200 : 500;
+        const second = await page.evaluate(({ boardId, score }) =>
+            window.slGame.scoreboard.submit({ boardId, score }), { boardId, score: 403 });
         await refresh();
-        const repeatedState = await read();
-        const repeatedPosts = network.posts.slice(postsBeforeRepeat);
-        check(repeated === false && repeatedPosts.some(item => item.entry.game === key
-            && item.entry.name === name && item.entry.score === 402 && item.status === 500)
-            && repeatedPosts.every(item => item.status === 500),
-        'same-score repeat did not exercise a new failed POST without another success', repeatedPosts);
-        check(sent(repeatedState) && queued(repeatedState) && !repeatedState.text.includes('not uploaded'),
-            'a failed same-score repeat replaced its previously acknowledged receipt', repeatedState);
+        const afterSecond = await read();
+        check(second === true && uploaded(403) && sent(afterSecond) && queued(afterSecond)
+            && afterSecond.queue.length === 1 && afterSecond.queue[0].score === 401,
+        'successful submission B changed the unrelated pending queue', afterSecond);
+
+        const checkFailedResend = async stage => {
+            // This POST really fails. The old remote acknowledgement must still
+            // own the display, without re-queuing the already accepted score.
+            network.postStatus = () => 500;
+            const postsBeforeRepeat = network.posts.length;
+            const repeated = await page.evaluate(({ boardId, score }) =>
+                window.slGame.scoreboard.submit({ boardId, score }), { boardId, score: 402 });
+            await refresh();
+            const repeatedState = await read();
+            const repeatedPosts = network.posts.slice(postsBeforeRepeat);
+            check(repeated === false && repeatedPosts.some(item => item.entry.game === key
+                && item.entry.name === name && item.entry.score === 402 && item.status === 500)
+                && repeatedPosts.every(item => item.status === 500),
+            stage + ': same-score resend did not actually fail', repeatedPosts);
+            check(sent(repeatedState) && queued(repeatedState) && !repeatedState.text.includes('not uploaded')
+                && repeatedState.queue.length === 1 && repeatedState.queue[0].score === 401,
+            stage + ': prior A receipt was lost or a confirmed score entered the queue', repeatedState);
+        };
+        await checkFailedResend('after successful new score B');
+
+        // The other path to B's acknowledgement is a recovered background
+        // retry. Stay on this page: a reload intentionally resets the ledger.
+        await page.evaluate(({ pendingKey, waiting }) => {
+            const queue = JSON.parse(localStorage.getItem(pendingKey) || '[]');
+            queue.push({ ...waiting, at: Date.now() });
+            localStorage.setItem(pendingKey, JSON.stringify(queue));
+        }, { pendingKey, waiting: entry(404) });
+        network.postStatus = item => item.score === 404 ? 200 : 500;
+        await refresh();
+        const afterRetry = await read();
+        check(uploaded(404) && sent(afterRetry) && queued(afterRetry)
+            && afterRetry.queue.length === 1 && afterRetry.queue[0].score === 401,
+        'background acknowledgement displaced A or left a successful B pending', afterRetry);
+        await checkFailedResend('after successful queued score B');
     } finally {
         network.postStatus = originalPostStatus;
         await page.evaluate(pendingKey => {

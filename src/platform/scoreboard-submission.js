@@ -11,6 +11,36 @@ export const sameScoreEntry = (a, b) => a.game === b.game && a.name === b.name &
 const entryKey = entry => JSON.stringify([entry.game, entry.name, entry.score]);
 const posts = new Map();
 
+/**
+ * A remote acknowledgement is a durable fact for this mounted view, not an
+ * entry in the expiring retry journal. Keep exact, deduplicated identities for
+ * the view's lifetime; its owner clears the ledger on destroy. Nothing here is
+ * persisted or evicted when another score succeeds.
+ */
+export function createScoreboardReceiptLedger() {
+    const byGame = new Map();
+    return {
+        acknowledge(entry) {
+            let entries = byGame.get(entry.game);
+            if (!entries) {
+                entries = new Map();
+                byGame.set(entry.game, entries);
+            }
+            const key = entryKey(entry);
+            if (!entries.has(key)) {
+                entries.set(key, Object.freeze({ game: entry.game, name: entry.name, score: entry.score }));
+            }
+        },
+        has(entry) {
+            return byGame.get(entry.game)?.has(entryKey(entry)) ?? false;
+        },
+        forBoard(game) {
+            return [...(byGame.get(game)?.values() || [])];
+        },
+        clear() { byGame.clear(); },
+    };
+}
+
 function snapshot(entry) {
     if (!entry || typeof entry.game !== 'string' || !entry.game || entry.game.length > 80
         || typeof entry.name !== 'string' || !entry.name.trim() || entry.name.length > 20
@@ -33,9 +63,11 @@ function post(entry) {
     return request;
 }
 
-export async function submitScoreResult(entry, { journal = false } = {}) {
+// A failed repeat of an exactly acknowledged score is still a failed POST,
+// but cannot become a new pending upload or evict a genuinely unsent score.
+export async function submitScoreResult(entry, { journal = false, previouslyConfirmed = false } = {}) {
     const frozen = snapshot(entry);
-    if (journal) enqueuePendingScore(frozen);
+    if (journal && !previouslyConfirmed) enqueuePendingScore(frozen);
     let acknowledged = false;
     const stopUploads = subscribePendingScoreUploads(uploaded => {
         if (sameScoreEntry(uploaded, frozen)) acknowledged = true;
@@ -44,10 +76,13 @@ export async function submitScoreResult(entry, { journal = false } = {}) {
         // Another retry owner can acknowledge this exact entry before our first
         // request fails. Preserve that receipt instead of journaling it again.
         const accepted = await post(frozen) || acknowledged;
-        if (accepted) dequeuePendingScore(frozen);
+        // A known remote receipt also permits cleanup of an old local entry,
+        // even when this particular redundant POST failed.
+        if (accepted || previouslyConfirmed) dequeuePendingScore(frozen);
         // The bounded/expiring journal may change while the POST is outstanding.
         // An earlier successful write is not proof this entry is still retryable.
-        const saved = !accepted && (hasPendingScore(frozen) || enqueuePendingScore(frozen));
+        const saved = !accepted && !previouslyConfirmed
+            && (hasPendingScore(frozen) || enqueuePendingScore(frozen));
         return { entry: frozen, status: accepted ? 'sent' : (saved ? 'queued' : 'notSaved') };
     } finally {
         stopUploads();

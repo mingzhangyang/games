@@ -4,7 +4,9 @@
  */
 import { fetchBoard, UnsupportedLeaderboardError } from './leaderboard.js';
 import { hasPendingScore, pendingScoreCount, subscribePendingScoreUploads } from './scoreboard-pending.js';
-import { retryScoreResults, sameScoreEntry, submitScoreResult } from './scoreboard-submission.js';
+import {
+    createScoreboardReceiptLedger, retryScoreResults, sameScoreEntry, submitScoreResult,
+} from './scoreboard-submission.js';
 import { ensurePlayerName, getPlayerName, setPlayerName } from './player.js';
 import { getLang } from './site-settings.js';
 import { ICONS } from './icons.js';
@@ -117,27 +119,20 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
     let requestId = 0;
     let readState = 'idle';
     const notices = new Map();
-    const receipts = new Map();
+    const receipts = createScoreboardReceiptLedger();
+    let destroyed = false;
     const boardFor = id => boards.find(board => board.id === id);
     const resolvedKey = board => typeof board.key === 'function' ? board.key() : board.key;
     const setStatus = message => { status.textContent = message; };
 
-    function rememberReceipt(entry) {
-        // Keep the latest acknowledgement and any whose local cleanup failed.
-        // Historical retries must not become this page's current result notice.
-        const previous = receipts.get(entry.game) || [];
-        receipts.set(entry.game, [...previous.filter(item =>
-            hasPendingScore(item) && !sameScoreEntry(item, entry)), entry]);
-    }
-
     function renderStatus() {
         const key = resolvedKey(boardFor(select.value));
         const notice = notices.get(key);
-        const accepted = receipts.get(key) || [];
+        const accepted = receipts.forBoard(key);
         const queued = Math.max(0, pendingScoreCount(key) - accepted.filter(hasPendingScore).length);
         const state = notice?.status === 'queued' && !hasPendingScore(notice.entry) ? 'notSaved' : notice?.status;
         const ownsQueued = notice && hasPendingScore(notice.entry)
-            && !accepted.some(entry => sameScoreEntry(entry, notice.entry));
+            && !receipts.has(notice.entry);
         const submission = notice ? text(state) : (queued ? text('queued') : accepted.length ? text('sent') : '');
         const remaining = notice && queued > Number(ownsQueued) ? text('otherQueued') : '';
         const reading = readState === 'loading' ? text('loading')
@@ -149,7 +144,7 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
     // Keep the latest result's notice separate from old entries on the same board.
     // This also observes startup/online retries initiated outside this dialog.
     const stopUploads = subscribePendingScoreUploads(entry => {
-        rememberReceipt(entry);
+        receipts.acknowledge(entry);
         const notice = notices.get(entry.game);
         if (notice && sameScoreEntry(notice.entry, entry)) notice.status = 'sent';
         if (dialog.open) renderStatus();
@@ -309,17 +304,19 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
      * A duplicate POST is harmless: each board keeps one best score per name.
      */
     async function submit({ boardId, score, key, journal = false }) {
+        if (destroyed) return false;
         const board = boardFor(boardId);
         if (!board || !isFiniteScore(score)) return false;
         const resolved = key || resolvedKey(board);
         const name = getPlayerName() || ensurePlayerName();
         const entry = Object.freeze({ game: resolved, name, score });
-        const alreadySent = receipts.get(resolved)?.some(item => sameScoreEntry(item, entry));
+        const alreadySent = receipts.has(entry);
         const notice = { entry, status: alreadySent ? 'sent' : 'submitting' };
         notices.set(resolved, notice);
         if (dialog.open) renderStatus();
-        const receipt = await submitScoreResult(entry, { journal });
-        if (receipt.status === 'sent') rememberReceipt(entry);
+        const receipt = await submitScoreResult(entry, { journal, previouslyConfirmed: alreadySent });
+        if (destroyed) return receipt.status === 'sent';
+        if (receipt.status === 'sent') receipts.acknowledge(entry);
         const current = notices.get(resolved);
         if (current === notice || (current?.status === 'sent' && sameScoreEntry(current.entry, entry))) {
             if (current.status !== 'sent') current.status = receipt.status;
@@ -331,7 +328,11 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
     }
 
     function destroy() {
+        if (destroyed) return;
+        destroyed = true;
         stopUploads();
+        receipts.clear();
+        notices.clear();
         ++requestId;
         if (dialog.open) dialog.close();
         visualViewportBinding.stop();
