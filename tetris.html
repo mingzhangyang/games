@@ -29,12 +29,14 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23667eea'/%3E%3Crect x='14' y='14' width='11' height='11' fill='white'/%3E%3Crect x='26' y='14' width='11' height='11' fill='white' opacity='0.85'/%3E%3Crect x='26' y='26' width='11' height='11' fill='white'/%3E%3Crect x='38' y='26' width='11' height='11' fill='white' opacity='0.7'/%3E%3C/svg%3E">
         <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <!-- registry:begin stylesheets -->
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/tetris.css">
     <link rel="stylesheet" href="css/stage-status.css">
     <link rel="stylesheet" href="css/mobile-fit.css">
     <link rel="stylesheet" href="css/more-games.css">
+    <!-- registry:end stylesheets -->
 </head>
 <body>
     <div class="background-animation"></div>
@@ -147,12 +149,15 @@
     <!-- 持久页脚：随流在底部（不用 sticky/fixed，避免与移动端底栏、
          统计抽屉、结算浮层抢层级，也不吃竖版画布高度）。
          ⚠️ 只保留操作提示；导航与状态控件统一留在 header / 页面主体。 -->
+    <!-- registry:begin footer -->
     <footer class="tt-footer game-footer">
         <p class="tt-footer-hint game-footer-hint" id="tt-hint" data-i18n="hint" data-i18n-touch="hintTouch"></p>
     </footer>
+    <!-- registry:end footer -->
     </div>
 
     <!-- 移动端底部抽屉：桌面端由 .game-drawer 整体隐藏，内容区仍用 #statsPanels 搬家 -->
+    <!-- registry:begin stats-drawer -->
     <div class="game-drawer" id="statsDrawer" hidden>
         <div class="game-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="statsDrawerTitle">
             <div class="game-drawer-handle"></div>
@@ -163,6 +168,7 @@
             <div class="game-drawer-body" id="statsDrawerBody"></div>
         </div>
     </div>
+    <!-- registry:end stats-drawer -->
 
     <div class="level-up-effect" id="levelUpEffect" data-i18n="levelUp"></div>
 
@@ -199,8 +205,10 @@
         });
     </script>
         <!-- registry:end seo-script -->
+    <!-- registry:begin tail-scripts -->
     <script type="module" src="src/games/tetris/index.js"></script>
     <script src="/analytics.js" defer></script>
     <script src="/sw-register.js" defer></script>
+    <!-- registry:end tail-scripts -->
 </body>
 </html>

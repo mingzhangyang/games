@@ -164,6 +164,9 @@
           },
           "chrome": {
             "$ref": "#/$defs/chrome"
+          },
+          "shell": {
+            "$ref": "#/$defs/shell"
           }
         },
         "additionalProperties": true,
@@ -188,9 +191,43 @@
             },
             "else": {
               "not": {
-                "required": [
-                  "chrome"
+                "anyOf": [
+                  {
+                    "required": [
+                      "chrome"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "shell"
+                    ]
+                  }
                 ]
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "caps": {
+                  "contains": {
+                    "const": "drawer"
+                  }
+                }
+              },
+              "required": [
+                "caps"
+              ]
+            },
+            "else": {
+              "properties": {
+                "shell": {
+                  "not": {
+                    "required": [
+                      "drawer"
+                    ]
+                  }
+                }
               }
             }
           }
@@ -233,6 +270,10 @@
           "minLength": 1
         },
         "seo": {
+          "type": "string",
+          "minLength": 1
+        },
+        "i18nKey": {
           "type": "string",
           "minLength": 1
         }
@@ -717,6 +758,104 @@
         }
       },
       "additionalProperties": false
+    },
+    "shell": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "description": "Static shell component choices. Defaults are derived; only existing differences are declared.",
+      "properties": {
+        "styles": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": false,
+          "properties": {
+            "page": {
+              "type": "string",
+              "pattern": "^css/[A-Za-z0-9][A-Za-z0-9-]*\\.css$",
+              "description": "Optional historical filename; defaults to css/<game.id>.css."
+            },
+            "scienceShowcase": {
+              "type": "boolean",
+              "default": false
+            },
+            "stageStatus": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        },
+        "footer": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": false,
+          "properties": {
+            "classPrefix": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[A-Za-z][\\w:.-]*$",
+              "description": "Defaults to chrome.classPrefix or prefix; null omits page-specific classes."
+            },
+            "hintClass": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[A-Za-z][\\w:.-]*$",
+              "description": "Overrides the page-specific hint class; the shared class is always retained."
+            },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[A-Za-z][\\w:.-]*$",
+              "description": "Defaults to <class prefix>-hint; null preserves a footer without an ID."
+            },
+            "key": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[A-Za-z][\\w:.-]*$",
+              "default": "hint",
+              "description": "Hint i18n key; null keeps runtime-owned copy without a binding."
+            },
+            "touchKey": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[A-Za-z][\\w:.-]*$",
+              "default": "hintTouch",
+              "description": "Touch hint i18n key; null omits the binding."
+            },
+            "text": {
+              "type": "string",
+              "description": "Plain initial text before the game applies localization."
+            }
+          }
+        },
+        "drawer": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": false,
+          "properties": {
+            "idBase": {
+              "type": "string",
+              "pattern": "^[A-Za-z][\\w-]*$",
+              "description": "Defaults to <prefix>Stats; Tetris keeps its historical stats IDs."
+            },
+            "i18n": {
+              "type": "boolean",
+              "default": false,
+              "description": "Keep declarative stats/close bindings and the initial Stats title."
+            }
+          }
+        }
+      }
     }
   },
   "additionalProperties": true

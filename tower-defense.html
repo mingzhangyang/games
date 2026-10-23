@@ -29,12 +29,14 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230d1230'/%3E%3Crect x='26' y='14' width='12' height='30' rx='3' fill='%2330449a'/%3E%3Crect x='22' y='10' width='20' height='8' rx='3' fill='%2340d8ff'/%3E%3Ccircle cx='32' cy='9' r='3.4' fill='%23ffd34d'/%3E%3Crect x='10' y='46' width='44' height='8' rx='3' fill='%2330449a'/%3E%3C/svg%3E">
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <!-- registry:begin stylesheets -->
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/tower-defense.css">
     <link rel="stylesheet" href="css/stage-status.css">
     <link rel="stylesheet" href="css/mobile-fit.css">
     <link rel="stylesheet" href="css/more-games.css">
+    <!-- registry:end stylesheets -->
 </head>
 <body>
     <div class="td-shell game-shell game-shell--immersive">
@@ -224,9 +226,11 @@
     <!-- 持久页脚：随流在底部（不用 sticky/fixed，避免与移动端底栏、
          统计抽屉、结算浮层抢层级，也不吃竖版画布高度）。
          ⚠️ 只保留操作提示；导航与状态控件统一留在 header / 页面主体。 -->
+    <!-- registry:begin footer -->
     <footer class="td-footer game-footer">
         <p class="td-footer-hint game-footer-hint" id="td-hint" data-i18n="hint" data-i18n-touch="hintTouch"></p>
     </footer>
+    <!-- registry:end footer -->
     </div>
         <!-- registry:begin seo-script -->
     <script>
@@ -254,8 +258,10 @@
         });
     </script>
         <!-- registry:end seo-script -->
+    <!-- registry:begin tail-scripts -->
     <script type="module" src="src/games/tower-defense/index.js"></script>
     <script src="/analytics.js" defer></script>
     <script src="/sw-register.js" defer></script>
+    <!-- registry:end tail-scripts -->
 </body>
 </html>

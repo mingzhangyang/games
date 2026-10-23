@@ -442,6 +442,12 @@
             }
           }
         }
+      },
+      "shell": {
+        "drawer": {
+          "idBase": "stats",
+          "i18n": true
+        }
       }
     },
     {
@@ -574,6 +580,11 @@
             }
           }
         }
+      },
+      "shell": {
+        "styles": {
+          "stageStatus": false
+        }
       }
     },
     {
@@ -650,6 +661,14 @@
               "id": "pm-home-btn"
             }
           }
+        }
+      },
+      "shell": {
+        "footer": {
+          "id": null,
+          "key": null,
+          "touchKey": null,
+          "text": "P 暂停 · M 静音 · R 重开"
         }
       }
     },
@@ -760,6 +779,12 @@
             }
           }
         }
+      },
+      "shell": {
+        "footer": {
+          "key": null,
+          "touchKey": null
+        }
       }
     },
     {
@@ -838,6 +863,11 @@
               "id": "hs-btn-home-top"
             }
           }
+        }
+      },
+      "shell": {
+        "footer": {
+          "text": "Swipe up to shoot · P pause · M mute"
         }
       }
     },
@@ -926,6 +956,13 @@
             "icon": "sound-no-stroke"
           }
         }
+      },
+      "shell": {
+        "footer": {
+          "hintClass": "ms-hint",
+          "key": null,
+          "touchKey": null
+        }
       }
     },
     {
@@ -1001,6 +1038,11 @@
             },
             "icon": "sound-no-stroke"
           }
+        }
+      },
+      "shell": {
+        "footer": {
+          "touchKey": null
         }
       }
     },
@@ -1225,6 +1267,15 @@
               "data-i18n-label": "sound"
             }
           }
+        }
+      },
+      "shell": {
+        "styles": {
+          "page": "css/gravity.css"
+        },
+        "footer": {
+          "key": null,
+          "touchKey": null
         }
       }
     },
@@ -1537,6 +1588,11 @@
             }
           }
         }
+      },
+      "shell": {
+        "footer": {
+          "touchKey": null
+        }
       }
     },
     {
@@ -1609,6 +1665,14 @@
           "stats",
           "sound"
         ]
+      },
+      "shell": {
+        "footer": {
+          "touchKey": null
+        },
+        "drawer": {
+          "i18n": true
+        }
       }
     },
     {
@@ -1680,6 +1744,11 @@
           "stats",
           "sound"
         ]
+      },
+      "shell": {
+        "footer": {
+          "touchKey": null
+        }
       }
     },
     {
@@ -1751,6 +1820,11 @@
           "stats",
           "sound"
         ]
+      },
+      "shell": {
+        "footer": {
+          "touchKey": null
+        }
       }
     },
     {
@@ -1820,6 +1894,14 @@
           "stats",
           "sound"
         ]
+      },
+      "shell": {
+        "styles": {
+          "scienceShowcase": true
+        },
+        "footer": {
+          "touchKey": null
+        }
       }
     },
     {
@@ -1888,6 +1970,11 @@
           "restart",
           "sound"
         ]
+      },
+      "shell": {
+        "styles": {
+          "scienceShowcase": true
+        }
       }
     },
     {
@@ -1959,6 +2046,11 @@
           "stats",
           "sound"
         ]
+      },
+      "shell": {
+        "styles": {
+          "scienceShowcase": true
+        }
       }
     },
     {
@@ -2028,6 +2120,11 @@
           "stats",
           "sound"
         ]
+      },
+      "shell": {
+        "styles": {
+          "scienceShowcase": true
+        }
       }
     },
     {
@@ -2099,6 +2196,11 @@
           "stats",
           "sound"
         ]
+      },
+      "shell": {
+        "styles": {
+          "scienceShowcase": true
+        }
       }
     },
     {
@@ -2223,6 +2325,13 @@
             "restart": 90,
             "stats": 80
           }
+        }
+      },
+      "shell": {
+        "footer": {
+          "key": null,
+          "touchKey": null,
+          "text": "Press Pull, Space, or ↑ when the needle enters the green zone."
         }
       }
     },
@@ -2456,6 +2565,12 @@
             "stats": 80
           }
         }
+      },
+      "shell": {
+        "footer": {
+          "key": null,
+          "touchKey": null
+        }
       }
     },
     {
@@ -2600,6 +2715,16 @@
             "restart": 90
           }
         }
+      },
+      "shell": {
+        "styles": {
+          "stageStatus": false
+        },
+        "footer": {
+          "key": null,
+          "touchKey": null,
+          "text": "Mouse moves the pen · hold to draw · cross your own line to close a loop"
+        }
       }
     },
     {
@@ -2733,6 +2858,17 @@
             },
             "icon": null
           }
+        }
+      },
+      "shell": {
+        "styles": {
+          "stageStatus": false
+        },
+        "footer": {
+          "classPrefix": null,
+          "id": null,
+          "key": "controls",
+          "touchKey": "controlsTouch"
         }
       }
     },
@@ -2877,6 +3013,16 @@
             "pause": 100,
             "restart": 90
           }
+        }
+      },
+      "shell": {
+        "styles": {
+          "stageStatus": false
+        },
+        "footer": {
+          "key": "footerHint",
+          "touchKey": "footerHintTouch",
+          "text": "Click a cell, then type 1–9 · digits can go straight into the mist · H for a hint"
         }
       }
     }

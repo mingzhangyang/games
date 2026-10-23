@@ -198,6 +198,9 @@ try {
                     // Real input-owner regression: releasing W with the popover
                     // open must clear Needle Awn's held movement state.
                     await page.waitForFunction(() => window.gameEngine?.artReady, { timeout: 15000 });
+                    // Native dialog close is queued after open becomes false;
+                    // let its ranking pause lease release before starting a run.
+                    await page.waitForFunction(() => !window.gameEngine.pauseOwnership.isHeld('ranking'));
                     await page.evaluate(() => window.gameEngine.startEndlessMode());
                     await page.waitForFunction(() => window.gameEngine.state === 'playing');
                     // This is an input-owner test, not a second scoreboard test:

@@ -29,12 +29,14 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230b0e1a'/%3E%3Cpath d='M18 40c-4-12 6-24 18-22 11 2 15 15 8 22-6 6-17 4-19-4-2-6 3-12 9-11' fill='none' stroke='%234ff3ff' stroke-width='4.5' stroke-linecap='round'/%3E%3Ccircle cx='34' cy='32' r='5' fill='%23ff4fa3'/%3E%3C/svg%3E">
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <!-- registry:begin stylesheets -->
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/loop-jail.css">
     <link rel="stylesheet" href="css/scoreboard-dialog.css">
     <link rel="stylesheet" href="css/mobile-fit.css">
     <link rel="stylesheet" href="css/more-games.css">
+    <!-- registry:end stylesheets -->
 </head>
 <body class="lj-body">
     <!-- Immersive Stage（games.config.json layout: "immersive"，契约 docs/contracts/layout.md §7）：
@@ -146,9 +148,11 @@
         </main>
 
         <!-- 持久页脚：immersive 布局下随流在首屏之下（不占场地高度），只保留操作提示 -->
+        <!-- registry:begin footer -->
         <footer class="lj-footer game-footer">
             <p class="lj-footer-hint game-footer-hint" id="lj-hint">Mouse moves the pen · hold to draw · cross your own line to close a loop</p>
         </footer>
+        <!-- registry:end footer -->
     </div>
 
     <!-- registry:begin seo-script -->
@@ -177,8 +181,10 @@
         });
     </script>
     <!-- registry:end seo-script -->
+    <!-- registry:begin tail-scripts -->
     <script type="module" src="src/games/loop-jail/index.js"></script>
     <script src="/analytics.js" defer></script>
     <script src="/sw-register.js" defer></script>
+    <!-- registry:end tail-scripts -->
 </body>
 </html>

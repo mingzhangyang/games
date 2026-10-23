@@ -28,7 +28,14 @@
 <!-- registry:end head -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23dce9dc'/%3E%3Cpath d='M18 45V26a14 14 0 0 1 28 0v19H36V26a4 4 0 0 0-8 0v19Z' fill='%23de877c'/%3E%3C/svg%3E">
 <link rel="manifest" href="/manifest.json">
-<link rel="stylesheet" href="css/tokens.css"><link rel="stylesheet" href="css/layout.css"><link rel="stylesheet" href="css/magnetic-garden.css"><link rel="stylesheet" href="css/scoreboard-dialog.css"><link rel="stylesheet" href="css/mobile-fit.css"><link rel="stylesheet" href="css/more-games.css">
+<!-- registry:begin stylesheets -->
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/magnetic-garden.css">
+<link rel="stylesheet" href="css/scoreboard-dialog.css">
+<link rel="stylesheet" href="css/mobile-fit.css">
+<link rel="stylesheet" href="css/more-games.css">
+<!-- registry:end stylesheets -->
 </head>
 <body class="mg-body">
 <div class="mg-shell game-shell game-shell--immersive">
@@ -62,7 +69,11 @@
 <div id="mg-help" class="mg-modal game-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="mg-help-title"><div class="mg-modal-card"><h2 class="mg-modal-title" id="mg-help-title" data-i18n="ruleTitle"></h2><div class="mg-pole-legend"><span class="mg-pole mg-pole--N">N</span><span>↔</span><span class="mg-pole mg-pole--S">S</span></div><ol class="mg-rules"><li data-i18n="rule1"></li><li data-i18n="rule2"></li><li data-i18n="rule3"></li><li data-i18n="rule4"></li><li data-i18n="rule5"></li></ol><button id="mg-help-close" class="mg-action game-btn game-action-btn game-action-btn--primary" type="button"></button></div></div>
 <p id="mg-sr-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
 </div></main>
-<footer class="game-footer"><p class="game-footer-hint" data-i18n="controls" data-i18n-touch="controlsTouch"></p></footer>
+<!-- registry:begin footer -->
+<footer class="game-footer">
+    <p class="game-footer-hint" data-i18n="controls" data-i18n-touch="controlsTouch"></p>
+</footer>
+<!-- registry:end footer -->
 </div>
 <!-- registry:begin seo-script -->
     <script>
@@ -90,5 +101,9 @@
         });
     </script>
 <!-- registry:end seo-script -->
-<script type="module" src="src/games/magnetic-garden/index.js"></script><script src="/analytics.js" defer></script><script src="/sw-register.js" defer></script>
+<!-- registry:begin tail-scripts -->
+<script type="module" src="src/games/magnetic-garden/index.js"></script>
+<script src="/analytics.js" defer></script>
+<script src="/sw-register.js" defer></script>
+<!-- registry:end tail-scripts -->
 </body></html>

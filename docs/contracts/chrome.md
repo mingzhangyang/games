@@ -6,8 +6,9 @@
 - 契约文件：`css/layout.css`（`.game-topbar-center` / `.game-footer` 系列）
 - 行为实现：`src/platform/game-chrome.js`（`bindChrome`）
 - 游戏顶栏 markup 由 registry 生成，按 `registry.md` §3.1 通过 `chrome.actions` 角色列表及稀疏 `chrome.overrides` 编辑并运行 `npm run gen`；i18n 与 `bindChrome` 行为仍按本文接入。
+- 页脚、本地样式表、页尾脚本与空统计抽屉由共享 `render-shell-parts.js` 生成，默认派生与 `shell` 稀疏覆盖见 `registry.md` §3.2；同样只改 registry / 模板后运行 `npm run gen`。
 - 校验工具：`tests/verify-chrome.mjs`（按文件名自动发现，verify-all 校验项 `verify-chrome`）
-- 后续（提案，未实施）：页脚、统计抽屉、样式表链接、侧栏信息卡片、结算弹层同样改由 registry 生成，见 `docs/proposal-shell-generation.md`
+- 后续（6b–6d，未实施）：侧栏信息卡片、结算弹层、共享榜单服务与同构关卡网格，见 `docs/proposal-shell-generation.md`；不属于本轮 6a。
 
 ---
 
@@ -110,10 +111,16 @@ Stats / Pause / 「⋯」，它的屏幕位置都一致。页面专属钮一律�
 ### 1.2 Footer：只保留操作提示
 
 ```html
+<!-- registry:begin footer -->
 <footer class="xx-footer game-footer">
-  <p class="xx-footer-hint game-footer-hint" id="xx-hint">操作提示</p>
+  <p class="xx-footer-hint game-footer-hint" id="xx-hint" data-i18n="hint" data-i18n-touch="hintTouch"></p>
 </footer>
+<!-- registry:end footer -->
 ```
+
+第 6 步 a 只替换生成来源：`shell.footer` 可稀疏覆盖提示键、初始文本与历史 id / class，`null` 明确省略原本不存在的属性。
+默认模板由 `renderFooter()` 派生，新游戏脚手架复用；现有页的 DOM、提示写入者、触屏文案选择与位置保持不变。
+不要直接修改 `footer` 哨兵内的 HTML，也不要在这一步把仅由游戏 JS 写文案的历史页脚改成第二套 i18n 绑定。
 
 - 游戏页 Footer 不再重复 Home，也不再放“更多游戏”展开按钮；Home 的唯一固定入口在 Header。
 - 跨游戏推荐仍可存在于侧栏、开始菜单等内容区域，由 `more-games` 组件负责，不属于 Chrome。

@@ -29,12 +29,14 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230d1024'/%3E%3Cpath d='M32 12v40' stroke='%235b8dee' stroke-width='4' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='12' r='8' fill='%23ff6b7a'/%3E%3Ccircle cx='22' cy='48' r='7' fill='%23e8ecff'/%3E%3Ccircle cx='42' cy='48' r='7' fill='%23e8ecff'/%3E%3C/svg%3E">
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <!-- registry:begin stylesheets -->
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/bond-forge.css">
     <link rel="stylesheet" href="css/stage-status.css">
     <link rel="stylesheet" href="css/mobile-fit.css">
     <link rel="stylesheet" href="css/more-games.css">
+    <!-- registry:end stylesheets -->
 </head>
 <body>
     <div class="bf-shell game-shell">
@@ -160,11 +162,14 @@
     <!-- 持久页脚：随流在底部（不用 sticky/fixed，避免与移动端底栏、
          统计抽屉、结算浮层抢层级，也不吃竖版画布高度）。
          ⚠️ 只保留操作提示；导航与状态控件统一留在 header / 页面主体。 -->
+    <!-- registry:begin footer -->
     <footer class="bf-footer game-footer">
         <p class="bf-footer-hint game-footer-hint" id="bf-hint" data-i18n="hint"></p>
     </footer>
+    <!-- registry:end footer -->
     </div>
     <!-- 底部统计抽屉（移动端）：面板由 JS 从侧栏搬进来 -->
+    <!-- registry:begin stats-drawer -->
     <div class="game-drawer" id="bfStatsDrawer" hidden>
         <div class="game-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="bfStatsDrawerTitle">
             <div class="game-drawer-handle"></div>
@@ -175,6 +180,7 @@
             <div class="game-drawer-body" id="bfStatsDrawerBody"></div>
         </div>
     </div>
+    <!-- registry:end stats-drawer -->
 
 
         <!-- registry:begin seo-script -->
@@ -203,8 +209,10 @@
         });
     </script>
         <!-- registry:end seo-script -->
+    <!-- registry:begin tail-scripts -->
     <script type="module" src="src/games/bond-forge/index.js"></script>
     <script src="/analytics.js" defer></script>
     <script src="/sw-register.js" defer></script>
+    <!-- registry:end tail-scripts -->
 </body>
 </html>

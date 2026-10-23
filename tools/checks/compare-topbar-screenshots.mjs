@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// One-time Step 5a static full-page visual diff, comparing the old and new
+// One-time registry-shell static full-page visual diff, comparing the old and new
 // worktrees served by the same Chrome. All 26 pages, mobile and desktop.
 // Disable JavaScript on BOTH sides to eliminate canvas simulation randomness;
 // running-game behavior is separately covered by the full browser verify suite.
@@ -16,7 +16,7 @@ if (!beforeUrl?.startsWith('http://') || !afterUrl?.startsWith('http://')) {
 }
 const VIEWPORTS = [{ width: 390, height: 844 }, { width: 1280, height: 900 }];
 const pages = registry.withCap('topbar');
-assert.equal(pages.length, 26, 'Step 5a must compare exactly 26 topbar pages');
+assert.equal(pages.length, 26, 'shell migration must compare exactly 26 topbar pages');
 const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 'new', args: LAUNCH_ARGS });
 
 // Chrome produces noninterlaced, 8-bit RGB or RGBA PNGs. Decode PNG scanline
@@ -97,11 +97,44 @@ async function capture(url, game, viewport) {
             content: '*,*::before,*::after{animation:none!important;transition:none!important;'
                 + 'scroll-behavior:auto!important;caret-color:transparent!important}',
         });
-        // Ensure stylesheet insertion and glyph rasterization have reached a
-        // settled frame before snapshotting the DOM-only visual baseline.
-        await new Promise(resolve => setTimeout(resolve, 120));
-        // Puppeteer 25 returns Uint8Array; PNG decoding requires Node Buffer methods.
-        return pixelsFromPng(Buffer.from(await page.screenshot({ fullPage: true })));
+        // Page JavaScript is disabled, so page-owned rAF/promise callbacks cannot
+        // be used as a readiness gate. Flush layout and poll the actual font state
+        // from Node; the screenshots below wait for compositor frame delivery.
+        const fontDeadline = Date.now() + 20000;
+        while (!await page.evaluate(() => {
+            document.documentElement.getBoundingClientRect();
+            return document.fonts.status === 'loaded';
+        })) {
+            if (Date.now() >= fontDeadline) throw new Error(game.id + ': fonts did not settle at ' + url);
+            await new Promise(resolve => setTimeout(resolve, 25));
+        }
+        // captureBeyondViewport can rerasterize rounded backdrop-filter edges,
+        // even when the entire document already fits in the viewport. Repeated
+        // captures of the unchanged baseline then differ by 1–2 colour levels.
+        // Use the existing viewport surface whenever it covers the whole page;
+        // only capture beyond it when the measured document actually overflows.
+        // Floor the extent at the viewport size so stable scrollbar gutters are
+        // included (fullPage alone can crop a 1280px viewport to 1250px).
+        const extent = await page.evaluate(() => ({
+            width: Math.max(window.innerWidth, document.documentElement.scrollWidth),
+            height: Math.max(window.innerHeight, document.documentElement.scrollHeight),
+        }));
+        const screenshotOptions = extent.width > viewport.width || extent.height > viewport.height
+            ? { captureBeyondViewport: true, clip: { x: 0, y: 0, ...extent } }
+            : { captureBeyondViewport: false };
+        // Keep each page open and require two exactly identical complete frames.
+        // Reopening it for retries only samples another initial paint; neither
+        // cross-version tolerance nor a pixel mask is applied here.
+        let previous = null;
+        for (let sample = 1; sample <= 6; sample++) {
+            // Puppeteer 25 returns Uint8Array; PNG decoding needs Buffer methods.
+            const current = pixelsFromPng(Buffer.from(await page.screenshot(screenshotOptions)));
+            assert.equal(current.width, extent.width, game.id + ': screenshot must cover the full width');
+            assert.equal(current.height, extent.height, game.id + ': screenshot must cover the full height');
+            if (previous && samePixels(previous, current)) return { ...current, samples: sample };
+            previous = current;
+        }
+        throw new Error(game.id + ': screenshot sampling did not settle after 6 frames at ' + url);
     } finally {
         await page.close();
     }
@@ -115,29 +148,8 @@ try {
             try {
                 const a = await capture(beforeUrl, game, viewport);
                 const b = await capture(afterUrl, game, viewport);
-                let matches = samePixels(a, b);
-                let settled = false;
-                let finalBefore = a, finalAfter = b;
-                if (!matches) {
-                    // Identical HTML can briefly differ in font/GPU rasterization on
-                    // the first frame. Recheck only if a side is itself unstable.
-                    // A stable before/after difference is NEVER waived.
-                    const a2 = await capture(beforeUrl, game, viewport);
-                    const b2 = await capture(afterUrl, game, viewport);
-                    finalBefore = a2;
-                    finalAfter = b2;
-                    if (!samePixels(a, a2) || !samePixels(b, b2)) {
-                        const a3 = await capture(beforeUrl, game, viewport);
-                        const b3 = await capture(afterUrl, game, viewport);
-                        finalBefore = a3;
-                        finalAfter = b3;
-                        settled = samePixels(a2, b2) && samePixels(a2, a3)
-                            && samePixels(b2, b3);
-                        matches = settled;
-                    }
-                }
-                if (!matches) {
-                    const before = finalBefore, after = finalAfter;
+                if (!samePixels(a, b)) {
+                    const before = a, after = b;
                     let changed = 0, minX = Infinity, minY = Infinity;
                     let maxX = -1, maxY = -1;
                     const width = Math.min(before.width, after.width);
@@ -157,11 +169,12 @@ try {
                     }
                     console.error('FAIL ' + label + ': image sizes ' + before.width + 'x' + before.height
                         + ' / ' + after.width + 'x' + after.height + ', different pixels=' + changed
-                        + ', bbox=' + [minX, minY, maxX, maxY].join(','));
+                        + ', bbox=' + (changed ? [minX, minY, maxX, maxY].join(',') : 'none (image size differs)'));
                     failures++;
                 } else {
                     console.log('PASS ' + label + ' — 0 different pixels'
-                        + (settled ? ' (confirmed stable after transient first-frame variation)' : ''));
+                        + (a.samples > 2 || b.samples > 2
+                            ? ' (confirmed stable after transient frame variation)' : ''));
                     pass++;
                 }
             } catch (error) {
@@ -173,6 +186,6 @@ try {
 } finally {
     await browser.close();
 }
-console.log('Chrome Step 5a static screenshot parity: ' + pass + '/' + (pages.length * VIEWPORTS.length)
+console.log('Registry shell static screenshot parity: ' + pass + '/' + (pages.length * VIEWPORTS.length)
     + ' full-page screenshot pairs, ' + failures + ' failures.');
 process.exit(failures ? 1 : 0);
