@@ -23,7 +23,8 @@ import {
     saveTowerDefenseClear,
 } from './storage.js';
 import { track } from '../../platform/analytics.js';
-import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
+import { createScoreboardResultSession, retryScoreResults } from '../../platform/scoreboard-submission.js';
+import { renderEmbeddedScoreResult, resetEmbeddedScoreResult } from '../../platform/scoreboard-result-view.js';
 import { LANGUAGES } from './i18n.js';
 import { createTowerDefenseArt } from './art.js';
 import { LEVELS } from './levels.js';
@@ -99,6 +100,11 @@ export class TowerDefenseGame {
         window.__TD_CREATE_ART__ = createTowerDefenseArt;
         this.bgCanvas = document.createElement('canvas');
         this.resetRun();
+        this.scoreRunId = 0;
+        this.resultSession = createScoreboardResultSession({
+            onChange: result => this.renderScoreResult(result),
+        });
+        this.el['lb-status']?.setAttribute('role', 'status');
         this.applyLanguage();
 
         this.state = 'menu'; // menu | playing | paused | over
@@ -119,6 +125,11 @@ export class TowerDefenseGame {
         });
 
         this.drawFrame();
+        window.addEventListener('online', () => {
+            if (this.resultSession.getState()) void this.resultSession.refresh();
+            else void retryScoreResults();
+        });
+        void retryScoreResults();
     }
 
     readLang() {
@@ -395,6 +406,8 @@ export class TowerDefenseGame {
     /* ── 流程控制 ── */
 
     startGame() {
+        resetEmbeddedScoreResult(this.resultSession, this.el);
+        this.scoreRunId++;
         this.resetRun();
         this.state = 'playing';
         this.closeTacticalPanel();
@@ -408,6 +421,7 @@ export class TowerDefenseGame {
     }
 
     toMenu() {
+        resetEmbeddedScoreResult(this.resultSession, this.el);
         this.stopLoop();
         this.state = 'menu';
         this.resetRun();
@@ -460,6 +474,7 @@ export class TowerDefenseGame {
     }
 
     async endGame(victory) {
+        if (this.state !== 'playing') return;
         this.state = 'over';
         this.stopLoop();
         this.closePanel();
@@ -521,18 +536,20 @@ export class TowerDefenseGame {
         }
         this.renderLevelCards();
 
-        // 本地榜（按关卡隔离）
+        const result = {
+            runId: this.scoreRunId, date: null, game: `tower-defense-${this.level.id}`,
+            name: ensurePlayerName() || 'Anonymous', score: this.score,
+        };
+        // Keep the original per-level local record; it is not the retry journal.
         const local = this.localScores();
-        local.push({ name: ensurePlayerName() || 'Anonymous', score: this.score, level: this.level.id });
+        local.push({ name: result.name, score: result.score, level: this.level.id });
         local.sort((a, b) => b.score - a.score);
         saveTowerDefenseLocalScores(local.slice(0, 30));
 
         if (this.el.over) this.el.over.classList.remove('hidden');
-        if (this.el.username) this.el.username.value = ensurePlayerName() || '';
-
-        // 上报全球榜（带关卡维度）；网络层收敛到 src/platform/leaderboard.js（false=静默保留本地榜）
-        await submitScore({ game: `tower-defense-${this.level.id}`, name: ensurePlayerName() || 'Anonymous', score: this.score });
-        this.fetchLeaderboard();
+        if (this.el.username) this.el.username.value = result.name;
+        this.renderLocalScores();
+        void this.resultSession.publish(result);
     }
 
     levelName(level) {
@@ -563,21 +580,37 @@ export class TowerDefenseGame {
     }
 
     renderLocalScores() {
+        const entries = this.localScores()
+            .filter(entry => !entry.level || entry.level === this.level.id).slice(0, 10);
+        this.renderBoard(entries);
+    }
+
+    renderBoard(rows) {
         const list = this.el['lb-list'];
         if (!list) return;
-        list.textContent = '';
-        // 只显示当前关卡的本地成绩
-        const filtered = this.localScores()
-            .filter(s => !s.level || s.level === (this.level && this.level.id))
-            .slice(0, 10);
-        if (filtered.length === 0) {
+        list.replaceChildren();
+        if (!rows.length) {
             const empty = document.createElement('div');
             empty.className = 'td-lb-empty game-lb-empty';
             empty.textContent = this.TEXT.noScores;
             list.appendChild(empty);
             return;
         }
-        filtered.forEach((s, i) => list.appendChild(this.buildLbRow(i, s)));
+        rows.slice(0, 10).forEach((entry, i) => list.appendChild(this.buildLbRow(i, entry)));
+    }
+
+    renderScoreResult(result = this.resultSession?.getState()) {
+        if (this.state !== 'over') return;
+        renderEmbeddedScoreResult({
+            result, el: this.el, text: key => this.TEXT[key],
+            renderBoard: rows => this.renderBoard(rows.length ? rows : this.readLocalBoard(result.entry.game)),
+            readLocalBoard: game => this.readLocalBoard(game),
+        });
+    }
+
+    readLocalBoard(game) {
+        const level = game.slice('tower-defense-'.length);
+        return this.localScores().filter(entry => !entry.level || entry.level === level).slice(0, 10);
     }
 
     buildLbRow(rank, entry) {
@@ -596,27 +629,7 @@ export class TowerDefenseGame {
         return row;
     }
 
-    async fetchLeaderboard() {
-        const list = this.el['lb-list'];
-        const statusEl = this.el['lb-status'];
-        if (!list || this.state !== 'over') return;
-        try {
-            const data = await fetchBoard(`tower-defense-${this.level.id}`);
-            if (this.state !== 'over') return;
-            list.textContent = '';
-            if (!Array.isArray(data) || data.length === 0) {
-                this.renderLocalScores();
-                if (statusEl) statusEl.textContent = '';
-                return;
-            }
-            data.slice(0, 10).forEach((entry, i) => list.appendChild(this.buildLbRow(i, entry)));
-            if (statusEl) statusEl.textContent = '';
-        } catch (e) {
-            if (this.state !== 'over') return;
-            this.renderLocalScores();
-            if (statusEl) statusEl.textContent = this.TEXT.lbOffline;
-        }
-    }
+
 
     async copyResult() {
         const t = this.TEXT;

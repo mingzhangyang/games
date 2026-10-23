@@ -74,6 +74,7 @@ export function renderTacticalPanel(game) {
     game.updateSideTowers();
     game.updateSideShortcuts();
     game.updateSideRecords();
+    game.renderScoreResult();
 }
 
 export function applyLanguage(game) {

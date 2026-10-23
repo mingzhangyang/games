@@ -14,7 +14,8 @@ import { updateMoreGames } from '../../platform/more-games.js';
 import { storageGet, storageSet } from '../../platform/safe-storage.js';
 import { track } from '../../platform/analytics.js';
 import { todayKey, todayKeyDisplay, hashString, mulberry32 } from '../../platform/daily.js';
-import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
+import { createScoreboardResultSession, retryScoreResults } from '../../platform/scoreboard-submission.js';
+import { renderEmbeddedScoreResult, resetEmbeddedScoreResult } from '../../platform/scoreboard-result-view.js';
 import { LANGUAGES } from './i18n.js';
 import { PLANET_MERGE_STORAGE, PLANET_MERGE_STORAGE_SLOTS, getPlanetMergeBest } from './storage.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
@@ -256,6 +257,13 @@ export class PlanetMergeGame {
 
         this.leaderboardTab = 'daily';
         this.dailyDay = todayKey();
+        this.scoreRunId = 0;
+        // Two independent POST receipts: changing tabs only selects the view.
+        this.resultSessions = {
+            alltime: createScoreboardResultSession({ onChange: () => this.renderScoreResult('alltime') }),
+            daily: createScoreboardResultSession({ onChange: () => this.renderScoreResult('daily') }),
+        };
+        this.el['lb-status']?.setAttribute('role', 'status');
 
         this.starfield = null;
 
@@ -271,6 +279,13 @@ export class PlanetMergeGame {
         this.updateHud();
         this.showStartScreen();
         this.startLoop();
+        window.addEventListener('online', () => {
+            for (const session of Object.values(this.resultSessions)) {
+                if (session.getState()) void session.refresh();
+            }
+            void retryScoreResults();
+        });
+        void retryScoreResults();
     }
 
     gatherElements() {
@@ -318,7 +333,7 @@ export class PlanetMergeGame {
         const btnHome2 = document.getElementById('pm-btn-home2');
         if (btnHome2) btnHome2.innerHTML = `${ICONS.home}<span>${t.home}</span>`;
         if (this.el['lb-title']) this.el['lb-title'].textContent = `🏆 ${t.leaderboard}`;
-        if (this.el['lb-status']) this.el['lb-status'].textContent = '';
+        if (this.resultSessions?.[this.leaderboardTab]?.getState()) this.renderScoreResult();
         if (this.el['over-max']) this.el['over-max'].textContent = '';
         if (this.el['over-suns']) this.el['over-suns'].textContent = '';
         if (this.el['over-merges']) this.el['over-merges'].textContent = '';
@@ -413,6 +428,8 @@ export class PlanetMergeGame {
     }
 
     startGame(mode) {
+        this.resetScoreResults();
+        this.scoreRunId++;
         this.mode = mode;
         this.dailyDay = todayKey();
         // 每日挑战：以日期为种子，全球玩家同一投放序列
@@ -496,6 +513,7 @@ export class PlanetMergeGame {
     }
 
     goHome() {
+        this.resetScoreResults();
         this.pauseOwnership?.invalidate();
         this.state = 'menu';
         this.ensureLoop();
@@ -830,8 +848,15 @@ export class PlanetMergeGame {
         this.leaderboardTab = isDaily ? 'daily' : 'alltime';
         this.updateLbTabs();
         this.renderLocalScores();
-        this.fetchLeaderboard();
-        this.submitScore();
+        if (this.score > 0) {
+            const result = {
+                runId: this.scoreRunId, date: this.dailyDay,
+                name: this.getUsername(), score: this.score,
+            };
+            // Endless and Daily both submit to two historical boards.
+            void this.resultSessions.alltime.publish({ ...result, game: 'planet-merge' });
+            void this.resultSessions.daily.publish({ ...result, game: `planet-merge-d${result.date}` });
+        }
         this.updateHud();
     }
 
@@ -875,24 +900,45 @@ export class PlanetMergeGame {
     }
 
     renderLocalScores() {
-        const t = this.TEXT;
+        const rows = this.localScores()
+            .filter(entry => this.leaderboardTab === 'alltime' || entry.day === this.dailyDay)
+            .sort((a, b) => b.score - a.score).slice(0, 10);
+        this.renderBoard(rows);
+    }
+
+    renderBoard(rows) {
         const list = this.el['lb-list'];
         if (!list) return;
-        list.textContent = '';
-        const day = this.dailyDay;
-        const filtered = this.localScores()
-            .filter(s => this.leaderboardTab === 'alltime' || s.day === day)
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 10);
-        if (filtered.length === 0) {
+        list.replaceChildren();
+        if (!rows.length) {
             const empty = document.createElement('div');
             empty.className = 'pm-lb-empty game-lb-empty';
-            empty.textContent = t.noScores;
+            empty.textContent = this.TEXT.noScores;
             list.appendChild(empty);
             return;
         }
-        filtered.forEach((s, i) => {
-            list.appendChild(this.buildLbRow(i, s));
+        rows.slice(0, 10).forEach((entry, i) => list.appendChild(this.buildLbRow(i, entry)));
+    }
+
+    readLocalBoard(game) {
+        const day = game === 'planet-merge' ? null : game.slice(-8);
+        return this.localScores().filter(entry => day === null || entry.day === day)
+            .sort((a, b) => b.score - a.score).slice(0, 10);
+    }
+
+    resetScoreResults() {
+        for (const session of Object.values(this.resultSessions)) {
+            resetEmbeddedScoreResult(session, this.el);
+        }
+    }
+
+    renderScoreResult(tab = this.leaderboardTab) {
+        if (tab !== this.leaderboardTab || this.state !== 'gameover') return;
+        renderEmbeddedScoreResult({
+            result: this.resultSessions[tab].getState(), el: this.el,
+            text: key => this.TEXT[key],
+            renderBoard: rows => this.renderBoard(rows),
+            readLocalBoard: game => this.readLocalBoard(game),
         });
     }
 
@@ -912,33 +958,7 @@ export class PlanetMergeGame {
         return row;
     }
 
-    async fetchLeaderboard() {
-        const statusEl = this.el['lb-status'];
-        const list = this.el['lb-list'];
-        if (!list) return;
-        try {
-            // 共享榜 Worker：每日榜是按天一个 game id（planet-merge-d<YYYYMMDD>）
-            const game = this.leaderboardTab === 'daily' ? `planet-merge-d${this.dailyDay}` : 'planet-merge';
-            const data = await fetchBoard(game);
-            if (this.state !== 'gameover') return;
-            if (!Array.isArray(data) || data.length === 0) {
-                list.textContent = '';
-                const empty = document.createElement('div');
-                empty.className = 'pm-lb-empty game-lb-empty';
-                empty.textContent = this.TEXT.noScores;
-                list.appendChild(empty);
-            } else {
-                list.textContent = '';
-                data.slice(0, 10).forEach((entry, i) => {
-                    list.appendChild(this.buildLbRow(i, entry));
-                });
-            }
-            if (statusEl) statusEl.textContent = '';
-        } catch (e) {
-            // Worker 未部署/网络失败：保留本地榜
-            if (statusEl) statusEl.textContent = this.TEXT.lbOffline;
-        }
-    }
+
 
     /**
      * 同步记录本地榜（无网络依赖，结算面板立即可见）
@@ -951,20 +971,6 @@ export class PlanetMergeGame {
         PLANET_MERGE_STORAGE.set(PLANET_MERGE_STORAGE_SLOTS.LOCAL_SCORES, local.slice(0, 30));
     }
 
-    async submitScore() {
-        if (this.score <= 0) return;
-        // 与旧 Worker 语义一致：每次提交同时进总榜与当日榜（两个 game id）
-        const entries = [
-            { game: 'planet-merge', score: this.score },
-            { game: `planet-merge-d${this.dailyDay}`, score: this.score }
-        ];
-        // 网络层收敛到 src/platform/leaderboard.js（任一失败即提示未进全球榜）
-        const results = await Promise.all(entries.map(entry => submitScore({ name: this.getUsername(), ...entry })));
-        if (results.some(r => !r)) {
-            // 提交失败：本地榜已由 recordLocalScore 记录，但要让玩家知道未进全球榜
-            this.showToast(this.TEXT.lbSubmitFail);
-        }
-    }
 
     showToast(msg, duration = 2400) {
         const toast = this.el.toast;
@@ -1158,14 +1164,12 @@ export class PlanetMergeGame {
         on('pm-tab-daily', () => {
             this.leaderboardTab = 'daily';
             this.updateLbTabs();
-            this.renderLocalScores();
-            this.fetchLeaderboard();
+            this.renderScoreResult();
         });
         on('pm-tab-alltime', () => {
             this.leaderboardTab = 'alltime';
             this.updateLbTabs();
-            this.renderLocalScores();
-            this.fetchLeaderboard();
+            this.renderScoreResult();
         });
 
         const username = document.getElementById('pm-username');

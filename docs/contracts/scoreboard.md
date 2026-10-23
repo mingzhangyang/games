@@ -3,7 +3,8 @@
 6c-1 将共享 dialog 与 Echo Cave / Maxwell Demon 的提交语义接到同一服务。
 6c-2a 将 Silk Dew、Crystal Bloom、Flame Verse、Ripple Duet 的内嵌榜单也接入共享服务。
 6c-2b 将 Gravity Slingshot、Circuit、Lumen、Bond Forge 的每日结果接入共享服务，并删除四页独立的 POST / GET 请求编排。
-其他页面仍待后续迁移，不能把本批当作全站已统一。
+6c-2c 将 Hoop Shot、Minesweeper、Reversi、Tower Defense、Planet Merge 的五个非解谜内嵌榜单接入共享结果服务。
+至此 15 个内嵌榜单全部完成迁移；Tetris、Sword Flight 的专有榜单界面另行评估。
 
 ## 责任边界
 
@@ -110,6 +111,27 @@ Silk Dew / Crystal Bloom / Flame Verse / Ripple Duet 继续使用各自的计分
 重连、跨日与刷新后只能用旧队列或 Session 中原始身份，不能从当前日期、昵称或分数
 重建旧 POST。GET 成功不表示 POST 成功；只有队列真正持久化才可显示 `queued`。
 
+### 6c-2c：经典游戏内嵌榜单
+
+五款游戏继续保留自身原有计分与 UI；成功 POST 由共享 Session 显示 `sent`，
+未发成功且已落盘显示 `queued`，存储不可用则显示 `notSaved`。
+GET 请求不会更新 POST 回执。开始新局或关闭结算视图时调用共享 reset，
+过期 GET 不能覆盖下一局；刷新/重新联网恢复原 `game/name/score` 的队列，不生成新成绩。
+旧本地榜单仍是本地历史榜和网络读榜失败时的可视回退，不代表上传成功。
+
+- **Hoop Shot**：仅正分结算提交；全局榜单高分优先，本地最多三十条。
+- **Minesweeper**：仅胜局提交；easy / medium / hard 分别使用三个 key，分数是通关秒数，
+  本地成绩按秒数升序排序；失败绝不创建共享 Session 或 POST。
+- **Reversi**：仅 AI 胜局计入连胜并提交；AI 输局清零、平局不清零，双人模式不提交。
+  输局 / 平局的榜单仍为只读 GET，不产生虚拟零分 POST；读榜回调独立序号隔离。
+- **Tower Defense**：按当前 level id 提交 `tower-defense-<level>`，
+  保留原行为（胜负结算均提交）和按关卡分隔的本地历史成绩。
+- **Planet Merge**：保留**每局两次提交**（`planet-merge` 总榜和
+  `planet-merge-dYYYYMMDD` 日榜），无尽模式也一样；两个共享 Result Session 分别
+  冻结并持久管理自己的 POST 回执与 GET。任一榜成功不替另一榜清除待提交记录，
+  页签仅切换展示；日期由开局 UTC+8 固定，跨日不更改旧身份。原本地历史记录
+  `{ name, score, day, mode }` 原样保留。
+
 ## 回归门禁
 
 - `verify-scoreboard-submission`：远端确认、精确 receipt、队列清理失败、容量与过期、
@@ -119,6 +141,7 @@ Silk Dew / Crystal Bloom / Flame Verse / Ripple Duet 继续使用各自的计分
 - `verify-scoreboard-daily-batch`：6c-2b 四页的 HTTP 500、网络失败、存储拒绝、
   GET 成功但 POST 失败、跨 UTC+8 午夜、原始昵称/分数、重复结算、旧 GET、
   部分成功和并发在线恢复、开局恢复与非每日模式；source 和 dist 都运行。
+- `verify-scoreboard-classic-batch`：6c-2c 五页的胜负提交门槛、难度及关卡独立榜、Planet Merge 双榜部分成功、存储拒写、HTTP 500 / 网络故障、启动和在线恢复、原始日与昵称、旧 GET、重复结算；源代码和 dist 均运行。
 - `verify-scoreboard-results`：真实 Echo / Maxwell 页面注入 HTTP 500、网络错误与存储失败；
   校验每日 / 战役可见提示、联网事件新增 POST、冻结原结果、重复结算、旧响应和启动重试。
   已接逐页过滤并进入 `DIST_SUITE`。

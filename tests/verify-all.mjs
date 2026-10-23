@@ -50,11 +50,13 @@ const DIST_SUITE = new Set([
     'verify-start-menus', 'smoke-index', 'smoke-carrot-pull', 'smoke-needle-awn', 'smoke-tower-defense',
     'smoke-sword-flight', 'verify-topbar-overflow', 'verify-contextual-restart', 'verify-scoreboard-results',
     'smoke-scoreboard-dialog', 'verify-scoreboard-embedded-batch', 'verify-scoreboard-daily-batch',
+    'verify-scoreboard-classic-batch',
 ]);
 // Approximate CI seconds of the slowest browser steps. Only used to balance --shard; a stale or
 // missing entry costs balance, never coverage. Unlisted browser steps count as DEFAULT_WEIGHT.
 const WEIGHTS = {
     'verify-scoreboard-embedded-batch': 125, 'verify-scoreboard-daily-batch': 145,
+    'verify-scoreboard-classic-batch': 175,
     'verify-stats-drawer': 190, 'verify-theme': 145, 'verify-button-icons': 135, 'verify-chrome': 105,
     'verify-desktop-frame': 100, 'placeholder-leak-check': 95, 'verify-overlay-corners': 75,
     'verify-start-menus': 70, 'fg-audit': 65, 'verify-immersive': 60, 'verify-touch-hints': 45, 'verify-topbar-row': 35, 'verify-topbar-states': 40,
