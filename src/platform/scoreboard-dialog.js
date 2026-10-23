@@ -2,8 +2,9 @@
  * Shared visible leaderboard dialog for games that did not previously expose a board.
  * Gameplay owns the score and eligibility; this module owns identity, network and DOM.
  */
-import { fetchBoard, submitScore, UnsupportedLeaderboardError } from './leaderboard.js';
-import { enqueuePendingScore, dequeuePendingScore, pendingScoreCount, retryPendingScores } from './scoreboard-pending.js';
+import { fetchBoard, UnsupportedLeaderboardError } from './leaderboard.js';
+import { hasPendingScore, pendingScoreCount, subscribePendingScoreUploads } from './scoreboard-pending.js';
+import { retryScoreResults, sameScoreEntry, submitScoreResult } from './scoreboard-submission.js';
 import { ensurePlayerName, getPlayerName, setPlayerName } from './player.js';
 import { getLang } from './site-settings.js';
 import { ICONS } from './icons.js';
@@ -15,6 +16,7 @@ const TEXT = {
         name: 'Player', empty: 'No results yet', loading: 'Loading rankings…',
         offline: 'Rankings unavailable. Try again later.',
         failed: 'This score was not uploaded. Check your connection.',
+        submitting: 'Submitting score…',
         sent: 'Score submitted. Placement depends on the leaderboard.',
         reload: 'Refresh', board: 'Leaderboard',
         pendingWorker: 'Rankings for this game are not live yet.',
@@ -26,6 +28,7 @@ const TEXT = {
         name: '昵称', empty: '暂无成绩', loading: '正在加载排行榜…',
         offline: '排行榜暂不可用，请稍后重试。',
         failed: '本次成绩未上传，请检查网络。',
+        submitting: '正在上传成绩…',
         sent: '成绩已提交，是否上榜以榜单结果为准。',
         reload: '刷新', board: '榜单',
         pendingWorker: '本游戏排行榜尚未上线。',
@@ -110,10 +113,31 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
     const visualViewportBinding = bindDialogToVisualViewport(dialog);
 
     let requestId = 0;
+    let readState = 'idle';
     const notices = new Map();
     const boardFor = id => boards.find(board => board.id === id);
     const resolvedKey = board => typeof board.key === 'function' ? board.key() : board.key;
     const setStatus = message => { status.textContent = message; };
+
+    function renderStatus() {
+        const key = resolvedKey(boardFor(select.value));
+        const notice = notices.get(key);
+        const state = notice?.status === 'queued' && !hasPendingScore(notice.entry) ? 'notSaved' : notice?.status;
+        const submission = notice ? text(state) : (pendingScoreCount(key) ? text('queued') : '');
+        const reading = readState === 'loading' ? text('loading')
+            : readState === 'unsupported' ? text('pendingWorker')
+                : readState === 'offline' ? text('offline') : '';
+        setStatus([submission, reading].filter(Boolean).join(' '));
+    }
+
+    // Keep the latest result's notice separate from old entries on the same board.
+    // This also observes startup/online retries initiated outside this dialog.
+    const stopUploads = subscribePendingScoreUploads(entry => {
+        const notice = notices.get(entry.game);
+        if (notice && !sameScoreEntry(notice.entry, entry)) return;
+        notices.set(entry.game, { entry, status: 'sent' });
+        if (dialog.open) renderStatus();
+    });
 
     function renderRows(data, board) {
         list.replaceChildren();
@@ -144,32 +168,29 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
         const seq = ++requestId;
         const key = resolvedKey(board);
         list.replaceChildren();
-        setStatus(text('loading'));
+        readState = 'loading';
+        renderStatus();
         try {
             const data = await fetchBoard(key);
             if (seq !== requestId || !dialog.open || board !== boardFor(select.value)) return;
             renderRows(data, board);
-            setStatus(pendingScoreCount(key) ? text('queued') : (notices.get(key) || ''));
+            readState = 'ready';
+            renderStatus();
 
             // A successful GET proves this independently deployed Worker has
             // been updated. Replay queued scores across ALL boards, including
             // yesterday's date-specific runs, with bounded/idempotent POSTs.
-            const uploaded = await retryPendingScores(submitScore);
-            for (const game of uploaded) notices.set(game, text('sent'));
+            const uploaded = await retryScoreResults();
             if (seq !== requestId || !dialog.open || board !== boardFor(select.value)) return;
             if (uploaded.includes(key)) {
                 void refresh(); // Read the now-persisted ranking exactly once.
             } else {
-                setStatus(pendingScoreCount(key) ? text('queued') : (notices.get(key) || ''));
+                renderStatus();
             }
         } catch (error) {
             if (seq !== requestId || !dialog.open || board !== boardFor(select.value)) return;
-            const queued = pendingScoreCount(key) ? ' ' + text('queued') : '';
-            if (error instanceof UnsupportedLeaderboardError) {
-                setStatus(text('pendingWorker') + queued);
-            } else {
-                setStatus(notices.get(key) || (text('offline') + queued));
-            }
+            readState = error instanceof UnsupportedLeaderboardError ? 'unsupported' : 'offline';
+            renderStatus();
         }
     }
 
@@ -189,9 +210,11 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
             button.setAttribute('aria-label', text('open'));
             if (!button.dataset.scoreboardIcon) button.querySelector('span').textContent = text('open');
         }
+        if (dialog.open) renderStatus();
     }
 
     const buttons = [];
+    const triggerBindings = [];
     for (const target of triggers) {
         let button;
         if (target.selector) {
@@ -215,10 +238,12 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
             anchor.parentElement.insertBefore(button, target.before ? anchor : anchor.nextSibling);
         }
         button.setAttribute('aria-haspopup', 'dialog');
-        button.addEventListener('click', () => {
+        const openFromTrigger = () => {
             const selected = typeof target.boardId === 'function' ? target.boardId() : target.boardId;
             open(selected);
-        });
+        };
+        button.addEventListener('click', openFromTrigger);
+        triggerBindings.push({ button, openFromTrigger, owned: !target.selector });
         buttons.push(button);
     }
     if (!buttons.length) throw new Error('Scoreboard has no visible entry');
@@ -272,15 +297,31 @@ export function mountScoreboardDialog({ boards, triggers, onOpen = () => {}, onC
         if (!board || !isFiniteScore(score)) return false;
         const resolved = key || resolvedKey(board);
         const name = getPlayerName() || ensurePlayerName();
-        const entry = { game: resolved, name, score };
-        const journaled = journal && enqueuePendingScore(entry);
-        const ok = await submitScore(entry);
-        if (ok && journaled) dequeuePendingScore(entry);
-        const locallySaved = !ok && (journaled || enqueuePendingScore(entry));
-        notices.set(resolved, text(ok ? 'sent' : (locallySaved ? 'queued' : 'notSaved')));
-        if (dialog.open && resolvedKey(boardFor(select.value)) === resolved) void refresh();
-        return ok; // Only remote acknowledgement counts as success.
+        const entry = Object.freeze({ game: resolved, name, score });
+        const notice = { entry, status: 'submitting' };
+        notices.set(resolved, notice);
+        if (dialog.open) renderStatus();
+        const receipt = await submitScoreResult(entry, { journal });
+        const current = notices.get(resolved);
+        if (current === notice || (current?.status === 'sent' && sameScoreEntry(current.entry, entry))) {
+            if (current.status !== 'sent') current.status = receipt.status;
+            if (dialog.open && resolvedKey(boardFor(select.value)) === resolved) void refresh();
+        }
+        return receipt.status === 'sent'; // Only remote acknowledgement counts as success.
     }
 
-    return { open, submit, refresh, dialog };
+    function destroy() {
+        stopUploads();
+        ++requestId;
+        if (dialog.open) dialog.close();
+        visualViewportBinding.stop();
+        window.removeEventListener('site-settings:changed', sync);
+        for (const { button, openFromTrigger, owned } of triggerBindings) {
+            button.removeEventListener('click', openFromTrigger);
+            if (owned) button.remove();
+        }
+        dialog.remove();
+    }
+
+    return { open, submit, refresh, dialog, destroy };
 }
