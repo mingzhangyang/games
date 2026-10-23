@@ -7,6 +7,7 @@
 - 行为实现：`src/platform/game-chrome.js`（`bindChrome`）
 - 游戏顶栏 markup 由 registry 生成，按 `registry.md` §3.1 通过 `chrome.actions` 角色列表及稀疏 `chrome.overrides` 编辑并运行 `npm run gen`；i18n 与 `bindChrome` 行为仍按本文接入。
 - 校验工具：`tests/verify-chrome.mjs`（按文件名自动发现，verify-all 校验项 `verify-chrome`）
+- 后续（提案，未实施）：页脚、统计抽屉、样式表链接、侧栏信息卡片、结算弹层同样改由 registry 生成，见 `docs/proposal-shell-generation.md`
 
 ---
 
