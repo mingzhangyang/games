@@ -1101,7 +1101,8 @@ body {
 /* ── 响应式 ── */
 
 @media (width <= 480px) {
-    .wd-icon-btn svg { width: 18px; height: 18px; }
+    /* Topbar icons stay at the shared 20px (chrome step 3); only in-stage buttons shrink. */
+    .wd-icon-btn:where(:not(.game-topbar *)) svg { width: 18px; height: 18px; }
     .wd-lang-btn { font-size: 11px; font-weight: 600; }
     .wd-title { font-size: 16px; letter-spacing: 0.02em; }
     .wd-sub-row { font-size: 10px; gap: 4px; }
@@ -1138,7 +1139,7 @@ body {
 }
 
 @media (width <= 360px) {
-    .wd-icon-btn svg { width: 16px; height: 16px; }
+    .wd-icon-btn:where(:not(.game-topbar *)) svg { width: 16px; height: 16px; }
     .wd-lang-btn { font-size: 10px; }
     .wd-title { font-size: 14px; }
     .wd-sub-row { font-size: 9px; gap: 3px; }

@@ -1093,8 +1093,9 @@
               "id": "td-range-btn",
               "title": "Toggle Ranges (R)",
               "aria-label": "Toggle Ranges",
+              "aria-keyshortcuts": "R",
               "data-i18n-title": "rangeBtnTitle",
-              "data-i18n-label": "rangeBtnTitle",
+              "data-i18n-label": "rangeBtnLabel",
               "aria-pressed": "false"
             },
             "icon": "range"

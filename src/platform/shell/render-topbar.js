@@ -102,7 +102,7 @@ function defaultNode(game, role) {
         case 'leaderboard':
             return { tag: 'button', attrs: {
                 type: 'button', id: p + '-leaderboard-btn',
-                class: 'scoreboard-trigger scoreboard-trigger--icon game-icon-btn',
+                class: 'scoreboard-trigger scoreboard-trigger--icon ' + cls,
                 'data-scoreboard-trigger': '', 'data-scoreboard-icon': 'true',
                 title: 'View rankings', 'aria-label': 'View rankings', 'aria-haspopup': 'dialog',
             }, icon: 'trophy' };
@@ -252,8 +252,9 @@ export function renderTopbar(game, indent = '        ') {
     const menuId = p + 'TopbarMenu';
     const moreId = p + 'TopbarMore';
     const overflow = actions.filter(action => mobile.overflow.includes(action.role));
+    // Same page palette class as its row neighbours (e.g. lj-icon-btn).
     const more = { tag: 'button', attrs: {
-        type: 'button', id: moreId, class: 'game-icon-btn game-topbar-more',
+        type: 'button', id: moreId, class: p + '-icon-btn game-icon-btn game-topbar-more',
         'data-topbar-more': '', hidden: null, popovertarget: menuId,
         'aria-controls': menuId, 'aria-expanded': 'false', 'aria-haspopup': 'menu',
         'aria-label': 'More actions', title: 'More actions',
