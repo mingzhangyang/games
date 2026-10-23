@@ -198,6 +198,8 @@ function checkScaffoldCli() {
             assert.equal(nodes.some(n => hasClass(n, 'game-sidebar')), hasSidebar, game.id + ': sidebar capability');
             if (hasSidebar) assert(nodes.some(n => '#' + attr(n, 'id') === runtime.more), game.id + ': More target exists');
             if (hasDrawer) {
+                assert.equal(tables.en.close, 'Close', game.id + ': drawer has an English close label');
+                assert.equal(tables.zh.close, '关闭', game.id + ': drawer has a Chinese close label');
                 for (const suffix of ['Toggle', 'Drawer', 'DrawerBody', 'Close', 'Panels', 'DrawerTitle']) {
                     assert(nodes.some(n => attr(n, 'id') === runtime.drawer.idPrefix + 'Stats' + suffix),
                         game.id + ': shared drawer adapter target ' + suffix);

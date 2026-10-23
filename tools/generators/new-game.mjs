@@ -47,8 +47,8 @@ if (footerKey === null && (typeof footer.text !== 'string' || !footer.text.trim(
     throw new Error('new-game requires non-empty static footer text when its i18n key is null');
 }
 const textTables = {
-    en: { title: game.name.en, titleZh: game.name.zh, stats: 'Stats' },
-    zh: { title: game.name.zh, titleZh: game.name.en, stats: '统计' },
+    en: { title: game.name.en, titleZh: game.name.zh, stats: 'Stats', close: 'Close' },
+    zh: { title: game.name.zh, titleZh: game.name.en, stats: '统计', close: '关闭' },
 };
 const defaultHints = {
     en: { desktop: 'Tap or use the keyboard to play.', touch: 'Tap to play.' },
