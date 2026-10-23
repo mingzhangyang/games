@@ -41,11 +41,20 @@ const begin = async (page, id) => {
         if (name === 'sudoku-mist') window.smGame.startLevel(0);
     }, id);
     await page.waitForFunction(() => {
-        const source = document.querySelector('[data-topbar-overflow-source]');
-        return source && !source.disabled && !source.classList.contains('hidden');
+        const restart = document.querySelector('[data-topbar-action="restart"]');
+        return restart && !restart.disabled && !restart.classList.contains('hidden');
     });
     await settle(page);
 };
+// Pages whose contextual Restart appears only once a run starts (hooks above).
+const PLAYABLE = new Set(['carrot-pull', 'shadow-loom', 'loop-jail', 'sudoku-mist']);
+// Left edge of every laid-out row control, keyed by role (visibility:hidden slots included).
+const rowSlots = page => page.evaluate(() => Object.fromEntries(
+    [...document.querySelectorAll('.game-topbar button, .game-topbar [data-chrome="home"]')]
+        .filter(node => !node.closest('[popover]') && node.getBoundingClientRect().width > 0)
+        .map(node => [node.dataset.topbarAction || node.dataset.chrome
+            || (node.hasAttribute('data-topbar-more') ? 'more' : node.id),
+        Math.round(node.getBoundingClientRect().left)])));
 
 try {
     for (const game of games) {
@@ -62,11 +71,27 @@ try {
             try {
                 await page.goto(BASE + '/' + game.href, { waitUntil: 'load', timeout: 30000 });
                 const plan = planMobileTopbar(game);
-                if (plan.overflow.length) {
-                    await page.waitForSelector('[data-topbar-overflow-ready]');
-                    if (plan.overflow.includes('restart')) {
-                        check(await page.$eval('[data-topbar-more]', node => node.hidden), game.id + ': no dead menu before play');
-                        await begin(page, game.id);
+                if (plan.overflow.length) await page.waitForSelector('[data-topbar-overflow-ready]');
+                if (PLAYABLE.has(game.id)) {
+                    // Starting a run may reveal Restart, but must never move a
+                    // control that was already in the row (e.g. More appearing).
+                    const before = {};
+                    for (const width of [320, 390, 480]) {
+                        await page.setViewport({ width, height: 844 });
+                        await settle(page);
+                        before[width] = await rowSlots(page);
+                    }
+                    await page.setViewport({ width: 390, height: 844 });
+                    await begin(page, game.id);
+                    for (const width of [320, 390, 480]) {
+                        await page.setViewport({ width, height: 844 });
+                        await settle(page);
+                        const after = await rowSlots(page);
+                        const moved = Object.keys(before[width])
+                            .filter(role => !(role in after) || after[role] !== before[width][role]);
+                        check(!moved.length, `${game.id}/${lang}/${width}: starting play keeps topbar controls in place: `
+                            + moved.map(role => `${role} ${before[width][role]}->${after[role]}`).join(', '));
+                        check('restart' in after, `${game.id}/${lang}/${width}: Restart is a direct mobile action once playing`);
                     }
                 }
                 for (const width of [320, 375, 390, 480, 481, 1280]) {

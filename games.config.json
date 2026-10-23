@@ -2219,7 +2219,7 @@
         },
         "mobile": {
           "priority": {
-            "leaderboard": 90,
+            "restart": 90,
             "stats": 80
           }
         }
@@ -2451,7 +2451,7 @@
         },
         "mobile": {
           "priority": {
-            "leaderboard": 90,
+            "restart": 90,
             "stats": 80
           }
         }
@@ -2596,7 +2596,7 @@
         "mobile": {
           "priority": {
             "pause": 100,
-            "leaderboard": 90
+            "restart": 90
           }
         }
       }
@@ -2874,7 +2874,7 @@
         "mobile": {
           "priority": {
             "pause": 100,
-            "leaderboard": 90
+            "restart": 90
           }
         }
       }
