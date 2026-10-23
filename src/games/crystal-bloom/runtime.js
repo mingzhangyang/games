@@ -1,3 +1,4 @@
+import { renderStarLevelGrid } from '../../platform/star-level-grid.js';
 import { copyResultText } from '../../platform/result-clipboard.js';
 /**
  * Crystal Bloom 晶绽 — 降温曲线结晶解谜
@@ -383,25 +384,9 @@ export class CrystalBloomGame {
     /* ---------------------- 关卡选择 / 侧栏 ---------------------- */
 
     renderLevelGrid() {
-        const grid = this.el['level-grid'];
-        if (!grid) return;
-        grid.innerHTML = '';
-        LEVELS.forEach((spec, i) => {
-            const p = this.progress[spec.id] || { stars: 0, bestCost: 0 };
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'cb-chip game-start-level-chip' + (p.stars > 0 ? ' is-done' : '');
-            btn.dataset.level = String(i);
-            const num = document.createElement('span');
-            num.className = 'cb-chip-num game-start-chip-num';
-            num.textContent = String(i + 1);
-            const stars = document.createElement('span');
-            stars.className = 'cb-chip-stars game-start-chip-stars';
-            stars.textContent = '★'.repeat(p.stars) + '☆'.repeat(3 - p.stars);
-            btn.appendChild(num);
-            btn.appendChild(stars);
-            btn.addEventListener('click', () => { Sfx.click(); this.startLevel(i); });
-            grid.appendChild(btn);
+        renderStarLevelGrid(this.el['level-grid'], LEVELS, this.progress, 'cb', i => {
+            Sfx.click();
+            this.startLevel(i);
         });
     }
 
