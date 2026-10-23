@@ -16,6 +16,7 @@ import { track } from '../../platform/analytics.js';
 import { todayKey, todayKeyDisplay, hashString, mulberry32 } from '../../platform/daily.js';
 import { createScoreboardResultSession, retryScoreResults } from '../../platform/scoreboard-submission.js';
 import { renderEmbeddedScoreResult, resetEmbeddedScoreResult } from '../../platform/scoreboard-result-view.js';
+import { fetchBoard } from '../../platform/leaderboard.js';
 import { LANGUAGES } from './i18n.js';
 import { PLANET_MERGE_STORAGE, PLANET_MERGE_STORAGE_SLOTS, getPlanetMergeBest } from './storage.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
@@ -258,6 +259,8 @@ export class PlanetMergeGame {
         this.leaderboardTab = 'daily';
         this.dailyDay = todayKey();
         this.scoreRunId = 0;
+        this.readOnlyBoardRequestId = 0;
+        this.readOnlyBoardState = null;
         // Two independent POST receipts: changing tabs only selects the view.
         this.resultSessions = {
             alltime: createScoreboardResultSession({ onChange: () => this.renderScoreResult('alltime') }),
@@ -333,7 +336,12 @@ export class PlanetMergeGame {
         const btnHome2 = document.getElementById('pm-btn-home2');
         if (btnHome2) btnHome2.innerHTML = `${ICONS.home}<span>${t.home}</span>`;
         if (this.el['lb-title']) this.el['lb-title'].textContent = `🏆 ${t.leaderboard}`;
-        if (this.resultSessions?.[this.leaderboardTab]?.getState()) this.renderScoreResult();
+        if (this.resultSessions?.[this.leaderboardTab]?.getState()) {
+            this.renderScoreResult();
+        } else if (this.state === 'gameover' && this.score <= 0 && this.el['lb-status']) {
+            this.el['lb-status'].textContent = this.readOnlyBoardState === 'loading'
+                ? this.TEXT.lbLoading : this.readOnlyBoardState === 'offline' ? this.TEXT.lbOffline : '';
+        }
         if (this.el['over-max']) this.el['over-max'].textContent = '';
         if (this.el['over-suns']) this.el['over-suns'].textContent = '';
         if (this.el['over-merges']) this.el['over-merges'].textContent = '';
@@ -856,6 +864,9 @@ export class PlanetMergeGame {
             // Endless and Daily both submit to two historical boards.
             void this.resultSessions.alltime.publish({ ...result, game: 'planet-merge' });
             void this.resultSessions.daily.publish({ ...result, game: `planet-merge-d${result.date}` });
+        } else {
+            // Empty runs are not submitted, but browsing either global board still works.
+            void this.fetchReadOnlyLeaderboard();
         }
         this.updateHud();
     }
@@ -927,6 +938,8 @@ export class PlanetMergeGame {
     }
 
     resetScoreResults() {
+        this.readOnlyBoardRequestId++;
+        this.readOnlyBoardState = null;
         for (const session of Object.values(this.resultSessions)) {
             resetEmbeddedScoreResult(session, this.el);
         }
@@ -940,6 +953,35 @@ export class PlanetMergeGame {
             renderBoard: rows => this.renderBoard(rows),
             readLocalBoard: game => this.readLocalBoard(game),
         });
+    }
+
+    // Read-only zero-score result: preserve the original tab navigation and
+    // offline local fallback without creating an artificial POST or journal.
+    async fetchReadOnlyLeaderboard() {
+        const requestId = ++this.readOnlyBoardRequestId;
+        const runId = this.scoreRunId;
+        const tab = this.leaderboardTab;
+        const day = this.dailyDay;
+        const boardKey = tab === 'daily' ? `planet-merge-d${day}` : 'planet-merge';
+        const current = () => this.readOnlyBoardRequestId === requestId
+            && this.scoreRunId === runId && this.state === 'gameover'
+            && this.score <= 0 && this.leaderboardTab === tab && this.dailyDay === day;
+        this.readOnlyBoardState = 'loading';
+        this.renderLocalScores();
+        if (this.el['lb-status']) this.el['lb-status'].textContent = this.TEXT.lbLoading;
+        try {
+            const rows = await fetchBoard(boardKey);
+            if (!current()) return;
+            if (!Array.isArray(rows)) throw new TypeError('Invalid scoreboard response');
+            this.readOnlyBoardState = 'ready';
+            this.renderBoard(rows);
+            if (this.el['lb-status']) this.el['lb-status'].textContent = '';
+        } catch (error) {
+            if (!current()) return;
+            this.readOnlyBoardState = 'offline';
+            this.renderLocalScores();
+            if (this.el['lb-status']) this.el['lb-status'].textContent = this.TEXT.lbOffline;
+        }
     }
 
     buildLbRow(rank, entry) {
@@ -1164,12 +1206,14 @@ export class PlanetMergeGame {
         on('pm-tab-daily', () => {
             this.leaderboardTab = 'daily';
             this.updateLbTabs();
-            this.renderScoreResult();
+            if (this.score > 0) this.renderScoreResult();
+            else void this.fetchReadOnlyLeaderboard();
         });
         on('pm-tab-alltime', () => {
             this.leaderboardTab = 'alltime';
             this.updateLbTabs();
-            this.renderScoreResult();
+            if (this.score > 0) this.renderScoreResult();
+            else void this.fetchReadOnlyLeaderboard();
         });
 
         const username = document.getElementById('pm-username');

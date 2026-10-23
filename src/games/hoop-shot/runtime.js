@@ -12,6 +12,7 @@ import { renderSideRecords } from '../../platform/side-records.js';
 import { ensurePlayerName, setPlayerName } from '../../platform/player.js';
 import { createScoreboardResultSession, retryScoreResults } from '../../platform/scoreboard-submission.js';
 import { renderEmbeddedScoreResult, resetEmbeddedScoreResult } from '../../platform/scoreboard-result-view.js';
+import { fetchBoard } from '../../platform/leaderboard.js';
 import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
 import { ICONS } from '../../platform/icons.js';
 import { updateMoreGames } from '../../platform/more-games.js';
@@ -176,6 +177,8 @@ export class HoopShotGame {
         this.lastFrameTime = 0;
         this.leaderboardTab = 'alltime';
         this.scoreRunId = 0;
+        this.readOnlyBoardRequestId = 0;
+        this.readOnlyBoardState = null;
         this.resultSession = createScoreboardResultSession({
             onChange: result => this.renderScoreResult(result),
         });
@@ -240,6 +243,10 @@ export class HoopShotGame {
         if (this.el['btn-home']) this.el['btn-home'].innerHTML = `${ICONS.home}<span>${t.home}</span>`;
         if (this.el['lb-title']) this.el['lb-title'].textContent = `🏆 ${t.leaderboard}`;
         if (this.resultSession?.getState()) this.renderScoreResult();
+        else if (this.state === 'gameover' && this.score <= 0 && this.el['lb-status']) {
+            this.el['lb-status'].textContent = this.readOnlyBoardState === 'loading'
+                ? this.TEXT.lbLoading : this.readOnlyBoardState === 'offline' ? this.TEXT.lbOffline : '';
+        }
         this.updateMuteButtons();
         this.updateStartStats();
         // 桌面侧栏（≥1024px 可见）
@@ -288,6 +295,8 @@ export class HoopShotGame {
     /* ── 流程 ── */
 
     startGame() {
+        this.readOnlyBoardRequestId++;
+        this.readOnlyBoardState = null;
         resetEmbeddedScoreResult(this.resultSession, this.el);
         this.scoreRunId++;
         this.state = 'playing';
@@ -350,6 +359,8 @@ export class HoopShotGame {
     }
 
     goHome() {
+        this.readOnlyBoardRequestId++;
+        this.readOnlyBoardState = null;
         resetEmbeddedScoreResult(this.resultSession, this.el);
         this.pauseOwnership?.invalidate();
         this.state = 'menu';
@@ -702,6 +713,9 @@ export class HoopShotGame {
                 runId: this.scoreRunId, date: null, game: LB_GAME,
                 name: this.getUsername(), score: this.score,
             });
+        } else {
+            // A missed first shot is ineligible for POST, not for browsing rankings.
+            void this.fetchReadOnlyLeaderboard();
         }
         this.updateHud();
     }
@@ -862,6 +876,28 @@ export class HoopShotGame {
     }
 
 
+
+    async fetchReadOnlyLeaderboard() {
+        const requestId = ++this.readOnlyBoardRequestId;
+        const runId = this.scoreRunId;
+        const current = () => this.readOnlyBoardRequestId === requestId
+            && this.scoreRunId === runId && this.state === 'gameover' && this.score <= 0;
+        this.readOnlyBoardState = 'loading';
+        if (this.el['lb-status']) this.el['lb-status'].textContent = this.TEXT.lbLoading;
+        try {
+            const rows = await fetchBoard(LB_GAME);
+            if (!current()) return;
+            if (!Array.isArray(rows)) throw new TypeError('Invalid scoreboard response');
+            this.readOnlyBoardState = 'ready';
+            this.renderBoard(rows);
+            if (this.el['lb-status']) this.el['lb-status'].textContent = '';
+        } catch (error) {
+            if (!current()) return;
+            this.readOnlyBoardState = 'offline';
+            this.renderLocalScores();
+            if (this.el['lb-status']) this.el['lb-status'].textContent = this.TEXT.lbOffline;
+        }
+    }
 
     /* ── 分享 ── */
 

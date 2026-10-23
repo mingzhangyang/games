@@ -264,11 +264,14 @@ try {
         }
         // Rehydrate a pending entry from the previous UTC+8 day on a new page.
         {
-            const historical = { game: game.dual ? 'planet-merge-d20261022'
-                : game.id === 'minesweeper' ? 'minesweeper-easy'
-                : game.id === 'tower-defense' ? 'tower-defense-first-light'
-                : game.id === 'reversi' ? 'reversi' : 'hoop-shot',
-                name: 'Yesterday player', score: 19, at: Date.now() };
+            const historicalGame = {
+                'planet-merge': 'planet-merge-d20261022',
+                'minesweeper': 'minesweeper-easy',
+                'tower-defense': 'tower-defense-first-light',
+                'reversi': 'reversi',
+                'hoop-shot': 'hoop-shot',
+            }[game.id];
+            const historical = { game: historicalGame, name: 'Yesterday player', score: 19, at: Date.now() };
             const { context, page, net, errors } = await fixture(game, 'success', [historical]);
             try {
                 await until(page, () => JSON.parse(localStorage.getItem('scoreboard:pending:v1') || '[]').length === 0,
@@ -295,6 +298,12 @@ try {
                 }
                 check(net.posts.length === (game.id === 'tower-defense' ? 1 : 0),
                     game.id + ': special-mode score eligibility preserved');
+                if (game.id === 'hoop-shot') {
+                    await until(page, () => document.querySelector('#hs-lb-list')?.textContent.includes('Remote latest'),
+                        null, 'hoop-shot: zero score can still browse global rankings');
+                    check(net.gets.some(url => url.includes('game=hoop-shot')),
+                        'hoop-shot: zero-score read does not create a POST');
+                }
             } finally { await context.close(); }
         }
         // Eligibility and board dimension stay owned by each game.
@@ -351,6 +360,39 @@ try {
         }
         console.log('PASS ' + game.id + ': immutable receipts, fault recovery, view isolation, eligibility');
     }
+    // Planet Merge zero-point games still support both read-only tabs; an older
+    // response must not overwrite the most recently selected tab.
+    if (cases.some(game => game.dual)) {
+        const game = cases.find(game => game.dual);
+        const { context, page, net, errors } = await fixture(game, 'success');
+        try {
+            net.get = 'hold';
+            await finish(page, game, 0);
+            await until(page, () => window.planetMergeGame.readOnlyBoardState === 'loading',
+                null, 'planet-merge: zero-score GET starts');
+            await page.click('#pm-tab-alltime');
+            await until(page, () => window.planetMergeGame.leaderboardTab === 'alltime',
+                null, 'planet-merge: all-time selected');
+            net.get = 'success';
+            net.label = 'Latest zero board';
+            await page.click('#pm-tab-daily');
+            await until(page, () => document.querySelector('#pm-lb-list')?.textContent.includes('Latest zero board'),
+                null, 'planet-merge: zero-score tab loads latest board');
+            for (const request of net.heldGets) {
+                await request.respond({ status: 200, headers, contentType: 'application/json',
+                    body: JSON.stringify([{ name: 'Stale zero board', score: 999 }]) });
+            }
+            const selected = await page.$eval('#pm-lb-list', el => el.textContent);
+            check(selected.includes('Latest zero board') && !selected.includes('Stale zero board'),
+                'planet-merge: stale zero-score tab GET does not repaint current tab');
+            check(net.posts.length === 0, 'planet-merge: zero-score reads never POST');
+            check(net.gets.some(url => url.includes('planet-merge-d'))
+                && net.gets.some(url => url.includes('game=planet-merge')),
+            'planet-merge: zero-score reads both remote boards');
+            check(errors.length === 0, 'planet-merge: read-only tabs have no page errors');
+        } finally { await context.close(); }
+    }
+
     if (cases.some(game => game.dual)) {
         const game = cases.find(game => game.dual);
         const { context, page, net } = await fixture(game, 'partial');
@@ -361,12 +403,13 @@ try {
                 return g.resultSessions.alltime.getState()?.submission === 'sent'
                     && g.resultSessions.daily.getState()?.submission === 'queued';
             }, null, 'planet-merge: independent board receipts');
-            check(snapshots.length === 2 && net.posts.some(p => p.game === 'planet-merge')
-                && net.posts.some(p => p.game.startsWith('planet-merge-d')),
-                'planet-merge: endless also sends both historical boards');
-            check((await pending(page)).length === 1
-                && (await pending(page))[0].game.startsWith('planet-merge-d'),
-            'planet-merge: only failing daily POST remains queued');
+            const bothPosted = snapshots.length === 2
+                && net.posts.some(p => p.game === 'planet-merge')
+                && net.posts.some(p => p.game.startsWith('planet-merge-d'));
+            check(bothPosted, 'planet-merge: endless also sends both historical boards');
+            const dailyPending = await pending(page);
+            check(dailyPending.length === 1 && dailyPending[0].game.startsWith('planet-merge-d'),
+                'planet-merge: only failing daily POST remains queued');
             await page.click('#pm-tab-daily');
             await waitVisible(page, game, 'Saved on this device');
             await page.click('#pm-tab-alltime');
