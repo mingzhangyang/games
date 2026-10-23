@@ -40,7 +40,7 @@ import { storageGet } from '../../platform/safe-storage.js';
 import { MAXWELL_DEMON_STORAGE, MAXWELL_DEMON_STORAGE_SLOTS } from './storage.js';
 import { track } from '../../platform/analytics.js';
 import { todayKey, todayKeyDisplay } from '../../platform/daily.js';
-import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
+import { createScoreboardResultSession, retryScoreResults } from '../../platform/scoreboard-submission.js';
 import { createSfxEngine } from '../../platform/game-sfx.js';
 import { bindPalette } from '../../platform/theme.js';
 
@@ -159,7 +159,7 @@ export class MaxwellDemonGame {
             'md-start', 'md-title', 'md-subtitle', 'md-howto', 'md-btn-levels', 'md-btn-daily',
             'md-level-label', 'md-level-grid', 'md-daily-best',
             'md-records', 'md-legend', 'md-scene', 'md-field',
-            'md-clear', 'md-clear-stars', 'md-clear-line', 'md-btn-next', 'md-btn-replay', 'md-btn-menu1',
+            'md-clear', 'md-clear-stars', 'md-clear-line', 'md-clear-status', 'md-btn-next', 'md-btn-replay', 'md-btn-menu1',
             'md-over', 'md-over-title', 'md-over-score', 'md-over-sub',
             'md-btn-again', 'md-btn-copy', 'md-btn-menu2',
             'md-lb-title', 'md-lb-list', 'md-lb-status', 'md-username', 'md-username-label',
@@ -197,6 +197,12 @@ export class MaxwellDemonGame {
         this.animationId = null;
         this.lastFrame = 0;
 
+        this.scoreRunId = 0;
+        this.resultSession = createScoreboardResultSession({
+            onChange: result => this.renderScoreResult(result),
+        });
+        this.el['lb-status']?.setAttribute('role', 'status');
+
         this.initUI();
         this.applyLanguage();
         this.bindInput();
@@ -204,6 +210,8 @@ export class MaxwellDemonGame {
         this.syncActionVisibility();
         this.resize();
         this.startLoop();
+        // Restore journaled results even when the player only visits the menu.
+        void retryScoreResults();
     }
 
     /* ---------------------- 基础 ---------------------- */
@@ -357,6 +365,7 @@ export class MaxwellDemonGame {
         this.renderLegend();
         this.renderRecords();
         this.updateHud();
+        this.renderScoreResult();
         document.documentElement.lang = this.lang === 'zh' ? 'zh-CN' : 'en';
     }
 
@@ -457,6 +466,9 @@ export class MaxwellDemonGame {
     }
 
     startLevel(ref) {
+        this.resultSession.close();
+        this.hide(this.el['clear-status']);
+        this.scoreRunId++;
         const spec = (ref && typeof ref === 'object') ? ref : LEVELS[clamp(ref, 0, LEVELS.length - 1)];
         const idx = LEVELS.indexOf(spec);
         this.levelIdx = idx >= 0 ? idx : 0;
@@ -512,6 +524,7 @@ export class MaxwellDemonGame {
     }
 
     toMenu() {
+        this.resultSession.close();
         this.pauseOwnership?.invalidate();
         this.state = 'menu'; this.contextualRestart?.sync();
         this.world = null;
@@ -526,6 +539,7 @@ export class MaxwellDemonGame {
     /* ---------------------- 结算 ---------------------- */
 
     onLevelWon() {
+        if (this.state !== 'playing') return;
         Sfx.win();
         vibrate(30);
         const spent = this.world.spent;
@@ -588,6 +602,7 @@ export class MaxwellDemonGame {
     }
 
     finishDaily() {
+        if (!this.daily || this.state === 'won-daily') return;
         this.state = 'won-daily'; this.contextualRestart?.sync();
         const el = this.el;
         this.hide(el['clear']);
@@ -604,17 +619,36 @@ export class MaxwellDemonGame {
     /* ---------------------- 榜单 ---------------------- */
 
     submit(game, score) {
-        const name = ensurePlayerName();
-        const el = this.el;
-        if (el['lb-status']) el['lb-status'].textContent = '…';
-        submitScore({ game, name, score })
-            .then(() => fetchBoard(game))
-            .then((rows) => this.renderBoard(rows))
-            .catch(() => {
-                if (el['lb-status']) el['lb-status'].textContent = this.t('lbOffline');
-                const local = this.readLocalBoard(game);
-                if (local.length) this.renderBoard(local);
-            });
+        return this.resultSession.publish({
+            runId: this.scoreRunId,
+            date: this.mode === 'daily' ? this.daily?.key : null,
+            game,
+            name: ensurePlayerName(),
+            score,
+        });
+    }
+
+    renderScoreResult(result = this.resultSession.getState()) {
+        if (!result) return;
+        if (result.board === 'ready') {
+            this.renderBoard(result.rows);
+        } else if (result.board === 'offline' || result.board === 'unsupported') {
+            this.renderBoard(this.readLocalBoard(result.entry.game));
+        } else {
+            this.el['lb-list']?.replaceChildren();
+        }
+        const submissionKey = {
+            submitting: 'lbSubmitting', sent: 'lbSent', queued: 'lbQueued', notSaved: 'lbNotSaved',
+        }[result.submission];
+        const messages = [this.t(submissionKey)];
+        const campaignStatus = this.el['clear-status'];
+        if (campaignStatus) {
+            campaignStatus.textContent = this.t(submissionKey);
+            campaignStatus.classList.toggle('hidden', result.entry.date !== null);
+        }
+        if (result.board === 'loading') messages.push(this.t('lbLoading'));
+        if (result.board === 'offline' || result.board === 'unsupported') messages.push(this.t('lbOffline'));
+        if (this.el['lb-status']) this.el['lb-status'].textContent = messages.join(' ');
     }
 
     readLocalBoard(game) {
@@ -633,14 +667,12 @@ export class MaxwellDemonGame {
         if (!list) return;
         list.innerHTML = '';
         if (!rows || !rows.length) {
-            if (el['lb-status']) el['lb-status'].textContent = '';
             const empty = document.createElement('div');
             empty.className = 'md-lb-empty game-lb-empty';
             empty.textContent = this.t('noScores');
             list.appendChild(empty);
             return;
         }
-        if (el['lb-status']) el['lb-status'].textContent = '';
         rows.slice(0, 10).forEach((row, i) => {
             const li = document.createElement('li');
             li.className = 'md-lb-row game-lb-row';
@@ -763,6 +795,10 @@ export class MaxwellDemonGame {
     }
 
     bindUI() {
+        window.addEventListener('online', () => {
+            if (this.resultSession.getState()) void this.resultSession.refresh();
+            else void retryScoreResults();
+        });
         window.addEventListener('site-settings:changed', () => {
             this.lang = getLang();
             this.applyLanguage();

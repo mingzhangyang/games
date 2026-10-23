@@ -35,9 +35,12 @@ assert.ok(workflow.includes('all)        npm run deploy:all ;;'),
     'the opt-in all target retains its coordinated ordering');
 
 const dialog = read('src/platform/scoreboard-dialog.js');
+const submission = read('src/platform/scoreboard-submission.js');
 assert.ok(dialog.includes('UnsupportedLeaderboardError'), 'new client handles old Worker');
-assert.ok(dialog.includes('enqueuePendingScore'), 'failed submissions can survive late backend rollout');
-assert.ok(dialog.includes('retryPendingScores'), 'scores get retried on a future successful read');
+assert.ok(dialog.includes('submitScoreResult') && submission.includes('enqueuePendingScore'),
+    'dialog uses the shared durable submission service for late backend rollout');
+assert.ok(dialog.includes('retryScoreResults') && submission.includes('retryPendingScores'),
+    'scores get retried through the existing journal after a successful read');
 assert.ok(dialog.includes('pendingWorker'), 'UI distinguishes unsupported games from empty boards');
 assert.ok(CANARY_KEYS.includes('tetris') && CANARY_KEYS.includes('math-rain-6'),
     'live manual checks cover legacy and new score families');

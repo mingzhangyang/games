@@ -75,17 +75,20 @@ display:contents 透传 + sr-only h1，横屏掌机形态保持覆盖式 HUD 不
 
 ---
 
-## 页面骨架提案审查确认、留待 6c 的榜单提交缺口
+## 页面骨架提案审查确认的榜单提交缺口
 
-**Echo Cave / Maxwell Demon 忽略提交失败返回值**：
+✅ **Echo Cave / Maxwell Demon 忽略提交失败返回值（6c-1，2026-10-23）**：
 `src/games/echo-cave/runtime.js` 与 `src/games/maxwell-demon/runtime.js` 的 `submit()`
 使用 `submitScore(...).then(() => fetchBoard(game))`，没有读取 POST 结果。
 `src/platform/leaderboard.js` 的契约是失败返回 `false`、不抛异常，因此 POST 失败后仍会拉榜；
 若 GET 成功，`renderBoard()` 清空状态提示，页面未告知本次成绩上传失败。
 
-控制流已由静态阅读确认；本条不声称已完成浏览器故障注入。Chrome 6a 仅迁移静态生成源，
-不修改这两页 runtime。后续 6c 应复用既有 `leaderboard.js` / `scoreboard-pending.js`，
-明确区分远端确认、本地待重试和未保存状态；GET 成功不能覆盖当前成绩未上传的事实。
+6c-1 将既有 dialog 提交逻辑提取为 `scoreboard-submission.js`，两页与 dialog 共用
+`leaderboard.js` / `scoreboard-pending.js`，明确区分远端确认、本地待重试和未保存状态。
+GET 成功仅更新榜单，不能覆盖当前成绩未上传的事实。每日结果与战役通关面板均提供可见反馈；
+重试使用原局快照，关闭结果只取消视图更新。契约见 `docs/contracts/scoreboard.md`。
 
-**验收**：注入 POST 网络失败 / 非 2xx、同时让 GET 返回有效榜单，断言仍显示未上传或已入队状态；
-再覆盖重试成功后的状态更新，以及旧请求在关闭、重开结算后不会覆盖新结果。
+**回归**：`verify-scoreboard-submission` 覆盖真实确认、队列清理失败、容量与过期、关闭和旧响应；
+`verify-scoreboard-results` 在两张真实页面注入 POST 网络失败 / HTTP 500、GET 成功与存储失败，
+检查可见提示、联网恢复新增 POST、冻结姓名 / 日期 / 分数、防重复、旧 GET 隔离及启动重试。
+同一浏览器断言在 #179 基线 `096bc8b` 的两页均因缺失待上传提示失败。

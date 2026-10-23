@@ -29,6 +29,11 @@ export function pendingScoreCount(game = null) {
     return readPending().filter(item => !game || item.game === game).length;
 }
 
+export function hasPendingScore(entry) {
+    const key = identity(entry);
+    return readPending().some(item => identity(item) === key);
+}
+
 export function enqueuePendingScore({ game, name, score }) {
     const item = { game, name, score, at: Date.now() };
     if (!valid(item)) return false;
@@ -46,6 +51,13 @@ export function dequeuePendingScore(item) {
 }
 
 let retryInFlight = null;
+const uploadListeners = new Set();
+
+/** Exact remote receipts, including acknowledgements whose local cleanup failed. */
+export function subscribePendingScoreUploads(listener) {
+    uploadListeners.add(listener);
+    return () => { uploadListeners.delete(listener); };
+}
 
 /**
  * Called after any successful leaderboard GET, so yesterday's Daily entries
@@ -59,7 +71,13 @@ export function retryPendingScores(submit) {
         for (const item of readPending()) {
             let accepted = false;
             try { accepted = await submit(item); } catch { /* Remain pending. */ }
-            if (accepted && dequeuePendingScore(item)) uploadedGames.add(item.game);
+            if (accepted) {
+                if (dequeuePendingScore(item)) uploadedGames.add(item.game);
+                const receipt = Object.freeze({ game: item.game, name: item.name, score: item.score });
+                for (const listener of uploadListeners) {
+                    try { listener(receipt); } catch { /* View work cannot undo a remote acknowledgement. */ }
+                }
+            }
         }
         return [...uploadedGames];
     })();
