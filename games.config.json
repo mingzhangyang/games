@@ -448,7 +448,8 @@
           "idBase": "stats",
           "i18n": true
         }
-      }
+      },
+      "sidebar": false
     },
     {
       "id": "tank-battle",
@@ -670,6 +671,9 @@
           "touchKey": null,
           "text": "P 暂停 · M 静音 · R 重开"
         }
+      },
+      "sidebar": {
+        "headingIcons": true
       }
     },
     {
@@ -869,6 +873,9 @@
         "footer": {
           "text": "Swipe up to shoot · P pause · M mute"
         }
+      },
+      "sidebar": {
+        "headingIcons": true
       }
     },
     {
@@ -1277,6 +1284,9 @@
           "key": null,
           "touchKey": null
         }
+      },
+      "sidebar": {
+        "headingIcons": true
       }
     },
     {
@@ -1399,7 +1409,8 @@
             "stats": 90
           }
         }
-      }
+      },
+      "sidebar": false
     },
     {
       "id": "sword-flight",
@@ -1511,7 +1522,8 @@
             }
           }
         }
-      }
+      },
+      "sidebar": false
     },
     {
       "id": "lumen",
@@ -1593,6 +1605,12 @@
         "footer": {
           "touchKey": null
         }
+      },
+      "sidebar": {
+        "panels": [
+          "records"
+        ],
+        "headingIcons": true
       }
     },
     {
@@ -1672,6 +1690,15 @@
         },
         "drawer": {
           "i18n": true
+        }
+      },
+      "sidebar": {
+        "headingIcons": true,
+        "howto": {
+          "titleText": "How to play"
+        },
+        "records": {
+          "titleText": "Records"
         }
       }
     },
@@ -1902,6 +1929,12 @@
         "footer": {
           "touchKey": null
         }
+      },
+      "sidebar": {
+        "desktopOnly": [
+          "legend",
+          "more"
+        ]
       }
     },
     {
@@ -2051,6 +2084,16 @@
         "styles": {
           "scienceShowcase": true
         }
+      },
+      "sidebar": {
+        "desktopOnly": [
+          "legend",
+          "more"
+        ],
+        "howto": {
+          "touchKey": "howtoTouch",
+          "scienceKey": "howtoScience"
+        }
       }
     },
     {
@@ -2124,6 +2167,16 @@
       "shell": {
         "styles": {
           "scienceShowcase": true
+        }
+      },
+      "sidebar": {
+        "desktopOnly": [
+          "legend",
+          "more"
+        ],
+        "howto": {
+          "touchKey": "howtoTouch",
+          "scienceKey": "howtoScience"
         }
       }
     },
@@ -2200,6 +2253,16 @@
       "shell": {
         "styles": {
           "scienceShowcase": true
+        }
+      },
+      "sidebar": {
+        "desktopOnly": [
+          "legend",
+          "more"
+        ],
+        "howto": {
+          "touchKey": "howtoTouch",
+          "scienceKey": "howtoScience"
         }
       }
     },
@@ -2332,6 +2395,18 @@
           "key": null,
           "touchKey": null,
           "text": "Press Pull, Space, or ↑ when the needle enters the green zone."
+        }
+      },
+      "sidebar": {
+        "panels": [
+          "howto"
+        ],
+        "desktopOnly": [],
+        "howto": {
+          "titleKey": "sideHowtoTitle",
+          "textKey": "sideHowto",
+          "titleText": "怎么玩",
+          "text": "按下“用力拔！”时，让指针落进绿色甜蜜区。连续命中会增加连击分，失误不会结束游戏，但会打断连击。"
         }
       }
     },
@@ -2570,6 +2645,15 @@
         "footer": {
           "key": null,
           "touchKey": null
+        }
+      },
+      "sidebar": {
+        "howto": {
+          "titleKey": "sideHowToTitle",
+          "textKey": "sideHowTo"
+        },
+        "records": {
+          "titleKey": "sideRecordsTitle"
         }
       }
     },

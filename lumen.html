@@ -137,18 +137,22 @@
                         <div class="game-legend-row"><span class="game-legend-dot lm-gloss-icon lm-gloss-split"></span><span class="game-legend-text" data-i18n="glossSplit"></span></div>
                     </div>
                 </div>
+                <!-- registry:begin sidebar-records -->
                 <div class="lm-side-card game-side-card">
-                    <div class="lm-side-title game-side-title" id="lm-side-records-title"></div>
+                    <div class="lm-side-title game-side-title" id="lm-side-records-title">🏅 <span data-i18n="sideRecords"></span></div>
                     <div class="lm-side-records game-side-records" id="lm-side-records"></div>
                 </div>
+                <!-- registry:end sidebar-records -->
             </div>
 
             <!-- 桌面侧栏专属：必须放在 #lmStatsPanels 外面 —— 那个节点会被
                  src/platform/game-drawer.js 整体搬进移动端抽屉，放进去会与页脚「更多游戏」重复；
                  放在外面则只在桌面侧栏出现（窄屏 aside 本来就被 has-stats-drawer 隐藏） -->
+            <!-- registry:begin sidebar-more -->
             <div class="lm-side-card game-side-card">
                 <nav class="more-games" id="lmSideMore"></nav>
             </div>
+            <!-- registry:end sidebar-more -->
 
         </aside>
     </main>

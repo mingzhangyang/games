@@ -129,14 +129,18 @@
 
             <!-- 由 game-drawer.js 在侧栏 / 底部抽屉之间搬移的面板容器 -->
             <div id="bfStatsPanels">
+                <!-- registry:begin sidebar-howto -->
                 <div class="bf-side-card game-side-card">
                     <div class="bf-side-title game-side-title" id="bf-side-howto-title" data-i18n="sideHowTo"></div>
                     <p class="bf-side-text game-side-text" id="bf-side-howto" data-i18n="howto"></p>
                 </div>
+                <!-- registry:end sidebar-howto -->
+                <!-- registry:begin sidebar-records -->
                 <div class="bf-side-card game-side-card">
                     <div class="bf-side-title game-side-title" id="bf-side-records-title" data-i18n="sideRecords"></div>
                     <div class="bf-side-records game-side-records" id="bf-side-records"></div>
                 </div>
+                <!-- registry:end sidebar-records -->
             </div>
 
             <!-- 桌面侧栏专属：必须放在 #bfStatsPanels 外面 —— 那个节点会被
@@ -150,9 +154,11 @@
                 <div class="bf-cheat-body" id="bf-cheat-body"></div>
             </div>
 
+            <!-- registry:begin sidebar-more -->
             <div class="bf-side-card game-side-card">
                 <nav class="more-games" id="bfSideMore"></nav>
             </div>
+            <!-- registry:end sidebar-more -->
 
         </aside>
     </main>

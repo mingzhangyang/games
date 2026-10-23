@@ -8,6 +8,7 @@
  * Vanilla JS + hand-rolled physics. No runtime dependencies.
  */
 
+import { renderSideRecords } from '../../platform/side-records.js';
 import { ensurePlayerName, setPlayerName } from '../../platform/player.js';
 import { submitScore, fetchBoard } from '../../platform/leaderboard.js';
 import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
@@ -231,8 +232,6 @@ export class HoopShotGame {
         this.updateMuteButtons();
         this.updateStartStats();
         // 桌面侧栏（≥1024px 可见）
-        if (this.el['side-howto-title']) this.el['side-howto-title'].textContent = `📖 ${t.sideHowTo}`;
-        if (this.el['side-records-title']) this.el['side-records-title'].textContent = `🏅 ${t.sideRecords}`;
         this.updateSideRecords();
         updateMoreGames(this.lang);
     }
@@ -252,17 +251,7 @@ export class HoopShotGame {
             [`🏆 ${t.best}`, formatNumber(this.best)],
             [`🔥 ${t.longestStreak}`, String(this.bestStreakAll)]
         ];
-        box.textContent = '';
-        rows.forEach(([label, value]) => {
-            const row = document.createElement('div');
-            row.className = 'hs-side-row game-side-row';
-            const labelEl = document.createElement('span');
-            labelEl.textContent = label;
-            const valueEl = document.createElement('b');
-            valueEl.textContent = value;
-            row.append(labelEl, valueEl);
-            box.appendChild(row);
-        });
+        renderSideRecords(box, rows.map(([label, value]) => ({ label, value })), { rowClass: 'hs-side-row' });
     }
 
     showStartScreen() {

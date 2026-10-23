@@ -13,6 +13,7 @@ import { registry } from './lib/registry.mjs';
 import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
 import { makeText } from '../src/platform/i18n.js';
 import { renderGameShell } from '../src/platform/shell/render-game-shell.js';
+import { sidebarCards } from '../src/platform/shell/render-sidebar.js';
 import {
     renderStylesheets, renderFooter, renderStatsDrawer, renderTailScripts,
 } from '../src/platform/shell/render-shell-parts.js';
@@ -161,6 +162,12 @@ function checkScaffoldCli() {
             shell: { footer: { key: 'instructions', touchKey: 'touchInstructions' } } }),
         fresh('cli-static-footer', { ...plain,
             shell: { footer: { key: null, touchKey: null, text: 'Read <rules> & play.' } } }),
+        fresh('cli-sidebar-copy', { sidebar: {
+            panels: ['howto', 'records'], desktopOnly: ['legend', 'more'],
+            howto: { titleKey: 'guideTitle', textKey: 'guide', touchKey: 'touchGuide', scienceKey: 'whyItWorks' },
+            records: { titleKey: 'resultsTitle' },
+        } }),
+        fresh('cli-manual-sidebar', { sidebar: false }),
     ];
     const invalid = fresh('cli-custom-drawer', { shell: { drawer: { idBase: 'legacyStats' } } });
     const emptyFooter = fresh('cli-empty-footer', { ...plain,
@@ -171,19 +178,25 @@ function checkScaffoldCli() {
         fresh('cli-static-explicit-touch', { ...plain,
             shell: { footer: { key: null, touchKey: 'touchHelp', text: 'Static help.' } } }),
     ];
+    const invalidSidebars = [
+        fresh('cli-misplaced-card', { sidebar: { panels: ['legend'] } }),
+        fresh('cli-duplicate-card', { sidebar: { panels: ['howto', 'howto'] } }),
+        fresh('cli-unknown-card', { sidebar: { desktopOnly: ['unexpected'] } }),
+        fresh('cli-no-sidebar-cap', { ...plain, sidebar: { panels: ['howto'] } }),
+    ];
     const invoke = game => execFileSync(process.execPath,
         [join(temp, 'tools/generators/new-game.mjs'), game.id], { stdio: 'pipe', timeout: 10000 });
     try {
         for (const name of ['tools/generators/new-game.mjs', 'src/platform/icons.js',
             'tests/verify-i18n.mjs', 'tests/lib/registry.mjs', 'tools/lib/registry.mjs',
             'tests/lib/static-module-graph.mjs', 'src/platform/i18n.js', 'src/platform/site-settings.js',
-            ...['render-game-shell', 'render-shell-parts', 'render-topbar'].map(n => 'src/platform/shell/' + n + '.js')]) {
+            ...['render-game-shell', 'render-shell-parts', 'render-topbar', 'render-sidebar'].map(n => 'src/platform/shell/' + n + '.js')]) {
             mkdirSync(dirname(join(temp, name)), { recursive: true });
             copyFileSync(join(ROOT, name), join(temp, name));
         }
         writeFileSync(join(temp, 'package.json'), '{"type":"module"}');
         writeFileSync(join(temp, 'games.config.json'),
-            JSON.stringify({ games: [...cases, invalid, emptyFooter, ...touchOnlyFooters] }));
+            JSON.stringify({ games: [...cases, invalid, emptyFooter, ...touchOnlyFooters, ...invalidSidebars] }));
         for (const game of cases) {
             invoke(game);
             const source = readFileSync(join(temp, game.entry), 'utf8');
@@ -207,6 +220,19 @@ function checkScaffoldCli() {
             assert.equal(!!runtime.more, hasSidebar, game.id + ': More runtime follows capability');
             assert.equal(nodes.some(n => hasClass(n, 'game-sidebar')), hasSidebar, game.id + ': sidebar capability');
             if (hasSidebar) assert(nodes.some(n => '#' + attr(n, 'id') === runtime.more), game.id + ': More target exists');
+            const cards = sidebarCards(game);
+            for (const card of cards) {
+                assert(nodes.some(n => attr(n, 'id') === card.targetId), game.id + ': scaffold includes declared ' + card.kind + ' target');
+                assert(html.includes('registry:begin ' + card.region), game.id + ': scaffold shares generated card ownership');
+            }
+            for (const node of nodes) {
+                if (!cards.length) break;
+                for (const attribute of ['data-i18n', 'data-i18n-touch']) {
+                    const key = attr(node, attribute);
+                    if (!key) continue;
+                    for (const lang of ['en', 'zh']) assert(tables[lang][key], game.id + ': generated binding has ' + lang + ' copy: ' + key);
+                }
+            }
             if (hasDrawer) {
                 assert.equal(tables.en.close, 'Close', game.id + ': drawer has an English close label');
                 assert.equal(tables.zh.close, '关闭', game.id + ': drawer has a Chinese close label');
@@ -250,7 +276,11 @@ function checkScaffoldCli() {
             assert.throws(() => invoke(game), error => /static footer requires touchKey: null/.test(String(error.stderr)),
                 game.id + ': a touch-only key has no shared i18n binding');
         }
-        for (const game of [invalid, emptyFooter, ...touchOnlyFooters]) {
+        for (const game of invalidSidebars) {
+            assert.throws(() => invoke(game), error => /sidebar|card|role/i.test(String(error.stderr)),
+                game.id + ': invalid sidebar declaration fails before writing');
+        }
+        for (const game of [invalid, emptyFooter, ...touchOnlyFooters, ...invalidSidebars]) {
             for (const name of [game.href, game.entry, 'css/' + game.id + '.css']) {
                 assert(!existsSync(join(temp, name)), 'invalid scaffold is rejected before writing ' + name);
             }

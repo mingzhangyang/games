@@ -6,6 +6,7 @@
  * Vanilla JS + hand-rolled circle physics. No runtime dependencies.
  */
 
+import { renderSideRecords } from '../../platform/side-records.js';
 import { ensurePlayerName, setPlayerName } from '../../platform/player.js';
 import { getLang, getMuted, setMuted } from '../../platform/site-settings.js';
 import { ICONS } from '../../platform/icons.js';
@@ -324,8 +325,6 @@ export class PlanetMergeGame {
 
         this.updateMuteButtons();
         // 桌面侧栏（≥1024px 可见）
-        if (this.el['side-howto-title']) this.el['side-howto-title'].textContent = `📖 ${t.sideHowTo}`;
-        if (this.el['side-records-title']) this.el['side-records-title'].textContent = `🏅 ${t.sideRecords}`;
         this.updateSideRecords();
         // HUD 小标签
         const scoreLabel = document.getElementById('pm-score-label');
@@ -859,17 +858,7 @@ export class PlanetMergeGame {
         const rows = [
             [`🏆 ${t.best}`, formatNumber(this.best)]
         ];
-        box.textContent = '';
-        rows.forEach(([label, value]) => {
-            const row = document.createElement('div');
-            row.className = 'pm-side-row game-side-row';
-            const labelEl = document.createElement('span');
-            labelEl.textContent = label;
-            const valueEl = document.createElement('b');
-            valueEl.textContent = value;
-            row.append(labelEl, valueEl);
-            box.appendChild(row);
-        });
+        renderSideRecords(box, rows.map(([label, value]) => ({ label, value })), { rowClass: 'pm-side-row' });
     }
 
     toggleMute() {

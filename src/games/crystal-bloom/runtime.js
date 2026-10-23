@@ -19,6 +19,7 @@
  * leaderboard / daily / i18n / safe-storage / analytics / game-sfx / boot。
  */
 
+import { renderSideRecords } from '../../platform/side-records.js';
 import { bindContextualRestart } from '../../platform/contextual-restart.js';
 import { LANGUAGES } from './i18n.js';
 import { createCoolingConsole } from './ui/cooling-console.js';
@@ -410,20 +411,9 @@ export class CrystalBloomGame {
             [this.t('stars'), `${stars} / ${LEVELS.length * 3}`],
             [this.t('paid'), bestCount ? String(bestSum) : '—'],
         ];
-        box.innerHTML = '';
-        for (const [k, v] of rows) {
-            const row = document.createElement('div');
-            row.className = 'cb-side-row game-side-row';
-            const kk = document.createElement('span');
-            kk.className = 'cb-side-k';
-            kk.textContent = k;
-            const vv = document.createElement('b');
-            vv.className = 'cb-side-v';
-            vv.textContent = v;
-            row.appendChild(kk);
-            row.appendChild(vv);
-            box.appendChild(row);
-        }
+        renderSideRecords(box, rows.map(([label, value]) => ({ label, value })), {
+            rowClass: 'cb-side-row', labelClass: 'cb-side-k', valueClass: 'cb-side-v',
+        });
     }
 
     renderLegend() {

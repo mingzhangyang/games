@@ -1,11 +1,11 @@
 # 页面骨架与信息卡片的 registry 生成方案（Chrome 第 6 步）
 
-> 状态：6a 已实现，待合并；6b–6d 为后续计划 · 原始盘点：2026-10-23 · 基线 main `fa2ad7d`
+> 状态：6a 已合并（PR #179）；6b、6c 分批实施；6d 为后续计划 · 原始盘点：2026-10-23 · 基线 main `fa2ad7d`
 > Repository: `mingzhangyang/games`
 > 范围：26 个 `topbar` 游戏页的样式表链接、页尾脚本、页脚、统计抽屉、侧栏信息卡片、结算 / 过关弹层与页内排行榜，以及关卡解谜十页 runtime 里的重复代码
 > 不在范围：舞台内部（画布、状态行内容）、各游戏自有的开始菜单内容、`index.html`、`math-rain` / `tank-battle`（豁免页）
 
-本轮只迁移样式表链接、页尾脚本、页脚和统计抽屉骨架，并让新游戏脚手架复用同一渲染源。侧栏卡片、结算与排行榜、关卡网格的后续方案不随 6a 一起实施。
+6a 已迁移样式表链接、页尾脚本、页脚和统计抽屉骨架，并让新游戏脚手架复用同一渲染源。后续侧栏卡片、榜单状态、结算模板与关卡网格按责任拆成独立 PR。
 
 ## 1. 背景：顶栏这一轮为什么做得成
 
@@ -102,7 +102,7 @@
 
 ### 4.2 信息卡片：按卡片类型声明
 
-**首批只覆盖 15 个使用通用抽屉的页面**，即 `drawer` 页面集合排除 tetris。tetris 有专用抽屉与侧栏行为；没有通用抽屉的侧栏页也暂不迁入。页面集合和例外由 registry 派生并断言覆盖。实际侧栏集合是 16 个 `sidebar` 页面；17 个 `.game-side-card` 页面另计了 tower-defense 的战术面板，不能按卡片类名把它们视为同一种侧栏模板。
+**6b 覆盖 15 个使用通用抽屉的页面**，即 `drawer` 页面集合排除 tetris。tetris 有专用抽屉与侧栏行为；没有通用抽屉的侧栏页也暂不迁入。页面集合和例外由 registry 派生并断言覆盖。实际侧栏集合是 16 个 `sidebar` 页面；17 个 `.game-side-card` 页面另计了 tower-defense 的战术面板，不能按卡片类名把它们视为同一种侧栏模板。
 
 仿照 `chrome.actions`，声明通用卡片类型列表，并区分「随面板进抽屉」与「仅桌面侧栏」两组。下面是字段形状示例，具体卡片归属以页面实际内容与契约为准：
 
@@ -116,11 +116,13 @@
 - 每类一个共享模板，统一 id（`xx-side-howto-title` / `xx-side-records` / `xx-side-legend` …）、共享类（`game-side-title`、`game-side-records`、`game-side-legend`）和 i18n 绑定。
 - 内容丰富的卡片（needle-awn / sword-flight 带 `<b>` 的规则卡与键位卡、bond-forge 可折叠的速查卡、lumen 的图例行）保留手写完整节点，或使用少数专用模板；不把任意 HTML 子树重新编码进 JSON。通用模板只接管已证明同构的连续区域，不能为了覆盖特例把起止标记拆到手写内容两侧。
 - **侧栏与抽屉一起校验。** `#xxStatsPanels` 在手机上会被 `game-drawer.js` 整个搬进抽屉；「更多游戏」和科学类图例应在其外。6a 的空抽屉模板继续复用，6b 只增加卡片与面板声明，不生成第二份 `StatsPanels`。
-- JS 侧新增共享的 `renderSideRecords(container, rows)`（`rows = [{ label, value }]`），替换 5 个各不相同的实现；「🏅」前缀从各页 JS 移到模板。
+- JS 侧共享 `renderSideRecords(container, rows, classes)`（`rows = [{ label, value }]`）只接管两列记录的 DOM 展示，已接入 11 页（包括 Lumen 的 `ui/view.js` 和命名不同的 Ripple `renderRecords`）；所有统计与存储计算仍在游戏内。PM / HS / GD / Lumen 记录标题的「🏅」从 JS 移到模板，原有手写标题仍保留自己的写入路径。
 
-现有漂移（只列几例，实施时以校验器输出为准）：planet-merge / hoop-shot / tower-defense 的记录列表缺 `game-side-records`；标题有的带 `data-i18n`、有的由 JS 写；circuit 在标题外多包一层 `<span>`。这一步**不是**零差异，会补齐这些共享类。
+实施结果：13 页生成同构卡片，Needle Awn / Sword Flight 的完整专用卡片保留但纳入 15 页回归。Lumen 的 gloss 位于可搬移的 howto 内，不归入 desktopOnly；Carrot 的进度点 / 提示卡、Shadow 的三列记录 / 桌面 keys、Bond Forge 的折叠速查仍保持页面所有权。默认列表与少量覆盖的实际字段见 `docs/contracts/registry.md` §3.3。
 
-验收不能仅列出现有校验器名字：`verify-sidebar-family` 当前覆盖共享侧栏家族，`verify-desktop-frame` 只覆盖 `frame-budget` 页面，两者都不等于本批 15 页。实施时先核对并补齐实际覆盖；对迁移集合逐页验证中英文、明暗主题、手机抽屉开关与桌面布局，以及跨 1024px 后仍是同一个 `StatsPanels` 节点。保留 tetris 的专用回归检查。
+原始漂移（只列几例）：planet-merge / hoop-shot / tower-defense 的记录列表缺 `game-side-records`；标题有的带 `data-i18n`、有的由 JS 写；circuit 在标题外多包一层 `<span>`。这一步补齐迁移范围内的共享类，并让通用标题统一由 i18n 绑定写入；tower-defense 的战术面板不在本批范围内。
+
+验收不能仅列出现有校验器名字：`verify-sidebar-family` 已由九页家族扩到本批 15 页，并保留原九页计算样式断言；`verify-desktop-frame` 按 `frame-budget` 能力派生，不能代替卡片身份与归属检查。对迁移集合逐页验证中英文、明暗主题、手机抽屉开关与桌面布局，以及跨 1024px 后仍是同一个 `StatsPanels` 节点。保留 tetris 的专用回归检查。
 
 ### 4.3 结算 / 过关弹层与排行榜
 
@@ -154,9 +156,9 @@ D1 已选择保留两种视图、共用一套服务。后续若要把内嵌榜�
 
 | 步骤 | 内容 | 是否零差异 | 验收 |
 | --- | --- | --- | --- |
-| **6a（本轮）** | 26 页本地样式表、页尾脚本、页脚及其中 16 页空抽屉骨架由 registry 生成；脚手架同源 | 是 | 逐页旧 / 新 DOM 相同、外部字体与区域外内容保留；静态截图像素比对并检查抽屉打开状态；生成区一致性及独立结构 / id / ARIA 检查；`gen --check`；全量 `npm run verify` 与 `--dist` |
-| **6b（后续）** | 15 个通用抽屉页面的通用卡片声明与 `renderSideRecords`；特殊卡片保留 | 否（补齐共享类） | 先补齐校验器对迁移集合的覆盖，再验中英文 / 主题 / 手机抽屉 / 桌面布局；断言卡片归属与跨断点节点身份，并做反向验证 |
-| **6c（后续）** | 先共享榜单状态 / 请求生命周期，再迁移同构弹层；两种视图共用服务 | 否 | 现有榜单、按钮与各页 smoke；增加 POST false / GET success、过期响应、跨日、重复提交、存储和复制失败回归 |
+| **6a（已合并 #179）** | 26 页本地样式表、页尾脚本、页脚及其中 16 页空抽屉骨架由 registry 生成；脚手架同源 | 是 | 逐页旧 / 新 DOM 相同、外部字体与区域外内容保留；静态截图像素比对并检查抽屉打开状态；生成区一致性及独立结构 / id / ARIA 检查；`gen --check`；全量 `npm run verify` 与 `--dist` |
+| **6b（侧栏卡片）** | 15 个通用抽屉页面的通用卡片声明与 `renderSideRecords`；特殊卡片保留 | 否（补齐共享类） | 先补齐校验器对迁移集合的覆盖，再验中英文 / 主题 / 手机抽屉 / 桌面布局；断言卡片归属与跨断点节点身份，并做反向验证 |
+| **6c（分批）** | 先共享榜单状态 / 请求生命周期，再迁移同构弹层；两种视图共用服务 | 否 | 现有榜单、按钮与各页 smoke；增加 POST false / GET success、过期响应、跨日、重复提交、存储和复制失败回归 |
 | **6d（后续，可选）** | 同构子集的选关渲染或关卡按钮 | 是（行为） | `verify-start-menus`、各页选关 smoke；保留章节分组、星级、无障碍名称与事件次数 |
 
 每一步单独开 PR。新增的逐页浏览器校验器要接 `tests/lib/page-filter.mjs`（`keepPage` / `exitIfNoPages`），CI 上超过 30 秒的补进 `tests/verify-all.mjs` 的 `WEIGHTS`。

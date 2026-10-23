@@ -167,6 +167,9 @@
           },
           "shell": {
             "$ref": "#/$defs/shell"
+          },
+          "sidebar": {
+            "$ref": "#/$defs/sidebar"
           }
         },
         "additionalProperties": true,
@@ -228,6 +231,11 @@
                     ]
                   }
                 }
+              },
+              "not": {
+                "required": [
+                  "sidebar"
+                ]
               }
             }
           }
@@ -856,6 +864,92 @@
           }
         }
       }
+    },
+    "sidebar": {
+      "description": "Ordinary drawer card defaults; false keeps a game-owned sidebar. Only roles and sparse copy differences are declared.",
+      "oneOf": [
+        {
+          "const": false
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "panels": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "howto",
+                  "records"
+                ]
+              },
+              "default": [
+                "howto",
+                "records"
+              ]
+            },
+            "desktopOnly": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "legend",
+                  "more"
+                ]
+              },
+              "default": [
+                "more"
+              ]
+            },
+            "headingIcons": {
+              "type": "boolean",
+              "default": false
+            },
+            "howto": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "titleKey": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z][\\w.-]*$"
+                },
+                "textKey": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z][\\w.-]*$"
+                },
+                "touchKey": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z][\\w.-]*$"
+                },
+                "scienceKey": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z][\\w.-]*$"
+                },
+                "titleText": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                }
+              }
+            },
+            "records": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "titleKey": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z][\\w.-]*$"
+                },
+                "titleText": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
     }
   },
   "additionalProperties": true

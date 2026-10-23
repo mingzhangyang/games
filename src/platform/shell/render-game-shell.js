@@ -1,5 +1,6 @@
 import { renderTopbar } from './render-topbar.js';
 import { renderStylesheets, renderFooter, renderStatsDrawer, renderTailScripts } from './render-shell-parts.js';
+import { sidebarCards, renderSidebarCard } from './render-sidebar.js';
 
 function esc(value) {
     return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -40,10 +41,16 @@ export function renderGameShell(game, {
     const heading = headingCount ? '' :
         `            <h1 class="sr-only" data-i18n="title">${esc(title)}</h1>\n`;
     const drawerBase = game.shell?.drawer?.idBase || `${prefix}Stats`;
+    const cards = sidebarCards(game);
+    const renderCards = (area, indent) => cards.filter(card => card.area === area)
+        .map(card => region(card.region, renderSidebarCard(game, card.kind, indent), indent) + '\n').join('');
+    const panelCards = renderCards('panels', '                    ');
+    const desktopCards = renderCards('desktopOnly', '                ');
     const sidebar = hasSidebar ? `            <aside class="game-sidebar">\n`
-        + (hasDrawer ? `                <div id="${esc(drawerBase)}Panels">${sidebarHtml}</div>\n`
+        + (hasDrawer ? `                <div id="${esc(drawerBase)}Panels">\n${panelCards}${sidebarHtml ? '                    ' + sidebarHtml + '\n' : ''}                </div>\n`
             : `                ${sidebarHtml}\n`)
-        + `                <div class="game-side-card" id="${esc(prefix)}SideMore"></div>\n`
+        + desktopCards
+        + (cards.some(card => card.kind === 'more') ? '' : `                <div class="game-side-card" id="${esc(prefix)}SideMore"></div>\n`)
         + '            </aside>\n' : '';
     const drawer = hasDrawer
         ? region('stats-drawer', renderStatsDrawer(game, '    '), '    ') + '\n' : '';

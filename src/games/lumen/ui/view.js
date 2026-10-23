@@ -2,6 +2,7 @@
  * Lumen 的 DOM 层：元素查找、文案、选关网格、HUD、提示、侧栏战绩、结算面板。
  * 只接收数据、只回调意图（bind 的 handlers），不读写对局状态、不碰存储与网络。
  */
+import { renderSideRecords } from '../../../platform/side-records.js';
 import { ICONS } from '../../../platform/icons.js';
 import { CHAPTERS, LEVELS_PER_CHAPTER, LUMEN_LEVELS } from '../model/levels.js';
 
@@ -96,7 +97,6 @@ export class LumenView {
         label('btn-copy', ICONS.copy, t.copyResult);
         if (el['lb-title']) el['lb-title'].textContent = `🏆 ${t.leaderboard}`;
         if (el['side-howto-title']) el['side-howto-title'].textContent = `📖 ${t.sideHowTo}`;
-        if (el['side-records-title']) el['side-records-title'].textContent = `🏅 ${t.sideRecords}`;
     }
 
     /** 一章一行（5 列网格 × 5 关），章节色只调边框 / 编号颜色 */
@@ -143,17 +143,7 @@ export class LumenView {
             const got = sumStars(stars.slice(ci * LEVELS_PER_CHAPTER, (ci + 1) * LEVELS_PER_CHAPTER));
             rows.push([`${ci + 1} · ${this.chapterName(ci)}`, `${got}/${LEVELS_PER_CHAPTER * 3}`]);
         });
-        box.textContent = '';
-        for (const [label, value] of rows) {
-            const row = document.createElement('div');
-            row.className = 'lm-side-row game-side-row';
-            const labelEl = document.createElement('span');
-            labelEl.textContent = label;
-            const valueEl = document.createElement('b');
-            valueEl.textContent = value;
-            row.append(labelEl, valueEl);
-            box.appendChild(row);
-        }
+        renderSideRecords(box, rows.map(([label, value]) => ({ label, value })), { rowClass: 'lm-side-row' });
     }
 
     renderHud({ daily, levelIdx, flips, par }) {

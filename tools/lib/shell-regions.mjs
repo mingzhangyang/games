@@ -14,7 +14,7 @@ const RENDERERS = {
 const attr = (node, name) => node.attrs?.find(a => a.name === name)?.value;
 const hasClass = (node, name) => (attr(node, 'class') || '').split(/\s+/).includes(name);
 
-function nodesOf(document) {
+export function nodesOf(document) {
     const nodes = [];
     function visit(node) {
         nodes.push(node);
@@ -72,14 +72,14 @@ function targetsFor(nodes, name, game) {
     return nodes.filter(node => node.tagName === 'script' && sources.has(attr(node, 'src')));
 }
 
-function lineIndent(source, offset, label) {
+export function lineIndent(source, offset, label) {
     const start = source.lastIndexOf('\n', offset - 1) + 1;
     const indent = source.slice(start, offset);
     if (!/^[ \t]*$/.test(indent)) throw new Error(`${label}: region must start on its own line`);
     return { start, indent };
 }
 
-function markerRange(source, nodes, name, label) {
+export function markerRange(source, nodes, name, label) {
     const markers = kind => nodes.filter(node => node.nodeName === '#comment'
         && node.data.trim() === `registry:${kind} ${name}`);
     const begins = markers('begin'), ends = markers('end');

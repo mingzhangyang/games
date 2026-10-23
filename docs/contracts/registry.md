@@ -92,6 +92,7 @@ caps 是校验器与迁移脚本的唯一判据：
 | 26 个 `topbar` 页的本地 CSS 链接 | `stylesheets` | 由 `shell.styles` 与既有 `scores.ui` 派生有序链接；外部字体样式表 / preconnect 留在区域外 |
 | 26 个 `topbar` 页的操作提示 | `footer` | 默认页脚模板与 `shell.footer` 稀疏覆盖；原 id / class / i18n / 初始文案保持不变 |
 | 其中带 `drawer` cap 的 16 页 | `stats-drawer` | 空统计抽屉骨架，由 `prefix` 与 `shell.drawer` 派生；不生成或复制 `StatsPanels` |
+| 普通抽屉页的同构卡片（当前 13 页） | `sidebar-howto` / `sidebar-records` / `sidebar-legend` / `sidebar-more` | 由默认角色列表与 `game.sidebar` 稀疏选择派生；每区只含一张完整卡片，特殊卡片保留手写 |
 | 26 个 `topbar` 页的入口及共享脚本 | `tail-scripts` | `game.entry` 模块入口 + `/analytics.js` + `/sw-register.js`，保留顺序和 defer 语义 |
 | 各游戏 SEO 脚本 | `seo-script` | canonical 纠正 + og:image/twitter:image + JSON-LD（VideoGame / BreadcrumbList）；分享图优先 `public/<ogImageDir>/og-<id>.jpg`（`tools/generators/game-covers.mjs` 用游戏美术生成），没有才用 `og-<id>.svg` |
 | `public/sitemap.xml` | `games` | 全部 `<url>` 条目 |
@@ -176,7 +177,29 @@ CLI 按声明的页脚 `key` / `touchKey` 生成默认双语提示词，并保�
 
 验收同时保留三类证据：生成区与渲染器逐字一致的防漂移检查；不依赖渲染器期望字符串的实际 DOM / CSS 链接 / 脚本 / id / ARIA 结构检查；迁移前后 DOM 与截图比对。
 `gen --check`、已有结构 / 交互检查与构建产物门禁都继续执行，不能用模板自比替代行为验证。
-侧栏卡片、结算弹层与榜单服务暂未纳入 6a，后续边界见 `docs/proposal-shell-generation.md`。
+侧栏卡片属于独立的 6b，见下节；结算弹层与榜单服务的后续边界见 `docs/proposal-shell-generation.md`。
+
+### 3.3 侧栏卡片（6b）
+
+`src/platform/shell/render-sidebar.js` 提供 `sidebarCards()` 和 `renderSidebarCard()`，由 registry 生成器与新游戏脚手架共同调用。具备 `sidebar` 和 `drawer` 的页面默认选择 `panels: ['howto', 'records']`、`desktopOnly: ['more']`。`sidebar: false` 表示整页卡片手写；当前仅 Tetris、Needle Awn、Sword Flight。普通抽屉的 15 页均参与结构和浏览器验收，其中 13 页有生成卡片。
+
+| 稀疏字段 | 默认 / 含义 |
+| --- | --- |
+| `sidebar.panels` | `['howto', 'records']`；选择位于 `StatsPanels` 内的同构卡片 |
+| `sidebar.desktopOnly` | `['more']`；可选择 `legend` / `more`，必须位于侧栏且在 `StatsPanels` 外 |
+| `sidebar.headingIcons` | `false`；`true` 保留说明 / 记录标题的 📖 / 🏅，图标由模板写入，文字由 i18n 写入嵌套 span |
+| `sidebar.howto.titleKey` / `textKey` | `sideHowTo` / `howto` |
+| `sidebar.howto.touchKey` / `scienceKey` | 不生成；设置后保留触屏说明 / 独立科学说明段 |
+| `sidebar.howto.titleText` / `text` | 空文本；需要保留的初始文案按纯文本转义 |
+| `sidebar.records.titleKey` / `titleText` | `sideRecords` / 空文本 |
+
+列表只选择本轮拥有的完整卡片；外层手写容器和特殊卡片决定位置。生成器检查所选卡片的实际相对顺序与声明一致，顺序不一致会拒绝，不能绕过手写卡片悄悄搬移。每个 `sidebar-*` 区域必须包含唯一完整卡片；额外的富文本、无 ID 的内容、控件、未知属性或跨父节点标记都不能被替换吞掉。首次接管未标记卡片时还核对声明的文案键、初始纯文本和标题图标，保留历史空标题槽的兼容；不能把裸文本注释或页面自有绑定覆盖掉。已标记的区域允许正常文案键 / 初始文案更新。候选继续复用 6a 的整批预检、原 ID 保留、最终 ID 唯一和 ARIA 引用保护。
+
+**保留的页面事实：** Lumen 仅生成 records / more，howto 内的 gloss 继续随抽屉移动；Carrot 仅生成 howto，进度点、提示卡和直接作为卡片的 More 导航保留；Shadow 的记录容器生成，但三列行与桌面 keys 仍由游戏维护；Bond Forge 的折叠速查卡保持完整手写；四页科学图例继续 desktopOnly。不能用 `legend` 类名推断所有图例都属于桌面。
+
+`src/platform/side-records.js` 的 `renderSideRecords(container, rows, classes)` 仅创建两列标签 / `<b>` 数值行，以 `textContent` 写入。`rows` 为 `{label, value}` 对象数组；稀疏 class 选项保留页面现有颜色钩子。关卡统计、每日日期、计分、存档、刷新时机和三列记录仍由各游戏维护。新游戏 CLI 为生成卡片添加真实双语词条；无效角色或配置在任何文件写入前拒绝。
+
+`verify-sidebar-registry` 将生成一致性与独立实际结构检查分开，保护特殊卡片并对归属、重复节点和生成区扩大做负例。`verify-sidebar-family` 覆盖 registry 派生的 15 页，包括跨 1024px 的同一节点身份与卡片相对顺序；原有九页科学家族的计算样式断言继续保留。Tetris 的专用抽屉回归仍独立执行。
 
 ## 4. verify-registry.mjs：caps ⟺ 代码事实
 
