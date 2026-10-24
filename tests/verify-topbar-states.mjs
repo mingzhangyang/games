@@ -21,6 +21,7 @@
 //    把所有 @media (hover: hover) 规则改写成 all，模拟一台有鼠标的设备；触屏轮保持原样。
 import puppeteer from 'puppeteer-core';
 import { decodePng } from './lib/png.mjs';
+import { outlineBackdropContrast } from './lib/focus-ring-contrast.mjs';
 import { CHROME_PATH, LAUNCH_ARGS } from './lib/browser.mjs';
 import { keepPage, exitIfNoPages } from './lib/page-filter.mjs';
 import { registry } from './lib/registry.mjs';
@@ -40,9 +41,6 @@ const fails = [];
 let checks = 0;
 const check = (ok, msg) => { checks++; if (!ok) fails.push(msg); };
 
-const lin = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
-const lum = ([r, g, b]) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
-const contrast = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
 const rgb = s => (s.match(/rgba?\(([^)]+)\)/)?.[1] || '0,0,0').split(/[\s,/]+/).filter(Boolean).map(Number);
 
 const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 'new', args: LAUNCH_ARGS });
@@ -109,7 +107,7 @@ for (const id of PAGES) {
                 return color;
             }), CONTROLS);
 
-            // ③ 的取样底图：未聚焦时焦点环将要盖住的像素（边框外 2–4px，取中线 3px）
+            // ③ 未聚焦底图：沿每边各取 9px 短条；中位数剔除 Tetris 的随机微型亮星。
             const barBottom = await page.evaluate(() => document.querySelector('.game-topbar').getBoundingClientRect().bottom);
             const shot = decodePng(await page.screenshot({
                 type: 'png',
@@ -158,9 +156,7 @@ for (const id of PAGES) {
                 if (solid) {
                     const ring = rgb(outline.color);
                     const [x, y, w, h] = b.rect;
-                    const samples = [[x - 3, y + h / 2], [x + w + 2, y + h / 2], [x + w / 2, y - 3], [x + w / 2, y + h + 2]]
-                        .map(([px, py]) => pixel(px, py)).filter(Boolean);
-                    const worst = Math.min(...samples.map(p => contrast(ring, p)));
+                    const worst = outlineBackdropContrast(pixel, ring, [x, y, w, h]);
                     check(worst >= MIN_RING_CONTRAST,
                         `${tag}: ${b.name} 焦点环 ${outline.color} 与背景对比度 ${worst.toFixed(2)}:1 < ${MIN_RING_CONTRAST}:1`);
                 }
