@@ -404,6 +404,9 @@ input, textarea {
     font-weight: 600;
     border-radius: 8px;
     transition: all 0.2s ease;
+    /* A coarse touch tap should activate immediately, not be treated as a
+       candidate double-tap zoom or a hover-only activation. */
+    touch-action: manipulation;
 }
 
 .mobile-controls .btn:active {
@@ -442,14 +445,20 @@ input, textarea {
     z-index: -1;
 }
 
-.btn:hover::before {
-    width: 300px;
-    height: 300px;
-}
+/* The expanding pseudo-element and moving :hover state are pointer
+   affordances only. On touch screens a first tap can enter hover without a
+   synthetic click (confirmed by pointer/touchend but missing click in Q2-A),
+   forcing a second tap for Pause. Keep the artwork for real hover hardware. */
+@media (hover: hover) and (pointer: fine) {
+    .btn:hover::before {
+        width: 300px;
+        height: 300px;
+    }
 
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--tt-btn-hover-shadow);
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--tt-btn-hover-shadow);
+    }
 }
 
 .btn:disabled {
