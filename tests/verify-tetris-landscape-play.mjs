@@ -115,8 +115,20 @@ for (const vp of landscapes) {
             await page.evaluate(() => {
                 const button = document.getElementById('mobilePauseBtn');
                 window.__q2PauseEvents = [];
-                for (const type of ['touchstart', 'touchend', 'pointerdown', 'pointerup', 'click']) {
-                    button.addEventListener(type, () => window.__q2PauseEvents.push(type), { passive: true });
+                const types = ['touchstart', 'touchend', 'touchcancel', 'pointerdown',
+                    'pointerup', 'pointercancel', 'click'];
+                for (const type of types) {
+                    document.addEventListener(type, event => {
+                        if (!event.target.closest?.('#mobileControls')) return;
+                        const point = event.changedTouches?.[0] || event;
+                        const hit = document.elementFromPoint(point.clientX, point.clientY);
+                        const record = { type, target: event.target.id, hit: hit?.id || hit?.tagName,
+                            buttonDisabled: button.disabled, defaultPrevented: event.defaultPrevented,
+                            scrollY: window.scrollY, visualTop: visualViewport?.offsetTop,
+                            time: Math.round(performance.now()) };
+                        window.__q2PauseEvents.push(record);
+                        queueMicrotask(() => { record.defaultPrevented = event.defaultPrevented; });
+                    }, { passive: true });
                 }
             });
             await page.tap('#mobilePauseBtn');
@@ -130,7 +142,14 @@ for (const vp of landscapes) {
                 disabled: document.getElementById('mobilePauseBtn').disabled,
                 label: document.getElementById('mobilePauseBtn').textContent,
             }));
-            const pauseTrace = await page.evaluate(() => window.__q2PauseEvents);
+            const pauseTrace = await page.evaluate(() => ({
+                events: window.__q2PauseEvents,
+                hover: matchMedia('(hover: hover) and (pointer: fine)').matches,
+                button: { disabled: document.getElementById('mobilePauseBtn').disabled,
+                    touchAction: getComputedStyle(document.getElementById('mobilePauseBtn')).touchAction,
+                    transform: getComputedStyle(document.getElementById('mobilePauseBtn')).transform },
+                scrollY: window.scrollY,
+            }));
             assert(paused.paused && paused.animationId === null,
                 name + ' Pause stops the game loop', JSON.stringify({ paused, events: pauseTrace }));
             await page.tap('#mobilePauseBtn');

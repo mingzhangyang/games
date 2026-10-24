@@ -46,6 +46,7 @@ const QUICK_BROWSER = new Set(['smoke-index', 'verify-chrome', 'verify-theme', '
 // whose cascade depends on Vite's CSS chunk order, and the smokes that load production art.
 const DIST_SUITE = new Set([
     'verify-tetris-landscape-play',
+    'verify-shadow-loom-small-touch',
     'verify-sidebar-family',
     'verify-chrome', 'verify-theme', 'verify-desktop-frame', 'verify-stats-drawer', 'verify-immersive',
     'verify-start-menus', 'smoke-index', 'smoke-carrot-pull', 'smoke-needle-awn', 'smoke-tower-defense',
