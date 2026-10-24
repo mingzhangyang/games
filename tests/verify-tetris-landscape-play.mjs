@@ -124,10 +124,10 @@ for (const vp of landscapes) {
                         const hit = document.elementFromPoint(point.clientX, point.clientY);
                         const record = { type, target: event.target.id, hit: hit?.id || hit?.tagName,
                             buttonDisabled: button.disabled, defaultPrevented: event.defaultPrevented,
-                            scrollY: window.scrollY, visualTop: visualViewport?.offsetTop,
+                            scrollY: window.scrollY, visualTop: window.visualViewport?.offsetTop,
                             time: Math.round(performance.now()) };
                         window.__q2PauseEvents.push(record);
-                        queueMicrotask(() => { record.defaultPrevented = event.defaultPrevented; });
+                        window.queueMicrotask(() => { record.defaultPrevented = event.defaultPrevented; });
                     }, { passive: true });
                 }
             });
@@ -144,7 +144,7 @@ for (const vp of landscapes) {
             }));
             const pauseTrace = await page.evaluate(() => ({
                 events: window.__q2PauseEvents,
-                hover: matchMedia('(hover: hover) and (pointer: fine)').matches,
+                hover: window.matchMedia('(hover: hover) and (pointer: fine)').matches,
                 button: { disabled: document.getElementById('mobilePauseBtn').disabled,
                     touchAction: getComputedStyle(document.getElementById('mobilePauseBtn')).touchAction,
                     transform: getComputedStyle(document.getElementById('mobilePauseBtn')).transform },
@@ -161,6 +161,26 @@ for (const vp of landscapes) {
             }));
             assert(!resumed.paused && resumed.animationId !== null,
                 name + ' Resume continues gameplay', JSON.stringify(resumed));
+            // Touch-specific activation must preserve the native keyboard
+            // click path and must not activate on a drag leaving the button.
+            await page.focus('#mobilePauseBtn');
+            await page.keyboard.press('Enter');
+            const keyboardPaused = await page.evaluate(() => window.game.paused);
+            assert(keyboardPaused, name + ' keyboard Enter pauses without touch');
+            await page.keyboard.press('Enter');
+            const keyboardResumed = await page.evaluate(() => !window.game.paused &&
+                window.game.animationId !== null);
+            assert(keyboardResumed, name + ' keyboard Enter resumes without touch');
+            const pausePoint = await page.evaluate(() => {
+                const rect = document.getElementById('mobilePauseBtn').getBoundingClientRect();
+                return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+            });
+            await page.touchscreen.touchStart(pausePoint.x, pausePoint.y);
+            await page.touchscreen.touchMove(pausePoint.x - 110, pausePoint.y);
+            await page.touchscreen.touchEnd();
+            const afterDrag = await page.evaluate(() => !window.game.paused &&
+                window.game.animationId !== null);
+            assert(afterDrag, name + ' dragging off Pause never activates it');
             // Real canvas double-tap hard-drops a piece, earning drop points and
             // leaving occupied board cells. Restart must undo these observable
             // gameplay effects, not merely leave a zero score untouched.

@@ -1407,12 +1407,36 @@ export function bindTetrisControls(game) {
 
     // 语言切换统一在首页进行（site_lang 全站生效），游戏页不再提供语言钮。
 
-    // Mobile controls
-    if (document.getElementById('mobileStartBtn')) {
-        document.getElementById('mobileStartBtn').onclick = () => game.start();
-        document.getElementById('mobilePauseBtn').onclick = () => game.togglePause();
-        document.getElementById('mobileRestartBtn').onclick = () => game.restart();
+    // Chromium can omit the compatibility click on a control tapped immediately
+    // after a canvas swipe. Handle real touch release directly; preventDefault
+    // suppresses its later synthetic click so Pause/Resume never fires twice.
+    // Keep native click for mouse, keyboard and assistive-technology activation.
+    function bindMobileButton(id, action) {
+        const button = document.getElementById(id);
+        if (!button) return;
+        button.onclick = action;
+        let start = null;
+        button.addEventListener('touchstart', (event) => {
+            const touch = event.touches.length === 1 ? event.touches[0] : null;
+            start = touch ? { id: touch.identifier, x: touch.clientX, y: touch.clientY } : null;
+        }, { passive: true });
+        button.addEventListener('touchend', (event) => {
+            if (!start) return;
+            const touch = Array.from(event.changedTouches).find(t => t.identifier === start.id);
+            if (!touch) return;
+            event.preventDefault();
+            const rect = button.getBoundingClientRect();
+            const inside = touch.clientX >= rect.left && touch.clientX <= rect.right
+                && touch.clientY >= rect.top && touch.clientY <= rect.bottom;
+            const stationary = Math.hypot(touch.clientX - start.x, touch.clientY - start.y) < 18;
+            start = null;
+            if (!button.disabled && inside && stationary) action();
+        }, { passive: false });
+        button.addEventListener('touchcancel', () => { start = null; }, { passive: true });
     }
+    bindMobileButton('mobileStartBtn', () => game.start());
+    bindMobileButton('mobilePauseBtn', () => game.togglePause());
+    bindMobileButton('mobileRestartBtn', () => game.restart());
 
     // 触摸手势：滑动 = 左右/下移动/旋转；双击（两次快速点按）= 硬降
     let touchStartX = null;

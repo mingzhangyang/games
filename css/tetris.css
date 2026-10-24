@@ -445,10 +445,9 @@ input, textarea {
     z-index: -1;
 }
 
-/* The expanding pseudo-element and moving :hover state are pointer
-   affordances only. On touch screens a first tap can enter hover without a
-   synthetic click (confirmed by pointer/touchend but missing click in Q2-A),
-   forcing a second tap for Pause. Keep the artwork for real hover hardware. */
+/* Moving hover artwork belongs to fine pointers. Coarse touch controls
+   remain visually stable while tapped; their touch activation is owned by
+   bindTetrisControls in the Tetris runtime. */
 @media (hover: hover) and (pointer: fine) {
     .btn:hover::before {
         width: 300px;
