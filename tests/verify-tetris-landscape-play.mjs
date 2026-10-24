@@ -109,6 +109,16 @@ for (const vp of landscapes) {
             assert(await page.evaluate(() => !window.game.paused && !window.game.gameOver &&
                 window.game.animationId !== null), name + ' Start begins actual gameplay');
             await swipeRight(page, await geometry(page), name);
+            // The preceding swipe and the following button tap are separate human
+            // gestures, not two CDP actions dispatched back-to-back in one frame.
+            await new Promise(resolve => setTimeout(resolve, 170));
+            await page.evaluate(() => {
+                const button = document.getElementById('mobilePauseBtn');
+                window.__q2PauseEvents = [];
+                for (const type of ['touchstart', 'touchend', 'pointerdown', 'pointerup', 'click']) {
+                    button.addEventListener(type, () => window.__q2PauseEvents.push(type), { passive: true });
+                }
+            });
             await page.tap('#mobilePauseBtn');
             // A touchscreen tap synthesizes its click asynchronously. Observe the
             // actual game transition rather than racing the browser event queue.
@@ -120,8 +130,9 @@ for (const vp of landscapes) {
                 disabled: document.getElementById('mobilePauseBtn').disabled,
                 label: document.getElementById('mobilePauseBtn').textContent,
             }));
+            const pauseTrace = await page.evaluate(() => window.__q2PauseEvents);
             assert(paused.paused && paused.animationId === null,
-                name + ' Pause stops the game loop', JSON.stringify(paused));
+                name + ' Pause stops the game loop', JSON.stringify({ paused, events: pauseTrace }));
             await page.tap('#mobilePauseBtn');
             await page.waitForFunction(() => !window.game.paused &&
                 window.game.animationId !== null, { timeout: 1300 }).catch(() => {});
@@ -131,21 +142,65 @@ for (const vp of landscapes) {
             }));
             assert(!resumed.paused && resumed.animationId !== null,
                 name + ' Resume continues gameplay', JSON.stringify(resumed));
+            // Real canvas double-tap hard-drops a piece, earning drop points and
+            // leaving occupied board cells. Restart must undo these observable
+            // gameplay effects, not merely leave a zero score untouched.
+            const boardNow = await geometry(page);
+            const x = boardNow.board.x + boardNow.board.width * 0.5;
+            const y = boardNow.board.y + boardNow.board.height * 0.4;
+            await page.touchscreen.touchStart(x, y);
+            await page.touchscreen.touchEnd();
+            await new Promise(resolve => setTimeout(resolve, 110));
+            await page.touchscreen.touchStart(x, y);
+            await page.touchscreen.touchEnd();
+            await page.waitForFunction(() => window.game.score > 0 &&
+                window.game.board.some(row => row.some(Boolean)), { timeout: 2000 }).catch(() => {});
+            const beforeRestart = await page.evaluate(() => ({
+                score: window.game.score,
+                locked: window.game.board.flat().filter(Boolean).length,
+            }));
+            assert(beforeRestart.score > 0 && beforeRestart.locked > 0,
+                name + ' real double-tap earns points and locks a piece',
+                JSON.stringify(beforeRestart));
+            await new Promise(resolve => setTimeout(resolve, 170));
             await page.tap('#mobileRestartBtn');
-            const restarted = await page.evaluate(() => {
+            await page.waitForFunction(() => {
                 const g = window.game;
-                return g.score === 0 && !g.paused && !g.gameOver && g.animationId !== null;
+                return g.score === 0 && g.board.every(row => row.every(value => !value)) &&
+                    !g.paused && !g.gameOver && g.animationId !== null;
+            }, { timeout: 2000 }).catch(() => {});
+            const afterRestart = await page.evaluate(() => {
+                const g = window.game;
+                return { score: g.score, locked: g.board.flat().filter(Boolean).length,
+                    paused: g.paused, over: g.gameOver, running: g.animationId !== null };
             });
-            assert(restarted, name + ' Restart starts a fresh active game');
+            assert(beforeRestart.score > 0 && beforeRestart.locked > 0 &&
+                afterRestart.score === 0 && afterRestart.locked === 0 &&
+                !afterRestart.paused && !afterRestart.over && afterRestart.running,
+            name + ' Restart clears previous score and board, starts active game',
+            JSON.stringify({ beforeRestart, afterRestart }));
         } else {
             assert(false, name + ' gameplay cannot start: Start control inaccessible');
         }
         await page.screenshot({ path: join(OUT, 'tetris-' + name + '-playing.png') });
 
         await page.setViewport(portrait);
-        // .mobile-controls .btn uses transition:all .2s; sample settled
-        // geometry, not the 30px in-flight widths from the first animation frame.
-        await page.evaluate(() => new Promise(r => setTimeout(r, 280)));
+        // Resize/layout and .btn transitions are asynchronous. Wait for the
+        // actual three-column portrait widths and bottom-docked controls.
+        await page.waitForFunction(() => {
+            const board = document.getElementById('tetris').getBoundingClientRect();
+            const bar = document.getElementById('mobileControls');
+            if (getComputedStyle(bar).display === 'none') return false;
+            const rect = bar.getBoundingClientRect();
+            const buttons = [...bar.querySelectorAll('button')];
+            return rect.bottom <= innerHeight + 1 && rect.width >= innerWidth - 2 &&
+                board.bottom <= rect.top - 1 && buttons.length === 3 &&
+                buttons.every(b => {
+                    const r = b.getBoundingClientRect();
+                    return r.width >= 100 && r.height >= 40 && r.right <= innerWidth &&
+                        r.bottom <= innerHeight;
+                });
+        }, { timeout: 3000 }).catch(() => {});
         const upright = await geometry(page);
         console.log('GEOMETRY portrait after ' + name + ' ' + JSON.stringify(upright));
         assert(upright.board.bottom <= (upright.bar?.top ?? portrait.height) - 1,
@@ -155,7 +210,20 @@ for (const vp of landscapes) {
         await page.screenshot({ path: join(OUT, 'tetris-' + name + '-portrait.png') });
 
         await page.setViewport(vp);
-        await page.evaluate(() => new Promise(r => setTimeout(r, 280)));
+        await page.waitForFunction(() => {
+            const board = document.getElementById('tetris').getBoundingClientRect();
+            const bar = document.getElementById('mobileControls');
+            if (getComputedStyle(bar).display === 'none') return false;
+            const b = bar.getBoundingClientRect();
+            const buttons = [...bar.querySelectorAll('button')];
+            return board.bottom <= innerHeight - 2 && b.right <= innerWidth &&
+                b.width <= 140 && buttons.length === 3 &&
+                buttons.every(button => {
+                    const rect = button.getBoundingClientRect();
+                    return rect.width >= 85 && rect.height >= 40 &&
+                        rect.bottom <= innerHeight;
+                });
+        }, { timeout: 3000 }).catch(() => {});
         fits(await geometry(page), name + ' after rotation');
     } catch (e) {
         assert(false, name + ' browser interaction', String(e.stack || e).slice(0,700));
