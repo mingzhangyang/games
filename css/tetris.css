@@ -1011,3 +1011,51 @@ body.rainbow-theme {
         }
     }
 }
+
+
+/*
+ * Q2-A / Q1-01: short touch-landscape Tetris is a height-constrained game,
+ * not a portrait page with a bottom bar. At 750x340 the old 140px minimum
+ * made a 280px board start at y=100, below the visible 340px screen; the
+ * full-width fixed buttons covered rows. At 839x360 both the 768px mobile
+ * control breakpoint and the mobile board height budget stopped applying.
+ *
+ * Keep the existing 10x20 canvas and touch gameplay; spend the short screen
+ * on its full-height board and move the three 50px buttons to an independent
+ * right-side touch rail. Do not change the shared Shell or other games.
+ * The 120px budget includes the 56px topbar, 44px score row and breathing
+ * room. The portrait rules above still own the normal bottom controls.
+ */
+@media (width < 1024px) and (height <= 400px) and (orientation: landscape) {
+    @layer contracts {
+        /* Override mobile-fit's 140px floor; 839px-wide short screens also
+           require this stage cap because mobile-fit stops at 768px width. */
+        .game-container.game-shell:has(#tetris) {
+            --tt-board-fit: calc((100dvh - 120px - env(safe-area-inset-bottom, 0px)) / 2);
+            --frame-stage: min(340px, var(--tt-board-fit)) !important;
+        }
+    }
+
+    .mobile-controls {
+        display: flex;
+        flex-direction: column;
+        top: 50%;
+        right: max(8px, env(safe-area-inset-right, 0px));
+        bottom: auto;
+        left: auto;
+        width: clamp(96px, 15vw, 116px);
+        padding: 8px;
+        gap: 8px;
+        border-top: 0;
+        border-left: 2px solid var(--primary-color);
+        border-radius: 12px 0 0 12px;
+        transform: translateY(-50%);
+    }
+
+    .mobile-controls .btn {
+        flex: none;
+        width: 100%;
+        min-height: 50px;
+        padding: 8px 4px;
+    }
+}
