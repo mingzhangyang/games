@@ -110,15 +110,27 @@ for (const vp of landscapes) {
                 window.game.animationId !== null), name + ' Start begins actual gameplay');
             await swipeRight(page, await geometry(page), name);
             await page.tap('#mobilePauseBtn');
-            assert(await page.evaluate(() => window.game.paused && window.game.animationId === null),
-                name + ' Pause stops the game loop');
+            const paused = await page.evaluate(() => ({
+                paused: window.game.paused,
+                animationId: window.game.animationId,
+                disabled: document.getElementById('mobilePauseBtn').disabled,
+                label: document.getElementById('mobilePauseBtn').textContent,
+            }));
+            assert(paused.paused && paused.animationId === null,
+                name + ' Pause stops the game loop', JSON.stringify(paused));
             await page.tap('#mobilePauseBtn');
-            assert(await page.evaluate(() => !window.game.paused && window.game.animationId !== null),
-                name + ' Resume continues gameplay');
+            const resumed = await page.evaluate(() => ({
+                paused: window.game.paused, animationId: window.game.animationId,
+                label: document.getElementById('mobilePauseBtn').textContent,
+            }));
+            assert(!resumed.paused && resumed.animationId !== null,
+                name + ' Resume continues gameplay', JSON.stringify(resumed));
             await page.tap('#mobileRestartBtn');
-            assert(await page.evaluate(() => window.game.score === 0 && !window.game.paused &&
-                !window.game.gameOver && window.game.animationId !== null),
-                name + ' Restart starts a fresh active game');
+            const restarted = await page.evaluate(() => {
+                const g = window.game;
+                return g.score === 0 && !g.paused && !g.gameOver && g.animationId !== null;
+            });
+            assert(restarted, name + ' Restart starts a fresh active game');
         } else {
             assert(false, name + ' gameplay cannot start: Start control inaccessible');
         }
