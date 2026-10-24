@@ -160,6 +160,17 @@ jobs:
       - name: Browser verification (shard ${{ matrix.shard }})
         run: node tests/verify-all.mjs --browser --with-dist --shard=${{ matrix.shard }}/${SHARDS} --jobs=2
 
+      # Q2-A: preserve real-play viewport screenshots for reviewer inspection.
+      # No production deployment; this step runs only on Q2-A PR branches.
+      - name: Upload Q2-A mobile screenshots
+        if: always() && contains(github.head_ref, 'q2a-')
+        uses: actions/upload-artifact@v4
+        with:
+          name: q2a-mobile-${{ matrix.shard }}
+          path: /tmp/games-q2a-evidence/*.png
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Step 6c-3 pixel-identical result overlays
         if: github.head_ref == 'refactor/result-overlays-6c3' && matrix.shard == 1
         run: |
