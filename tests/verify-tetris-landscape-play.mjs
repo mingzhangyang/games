@@ -110,6 +110,10 @@ for (const vp of landscapes) {
                 window.game.animationId !== null), name + ' Start begins actual gameplay');
             await swipeRight(page, await geometry(page), name);
             await page.tap('#mobilePauseBtn');
+            // A touchscreen tap synthesizes its click asynchronously. Observe the
+            // actual game transition rather than racing the browser event queue.
+            await page.waitForFunction(() => window.game.paused &&
+                window.game.animationId === null, { timeout: 1300 }).catch(() => {});
             const paused = await page.evaluate(() => ({
                 paused: window.game.paused,
                 animationId: window.game.animationId,
@@ -119,6 +123,8 @@ for (const vp of landscapes) {
             assert(paused.paused && paused.animationId === null,
                 name + ' Pause stops the game loop', JSON.stringify(paused));
             await page.tap('#mobilePauseBtn');
+            await page.waitForFunction(() => !window.game.paused &&
+                window.game.animationId !== null, { timeout: 1300 }).catch(() => {});
             const resumed = await page.evaluate(() => ({
                 paused: window.game.paused, animationId: window.game.animationId,
                 label: document.getElementById('mobilePauseBtn').textContent,
@@ -137,7 +143,9 @@ for (const vp of landscapes) {
         await page.screenshot({ path: join(OUT, 'tetris-' + name + '-playing.png') });
 
         await page.setViewport(portrait);
-        await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
+        // .mobile-controls .btn uses transition:all .2s; sample settled
+        // geometry, not the 30px in-flight widths from the first animation frame.
+        await page.evaluate(() => new Promise(r => setTimeout(r, 280)));
         const upright = await geometry(page);
         console.log('GEOMETRY portrait after ' + name + ' ' + JSON.stringify(upright));
         assert(upright.board.bottom <= (upright.bar?.top ?? portrait.height) - 1,
@@ -147,7 +155,7 @@ for (const vp of landscapes) {
         await page.screenshot({ path: join(OUT, 'tetris-' + name + '-portrait.png') });
 
         await page.setViewport(vp);
-        await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
+        await page.evaluate(() => new Promise(r => setTimeout(r, 280)));
         fits(await geometry(page), name + ' after rotation');
     } catch (e) {
         assert(false, name + ' browser interaction', String(e.stack || e).slice(0,700));
